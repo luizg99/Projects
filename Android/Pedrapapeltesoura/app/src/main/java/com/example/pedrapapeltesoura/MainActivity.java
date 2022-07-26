@@ -18,20 +18,20 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
     }
 
-//    void zerarEAguardar(){
-//
-//            ImageView minhaEscolha1 = findViewById(R.id.imMinhaEscolha);
-//            ImageView imageResultado = findViewById(R.id.imResultado);
-//            TextView textoResultado = findViewById(R.id.txtResultado);
-//
-//            textoResultado.setText("JOGANDO, AGUARDE O RESULTADO!");
-//
-//            minhaEscolha1.setImageResource(R.drawable.padrao);
-//            imageResultado.setImageResource(R.drawable.padrao);
-//    }
+    void zerarEAguardar(){
+
+            ImageView minhaEscolha1 = findViewById(R.id.imMinhaEscolha);
+            ImageView imageResultado = findViewById(R.id.imResultado);
+            TextView textoResultado = findViewById(R.id.txtResultado);
+
+            textoResultado.setText("JOGANDO, AGUARDE O RESULTADO!");
+
+            minhaEscolha1.setImageResource(R.drawable.padrao);
+            imageResultado.setImageResource(R.drawable.padrao);
+    }
 
     public void selecionadoPedra(View view){
-//        zerarEAguardar();
+        zerarEAguardar();
         ImageView minhaEscolha = findViewById(R.id.imMinhaEscolha);
         minhaEscolha.setImageResource(R.drawable.pedra);
         this.opcaoSelecionada("pedra");

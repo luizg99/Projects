@@ -1,0 +1,103 @@
+object FormEstados: TFormEstados
+  Left = 0
+  Top = 0
+  Caption = 'Cadastro de estados'
+  ClientHeight = 154
+  ClientWidth = 263
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'Tahoma'
+  Font.Style = []
+  OldCreateOrder = False
+  PixelsPerInch = 96
+  TextHeight = 13
+  object Label1: TLabel
+    Left = 8
+    Top = 31
+    Width = 33
+    Height = 13
+    Caption = 'C'#243'digo'
+  end
+  object Label2: TLabel
+    Left = 8
+    Top = 73
+    Width = 27
+    Height = 13
+    Caption = 'Nome'
+  end
+  object Label3: TLabel
+    Left = 8
+    Top = 112
+    Width = 13
+    Height = 13
+    Caption = 'UF'
+  end
+  object eCodigo: TEdit
+    Left = 8
+    Top = 46
+    Width = 121
+    Height = 21
+    TabOrder = 0
+  end
+  object Edit1: TEdit
+    Left = 8
+    Top = 86
+    Width = 201
+    Height = 21
+    TabOrder = 1
+  end
+  object Edit2: TEdit
+    Left = 8
+    Top = 126
+    Width = 201
+    Height = 21
+    TabOrder = 2
+  end
+  object Button1: TButton
+    Left = 8
+    Top = 2
+    Width = 75
+    Height = 25
+    Caption = 'Gravar'
+    TabOrder = 3
+    OnClick = Button1Click
+  end
+  object FDConnection1: TFDConnection
+    Params.Strings = (
+      'User_Name=sysdba'
+      'Password=masterkey'
+      'Database=C:\projects\Condominio\BANCO_DE_DADOS\CONDOMINIO.FDB'
+      'DriverID=FB')
+    Connected = True
+    Left = 208
+    Top = 8
+  end
+  object FDTransaction1: TFDTransaction
+    Connection = FDConnection1
+    Left = 144
+  end
+  object FDQuery1: TFDQuery
+    Connection = FDConnection1
+    SQL.Strings = (
+      'select * from estados')
+    Left = 160
+    Top = 48
+    object FDQuery1ESTADO_ID: TIntegerField
+      FieldName = 'ESTADO_ID'
+      Origin = 'ESTADO_ID'
+      ProviderFlags = [pfInUpdate, pfInWhere, pfInKey]
+      Required = True
+    end
+    object FDQuery1NOME: TStringField
+      FieldName = 'NOME'
+      Origin = 'NOME'
+    end
+    object FDQuery1UF: TStringField
+      FieldName = 'UF'
+      Origin = 'UF'
+      Size = 2
+    end
+  end
+end

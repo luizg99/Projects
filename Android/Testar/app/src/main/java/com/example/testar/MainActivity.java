@@ -1,53 +1,46 @@
 package com.example.testar;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.TextView;
+import java.lang.Thread;
 
 public class MainActivity extends AppCompatActivity {
-    private CheckBox ckverde, ckBranco, ckVermelho;
-    private TextView resultado;
+    private ProgressBar progressBarHorizontal;
+    private ProgressBar progressBarCircular;
+    private int progresso = 0;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        resultado = findViewById(R.id.txtResultado);
+        progressBarHorizontal = findViewById(R.id.pbHorizontal);
+        //progressBarCircular = findViewById(R.id.pbCircular);
 
-        //CheckBox
-        ckverde    = findViewById(R.id.ckVerde);
-        ckVermelho = findViewById(R.id.ckVermelho);
-        ckBranco   = findViewById(R.id.ckBranco);
     }
 
-    public void checkBox(){
-        String texto = "";
-        if (ckverde.isChecked()){
-            texto = "Verde selecionado - ";
-        }
-        if (ckBranco.isChecked()){
-            texto = texto + "Branco selecionado - ";
-        }
-        if (ckVermelho.isChecked()){
-            texto = texto + "Vermelho selecionado - ";
-        }
-        resultado.setText(texto);
+    public void carregarProgressBar(){
+        progressBarHorizontal.incrementProgressBy(this.progresso + 1);
     }
 
-    public void enviar(View view){
-        checkBox();
-        /*
-        EditText campoTexto = findViewById(R.id.eTexto);
-        TextView resultado = findViewById(R.id.txtResultado);
+    public void carregar(View view) throws InterruptedException {
+        int i;
+        int n = 10;
+        int vetor[] = new int[10];
 
-
-        resultado.setText(texto);
-
-
-         */
+        for (i=0; i<n; i++) {
+            progressBarHorizontal.getProgress();
+            carregarProgressBar();
+            Thread.sleep(1000);
+        }
     }
+
 }

@@ -8,47 +8,18 @@
     android:padding="20dp"
     tools:context=".MainActivity" >
 
-    <com.google.android.material.textfield.TextInputLayout
+    <ProgressBar
+        android:id="@+id/pbHorizontal"
+        style="@style/Widget.AppCompat.ProgressBar.Horizontal"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/eTexto"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="hint" />
-    </com.google.android.material.textfield.TextInputLayout>
+        android:layout_height="wrap_content"
+        android:max="10" />
 
     <Button
-        android:id="@+id/button7"
+        android:id="@+id/buttonCarregar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:onClick="enviar"
-        android:text="Enviar" />
-
-    <TextView
-        android:id="@+id/txtResultado"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Cores"
-        android:textSize="18sp" />
-
-    <CheckBox
-        android:id="@+id/ckVerde"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Verde" />
-
-    <CheckBox
-        android:id="@+id/ckBranco"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Branco" />
-
-    <CheckBox
-        android:id="@+id/ckVermelho"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Vermelho" />
+        android:onClick="carregar"
+        android:text="Carregar" />
 
 </LinearLayout>

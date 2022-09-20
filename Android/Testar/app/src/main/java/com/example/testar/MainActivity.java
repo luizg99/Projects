@@ -24,11 +24,13 @@ public class MainActivity extends AppCompatActivity {
 
         progressBarHorizontal = findViewById(R.id.pbHorizontal);
         //progressBarCircular = findViewById(R.id.pbCircular);
-
+        //progressBarHorizontal.setMax(10);
     }
 
-    public void carregarProgressBar(){
+    public void carregarProgressBar() throws InterruptedException {
+        Thread.sleep(1000);
         progressBarHorizontal.incrementProgressBy(this.progresso + 1);
+
     }
 
     public void carregar(View view) throws InterruptedException {
@@ -36,11 +38,8 @@ public class MainActivity extends AppCompatActivity {
         int n = 10;
         int vetor[] = new int[10];
 
-        for (i=0; i<n; i++) {
-            progressBarHorizontal.getProgress();
+        for (i=0; i<n; i++)
             carregarProgressBar();
-            Thread.sleep(1000);
         }
     }
 
-}

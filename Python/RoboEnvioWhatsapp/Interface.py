@@ -162,6 +162,19 @@ def exibir_mensagem_sucesso(mensagem):
     fechar_button = tk.Button(janela_sucesso, text="Fechar", command=fechar_janela_sucesso)
     fechar_button.pack()
 
+# Função para iniciar o envio de números de telefone
+def iniciar_envio_numeros():
+    numeros = telefone_text.get("1.0", "end-1c").split('\n')  # Obtém números de telefone como uma lista
+    numeros = [numero.strip() for numero in numeros if numero.strip()]
+    if numeros:
+        salvar_numeros_telefones(numeros)
+        exibir_mensagem_sucesso("Números de telefone cadastrados com sucesso!")
+
+# Função para salvar os números de telefone em um arquivo JSON
+def salvar_numeros_telefones(numeros):
+    with open("NumerosTelefones.json", "w") as arquivo_json:
+        json.dump({"NumerosTelefones": numeros}, arquivo_json)
+
 # Função para cadastrar mensagem a enviar
 def cadastrar_mensagem_enviar(mensagem_enviar_entry):
     mensagem = mensagem_enviar_entry.get("1.0", "end-1c")
@@ -204,6 +217,14 @@ abrir_janela_cadastro_enviar_button.pack()
 abrir_janela_consultar_enviar_button = tk.Button(janela_principal, text="Consultar Mensagens Enviar",
                                                  command=abrir_janela_consultar_enviar)
 abrir_janela_consultar_enviar_button.pack()
+
+# Cria uma caixa de texto de várias linhas para o usuário inserir números de telefone
+telefone_text = tk.Text(janela_principal, height=10, width=30)
+telefone_text.pack()
+
+# Cria um botão para iniciar o envio de números de telefone
+iniciar_envio_button = tk.Button(janela_principal, text="Iniciar Envio", command=iniciar_envio_numeros)
+iniciar_envio_button.pack()
 
 # Cria um rótulo para exibir o status
 status_label = tk.Label(janela_principal, text="")

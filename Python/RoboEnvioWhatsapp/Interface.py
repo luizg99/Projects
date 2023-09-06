@@ -1,5 +1,9 @@
 import tkinter as tk
 import json
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
+
 
 # Variável global para armazenar a janela de consulta de mensagens a enviar
 janela_consultar_enviar = None
@@ -164,11 +168,43 @@ def exibir_mensagem_sucesso(mensagem):
 
 # Função para iniciar o envio de números de telefone
 def iniciar_envio_numeros():
+    '''
+
     numeros = telefone_text.get("1.0", "end-1c").split('\n')  # Obtém números de telefone como uma lista
     numeros = [numero.strip() for numero in numeros if numero.strip()]
     if numeros:
         salvar_numeros_telefones(numeros)
         exibir_mensagem_sucesso("Números de telefone cadastrados com sucesso!")
+
+    '''
+    service = Service(ChromeDriverManager().install())
+    navegador = webdriver.Chrome(service=service)
+    navegador.get("https://web.whatsapp.com")
+
+    from selenium.webdriver.common.keys import Keys
+    import pyperclip
+    import time
+
+
+    while True:
+        time.sleep(20)
+        try:
+            link = f"https://web.whatsapp.com/send?phone=+5562981265245&text=teste"
+            navegador.get(link)
+
+            while len(navegador.find_elements_by_id('side')) < 1:
+                time.sleep(1)
+
+                time.sleep(4)
+                navegador.find_element_by_xpath(
+                    '/html/body/div[1]/div[1]/div[1]/div[4]/div[1]/footer/div[1]/div/div/div[2]/div[1]/div/div[2]').send_keys(
+                    Keys.ENTER)
+
+                time.sleep(3)
+
+        except Exception:
+            print('O número: ', numero, ' é invalido por isso não foi enviado nem uma mensagem.   ', datetime.now())
+
 
 # Função para salvar os números de telefone em um arquivo JSON
 def salvar_numeros_telefones(numeros):

@@ -13,6 +13,7 @@ import os
 import time
 import pyperclip
 
+
 # Variável global para armazenar a janela de consulta de mensagens a enviar
 janela_consultar_enviar = None
 
@@ -198,7 +199,13 @@ def format_phone_number(phone_number):
     digits = ''.join(filter(str.isdigit, phone_number))
 
     formatted_number = None
+    if len(digits) == 10:
+        formatted_number = f'{digits[2:]}'
+    elif len(digits) == 11:
+        formatted_number = f'{digits[3:]}'
+        # Check the length 'of the digits to determine the formatting
 
+    '''
     if len(digits) == 10:
         # Format as +55 69 8495-0720
         formatted_number = f'+55 {digits[:2]} {digits[2:6]}-{digits[6:10]}'
@@ -209,9 +216,9 @@ def format_phone_number(phone_number):
     else:
         # Handle invalid phone numbers here, e.g., raise an exception or return None
         formatted_number = None
+    '''
 
     return formatted_number
-
 # Função para iniciar o envio de números de telefone
 def iniciar_envio_numeros():
     # Load JSON data for numerosArray, Saudacao, and MensagemEnviar
@@ -238,6 +245,8 @@ def iniciar_envio_numeros():
     UltimaMensagem = ''
     for i, numero in enumerate(numerosArray['numeros']):
         try:
+            tempoEsperar = random.randint(45, 60) #Esperar de 45 a 60 segundos para enviar a próxima mensagem.
+            time.sleep(tempoEsperar)
             mensagemSaudacao = random.choice(Saudacao["MensagensSaudacao"])
             link = f"https://web.whatsapp.com/send?phone=55{numero}&text={mensagemSaudacao}"
             navegador.get(link)
@@ -329,21 +338,6 @@ def iniciar_envio_numeros():
                     # apagar o nome do contato
                     navegador.find_element('xpath', '//*[@id="app"]/div/span[2]/div/div/div/div/div/div/div/div[1]/div/div/div[2]/div/div[1]/p').send_keys(Keys.BACKSPACE)
                     time.sleep(1)
-
-                    if len(numEncaminhar) == 16:
-                        numEncaminhar[:5] + "62 9" + numEncaminhar[5:]
-                        navegador.find_element('xpath','//*[@id="app"]/div/span[2]/div/div/div/div/div/div/div/div[1]/div/div/div[2]/div/div[1]/p').send_keys(numEncaminhar)
-                        time.sleep(1)
-                        # dar enter
-                        navegador.find_element('xpath','//*[@id="app"]/div/span[2]/div/div/div/div/div/div/div/div[1]/div/div/div[2]/div/div[1]/p').send_keys(Keys.ENTER)
-                        time.sleep(1)
-                        # Select all text in the input field (Ctrl+A)
-                        navegador.find_element('xpath','//*[@id="app"]/div/span[2]/div/div/div/div/div/div/div/div[1]/div/div/div[2]/div/div[1]/p').send_keys(Keys.CONTROL + 'a')
-                        time.sleep(1)
-                        # apagar o nome do contato
-                        navegador.find_element('xpath','//*[@id="app"]/div/span[2]/div/div/div/div/div/div/div/div[1]/div/div/div[2]/div/div[1]/p').send_keys(Keys.BACKSPACE)
-                        time.sleep(1)
-
 
                 navegador.find_element('xpath', '//*[@id="app"]/div/span[2]/div/div/div/div/div/div/div/span/div/div/div/span').click()
                 time.sleep(3)

@@ -1,8 +1,17 @@
 import tkinter as tk
 import json
 from selenium import webdriver
+from selenium.common import NoSuchElementException
+from selenium.webdriver import ActionChains
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.by import By
+import datetime
+import random
+import os
+import time
+import pyperclip
 
 
 # Variável global para armazenar a janela de consulta de mensagens a enviar
@@ -166,50 +175,182 @@ def exibir_mensagem_sucesso(mensagem):
     fechar_button = tk.Button(janela_sucesso, text="Fechar", command=fechar_janela_sucesso)
     fechar_button.pack()
 
-# Função para iniciar o envio de números de telefone
-def iniciar_envio_numeros():
-    '''
 
+
+#Função para salvar os números
+def Salvar_numeros_a_enviar():
     numeros = telefone_text.get("1.0", "end-1c").split('\n')  # Obtém números de telefone como uma lista
     numeros = [numero.strip() for numero in numeros if numero.strip()]
     if numeros:
         salvar_numeros_telefones(numeros)
-        exibir_mensagem_sucesso("Números de telefone cadastrados com sucesso!")
+
+def ler_json(filename):
+    # Construct the full path to the JSON file
+    filepath = os.path.join(os.getcwd(), filename)
+
+    # Read and return the JSON data
+    with open(filepath, 'r', encoding='utf-8-sig') as file:
+        data = file.read()
+        return json.loads(data)
+
+
+def format_phone_number(phone_number):
+    # Remove any non-digit characters from the phone number
+    digits = ''.join(filter(str.isdigit, phone_number))
+
+    formatted_number = None
+    if len(digits) == 10:
+        formatted_number = f'{digits[2:]}'
+    elif len(digits) == 11:
+        formatted_number = f'{digits[3:]}'
+        # Check the length 'of the digits to determine the formatting
 
     '''
+    if len(digits) == 10:
+        # Format as +55 69 8495-0720
+        formatted_number = f'+55 {digits[:2]} {digits[2:6]}-{digits[6:10]}'
+    elif len(digits) == 11:
+        # Format as +55 69 98495-0720
+        formatted_number = f'+55 {digits[:2]} {digits[3:7]}-{digits[7:11]}' #ignorar o 9 extra.
+        # Check the length 'of the digits to determine the formatting
+    else:
+        # Handle invalid phone numbers here, e.g., raise an exception or return None
+        formatted_number = None
+    '''
+
+    return formatted_number
+# Função para iniciar o envio de números de telefone
+def iniciar_envio_numeros():
+    # Load JSON data for numerosArray, Saudacao, and MensagemEnviar
+    global elemento
+    numerosArray = ler_json('NumerosTelefones.json')
+    Saudacao = ler_json('MensagensSaudacao.json')
+    MensagemEnviar = ler_json('MensagensEnviar.json')
+
+    Salvar_numeros_a_enviar()
     service = Service(ChromeDriverManager().install())
     navegador = webdriver.Chrome(service=service)
     navegador.get("https://web.whatsapp.com")
 
-    from selenium.webdriver.common.keys import Keys
-    import pyperclip
-    import time
-
-
+    #esperando o usuário logar.
     while True:
-        time.sleep(20)
         try:
-            link = f"https://web.whatsapp.com/send?phone=+5562981265245&text=teste"
+            navegador.find_element('id', 'side')
+            break  # Exit the loop if the 'side' element is found
+        except NoSuchElementException:
+            time.sleep(1)
+
+    count = 0;
+    NumerosEncaminhar = []  # Create an empty array to store phone numbers to forward
+    UltimaMensagem = ''
+    for i, numero in enumerate(numerosArray['numeros']):
+        try:
+            tempoEsperar = random.randint(45, 60) #Esperar de 45 a 60 segundos para enviar a próxima mensagem.
+            time.sleep(tempoEsperar)
+            mensagemSaudacao = random.choice(Saudacao["MensagensSaudacao"])
+            link = f"https://web.whatsapp.com/send?phone=55{numero}&text={mensagemSaudacao}"
             navegador.get(link)
 
-            while len(navegador.find_elements_by_id('side')) < 1:
-                time.sleep(1)
+            count = count + 1;
 
-                time.sleep(4)
-                navegador.find_element_by_xpath(
-                    '/html/body/div[1]/div[1]/div[1]/div[4]/div[1]/footer/div[1]/div/div/div[2]/div[1]/div/div[2]').send_keys(
-                    Keys.ENTER)
+            while True:
+                try:
+                    navegador.find_element('id', 'side')
+                    break  # Exit the loop if the 'side' element is found
+                except NoSuchElementException:
+                    time.sleep(1)
 
-                time.sleep(3)
-
+            time.sleep(4)
+            navegador.find_element('xpath','//*[@id="main"]/footer/div[1]/div/span[2]/div/div[2]/div[1]/div/div[1]/p').send_keys(Keys.ENTER)
+            time.sleep(3)
         except Exception:
-            print('O número: ', numero, ' é invalido por isso não foi enviado nem uma mensagem.   ', datetime.now())
+            print('O número: ', numero, ' é invalido por isso não foi enviado nem uma mensagem.   ', datetime.date.today())
 
+            if i < len(numerosArray['numeros']) - 1:
+                continue
+
+        NumerosEncaminhar.append(numero)
+
+        if count >= 5:
+            # Pegar uma mensagem aleatória
+            mensagem = random.choice(MensagemEnviar["MensagensEnviar"])
+
+            # se a ultima mensagem mandada for igual a próxima sorteada, sortear novamente até pegar uma mensagem diferente.
+            while UltimaMensagem == mensagem:
+                mensagem = random.choice(MensagemEnviar["MensagensEnviar"])
+            # enviar a mensagem para o Meu Numero para poder depois encaminhar
+
+            navegador.get("https://web.whatsapp.com")
+
+            while True:
+                try:
+                    navegador.find_element('id', 'side')
+                    break  # Exit the loop if the 'side' element is found
+                except NoSuchElementException:
+                    time.sleep(1)
+
+            time.sleep(4)
+            # clicar na lupa
+            navegador.find_element('xpath', '//*[@id="side"]/div[1]/div/div/button/div[2]/span').click()
+            navegador.find_element('xpath', '//*[@id="side"]/div[1]/div/div/div[2]/div/div[1]/p').send_keys("você")
+            navegador.find_element('xpath', '//*[@id="side"]/div[1]/div/div/div[2]/div/div[1]/p').send_keys(Keys.ENTER)
+            time.sleep(1)
+
+            # escrever a mensagem para nós mesmos
+            pyperclip.copy(mensagem)
+            navegador.find_element('xpath', '//*[@id="main"]/footer/div[1]/div/span[2]/div/div[2]/div[1]/div/div[1]/p').send_keys(Keys.CONTROL + "v")
+            navegador.find_element('xpath', '//*[@id="main"]/footer/div[1]/div/span[2]/div/div[2]/div[1]/div/div[1]/p').send_keys(Keys.ENTER)
+            time.sleep(2)
+
+            #Informa qual a última mensagem enviada.
+            UltimaMensagem = mensagem
+
+            # selecionar a mensagem para enviar e abre a caixa de encaminhar
+            lista_elementos = navegador.find_elements('class name', '_2AOIt')
+            for item in lista_elementos:
+                mensagem = mensagem.replace("\n", "")
+                texto = item.text.replace("\n", "")
+                if mensagem in texto:
+                    elemento = item
+
+            ActionChains(navegador).move_to_element(elemento).perform()
+            elemento.find_element('class name', '_3u9t-').click()
+            time.sleep(0.5)
+            navegador.find_element('xpath', '//*[@id="app"]/div/span[4]/div/ul/div/li[4]/div').click()
+            navegador.find_element('xpath', '//*[@id="main"]/span[2]/div/button[5]/span').click()
+            time.sleep(1)
+
+            if NumerosEncaminhar is not None and len(NumerosEncaminhar) > 0:
+                for numEncaminhar in NumerosEncaminhar:
+                    # selecionar os 5 conttos para enviar
+                    # escrever o nome do contato
+
+                    numEncaminhar = format_phone_number(numEncaminhar)
+
+                    navegador.find_element('xpath', '//*[@id="app"]/div/span[2]/div/div/div/div/div/div/div/div[1]/div/div/div[2]/div/div[1]/p').send_keys(numEncaminhar)
+                    time.sleep(1)
+                    # dar enter
+                    navegador.find_element('xpath', '//*[@id="app"]/div/span[2]/div/div/div/div/div/div/div/div[1]/div/div/div[2]/div/div[1]/p').send_keys(Keys.ENTER)
+                    time.sleep(1)
+                    # Select all text in the input field (Ctrl+A)
+                    navegador.find_element('xpath','//*[@id="app"]/div/span[2]/div/div/div/div/div/div/div/div[1]/div/div/div[2]/div/div[1]/p').send_keys(Keys.CONTROL + 'a')
+                    time.sleep(1)
+                    # apagar o nome do contato
+                    navegador.find_element('xpath', '//*[@id="app"]/div/span[2]/div/div/div/div/div/div/div/div[1]/div/div/div[2]/div/div[1]/p').send_keys(Keys.BACKSPACE)
+                    time.sleep(1)
+
+                navegador.find_element('xpath', '//*[@id="app"]/div/span[2]/div/div/div/div/div/div/div/span/div/div/div/span').click()
+                time.sleep(3)
+                NumerosEncaminhar.clear()
+                count = 0
+
+    exibir_mensagem_sucesso('Processo finalizado com sucesso.')
+    navegador.close()
 
 # Função para salvar os números de telefone em um arquivo JSON
 def salvar_numeros_telefones(numeros):
     with open("NumerosTelefones.json", "w") as arquivo_json:
-        json.dump({"NumerosTelefones": numeros}, arquivo_json)
+        json.dump({"numeros": numeros}, arquivo_json)
 
 # Função para cadastrar mensagem a enviar
 def cadastrar_mensagem_enviar(mensagem_enviar_entry):
@@ -225,14 +366,14 @@ def cadastrar_mensagem_enviar(mensagem_enviar_entry):
 
 # Função para salvar as mensagens de saudação cadastradas em um arquivo JSON
 def salvar_mensagens_saudacao():
-    with open("MensagensSaudacao.json", "w") as arquivo_json:
-        json.dump({"MensagensSaudacao": MensagensSaudacao}, arquivo_json)
+    with open("MensagensSaudacao.json", "w", encoding="utf-8") as arquivo_json:
+        json.dump({"MensagensSaudacao": MensagensSaudacao}, arquivo_json, ensure_ascii=False)
     status_label.config(text="Mensagens de saudação cadastradas salvas com sucesso!")
 
 # Função para salvar as mensagens a enviar cadastradas em um arquivo JSON
 def salvar_mensagens_enviar():
-    with open("MensagensEnviar.json", "w") as arquivo_json:
-        json.dump({"MensagensEnviar": MensagensEnviar}, arquivo_json)
+    with open("MensagensEnviar.json", "w", encoding="utf-8") as arquivo_json:
+        json.dump({"MensagensEnviar": MensagensEnviar}, arquivo_json, ensure_ascii=False)
     status_label.config(text="Mensagens a enviar cadastradas salvas com sucesso!")
 
 # Cria a janela principal
@@ -257,6 +398,17 @@ abrir_janela_consultar_enviar_button.pack()
 # Cria uma caixa de texto de várias linhas para o usuário inserir números de telefone
 telefone_text = tk.Text(janela_principal, height=10, width=30)
 telefone_text.pack()
+
+# Load phone numbers from "NumerosTelefones.json" and insert them into the telefone_text widget
+try:
+    with open("NumerosTelefones.json", "r") as arquivo_json:
+        dados = json.load(arquivo_json)
+        if "numeros" in dados:
+            numeros = dados["numeros"]
+            for numero in numeros:
+                telefone_text.insert(tk.END, f"{numero}\n")
+except FileNotFoundError:
+    pass
 
 # Cria um botão para iniciar o envio de números de telefone
 iniciar_envio_button = tk.Button(janela_principal, text="Iniciar Envio", command=iniciar_envio_numeros)

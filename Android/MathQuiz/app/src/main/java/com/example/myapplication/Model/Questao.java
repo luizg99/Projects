@@ -3,9 +3,7 @@ package com.example.myapplication.Model;
 public class Questao {
 
     private String texto;
-    private double respostaCorreta;
-    private double respostaIncorreta;
-
+    private double respostaCorreta, respostaIncorreta;
     public  Questao(String texto, double respostaCorreta, double respostaIncorreta) {
         this.texto = texto;
         this.respostaCorreta = respostaCorreta;

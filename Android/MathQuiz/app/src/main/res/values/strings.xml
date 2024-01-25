@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">My Application</string>
+    <string name="proxima_pergunta_placeholder">Próxima pergunta</string>
 </resources>

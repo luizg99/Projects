@@ -1,5 +1,6 @@
 package com.example.myapplication.controller;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
@@ -33,23 +34,33 @@ public class MainActivity extends AppCompatActivity {
     private Button botaoResposta1;
     private Button botaoResposta2;
     String mensagem;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        textViewTextoPergunta = findViewById(R.id.texto_pergunta_textview);
+        botaoResposta1 = findViewById(R.id.opcao1_button);
+        botaoResposta2 = findViewById(R.id.opcao2_button);
         View.OnClickListener listener = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 final String resposta = ((Button)v).getText().toString();
-                AnalisadorQuestao analisadorQuestao = new AnalisadorQuestao();
-                Questao questao = repositorio.getListaQuestoes().get(indiceQuestao);
 
-                if (analisadorQuestao.isRespostaCorreta(questao, Double.valueOf(resposta))){
-                    mensagem = "Parabéns, resposta correta!";
-                }
-                else {
-                    mensagem = "Resposta incorreta!";
+                AnalisadorQuestao analisadorQuestao = new AnalisadorQuestao();
+
+                try {
+                    NumberFormat format = NumberFormat.getInstance(locale);
+                    Number number = format.parse(resposta);
+
+                    if (analisadorQuestao.isRespostaCorreta(questao, number.doubleValue())) {
+                        mensagem = "Parabéns, resposta correta!";
+                    } else {
+                        mensagem = "Aah, resposta errada :(";
+                    }
+                } catch(ParseException e) {
+                    mensagem = e.getMessage();
                 }
 
                 Toast.makeText(MainActivity.this, mensagem, Toast.LENGTH_SHORT).show();
@@ -57,17 +68,9 @@ public class MainActivity extends AppCompatActivity {
 
         };
 
-        //instanciando os botões
-        TextView textViewTextoPergunta = findViewById(R.id.texto_pergunta_textview);
-        Button botaoResposta1 = findViewById(R.id.opcao1_button);
-        Button botaoResposta2 = findViewById(R.id.opcao2_button);
-        Button botaoProximaPergunta = findViewById(R.id.proxima_pergunta_button);
-
-        exibirQuestao(indiceQuestao);
-
-        //chamando o listner para obter a resposta correta ou incorreta
         botaoResposta1.setOnClickListener(listener);
         botaoResposta2.setOnClickListener(listener);
+
 
         View.OnClickListener listenerProximaPergunta = new View.OnClickListener() {
             @Override
@@ -83,15 +86,30 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
+        Button botaoProximaPergunta = findViewById(R.id.proxima_pergunta_button);
         botaoProximaPergunta.setOnClickListener(listenerProximaPergunta);
 
+        if(savedInstanceState != null) {
+            indiceQuestao = savedInstanceState.getInt(INDICE_QUESTAO);
+        };
+
+        exibirQuestao(indiceQuestao);
+    }
+    Questao questao = repositorio.getListaQuestoes().get(indiceQuestao);
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(INDICE_QUESTAO, indiceQuestao);
     }
 
     private void exibirQuestao(final int indiceQuestao) {
         Questao questao = repositorio.getListaQuestoes().get(indiceQuestao);
         textViewTextoPergunta.setText(questao.getTexto());
-        botaoResposta1.setText(String.valueOf(questao.getRespostaCorreta()));
-        botaoResposta2.setText(String.valueOf(questao.getRespostaIncorreta() ));
+
+        String respostaCorreta = String.format(locale, "%.2f", questao.getRespostaCorreta());
+        String respostaIncorreta = String.format(locale, "%.2f", questao.getRespostaIncorreta());
+        botaoResposta1.setText(respostaCorreta);
+        botaoResposta2.setText(respostaIncorreta);
     }
 
 }

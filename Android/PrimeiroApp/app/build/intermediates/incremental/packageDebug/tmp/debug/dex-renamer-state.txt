@@ -1,0 +1,10 @@
+#Tue Feb 06 21:57:28 BRT 2024
+base.0=C\:\\Projects\\Android\\PrimeiroApp\\app\\build\\intermediates\\dex\\debug\\mergeExtDexDebug\\classes.dex
+base.1=C\:\\Projects\\Android\\PrimeiroApp\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\0\\classes.dex
+base.2=C\:\\Projects\\Android\\PrimeiroApp\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\9\\classes.dex
+path.0=classes.dex
+path.1=0/classes.dex
+path.2=9/classes.dex
+renamed.0=classes.dex
+renamed.1=classes2.dex
+renamed.2=classes3.dex

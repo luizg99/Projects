@@ -17,50 +17,68 @@ public class PessoasJuridicas extends Pessoas{
 	private static final long serialVersionUID = 1L;
 
 	@Column(nullable = false)
-	private String cpf;
+	private String Cpf;
 	
+	@Column(nullable = false)
+	private String InscricaoEstadual;
+	
+	private String InscricaoMunicipal;
+	
+	@Column(nullable = false)
+	private String RazaoSocial;
+
+	@Column(nullable = false)
+	private String Fantasia;
+	
+	@Column(nullable = false)
+	private String Categoria;
+
 	public String getCpf() {
-		return cpf;
+		return Cpf;
 	}
+
 	public void setCpf(String cpf) {
-		this.cpf = cpf;
+		Cpf = cpf;
 	}
-	public String getINSC_ESTADUAL() {
-		return INSC_ESTADUAL;
+
+	public String getInscricaoEstadual() {
+		return InscricaoEstadual;
 	}
-	public void setINSC_ESTADUAL(String iNSC_ESTADUAL) {
-		INSC_ESTADUAL = iNSC_ESTADUAL;
+
+	public void setInscricaoEstadual(String inscricaoEstadual) {
+		InscricaoEstadual = inscricaoEstadual;
 	}
-	public String getINSC_MUNICIPAL() {
-		return INSC_MUNICIPAL;
+
+	public String getInscricaoMunicipal() {
+		return InscricaoMunicipal;
 	}
-	public void setINSC_MUNICIPAL(String iNSC_MUNICIPAL) {
-		INSC_MUNICIPAL = iNSC_MUNICIPAL;
+
+	public void setInscricaoMunicipal(String inscricaoMunicipal) {
+		InscricaoMunicipal = inscricaoMunicipal;
 	}
-	public String getRAZAO_SOCIAL() {
-		return RAZAO_SOCIAL;
+
+	public String getRazaoSocial() {
+		return RazaoSocial;
 	}
-	public void setRAZAO_SOCIAL(String rAZAO_SOCIAL) {
-		RAZAO_SOCIAL = rAZAO_SOCIAL;
+
+	public void setRazaoSocial(String razaoSocial) {
+		RazaoSocial = razaoSocial;
 	}
-	public String getFANTASIA() {
-		return FANTASIA;
+
+	public String getFantasia() {
+		return Fantasia;
 	}
-	public void setFANTASIA(String fANTASIA) {
-		FANTASIA = fANTASIA;
+
+	public void setFantasia(String fantasia) {
+		Fantasia = fantasia;
 	}
-	public String getCATEGORIA() {
-		return CATEGORIA;
+
+	public String getCategoria() {
+		return Categoria;
 	}
-	public void setCATEGORIA(String cATEGORIA) {
-		CATEGORIA = cATEGORIA;
-	}
-	private String INSC_ESTADUAL;
-	private String INSC_MUNICIPAL;
-	private String RAZAO_SOCIAL;
-	private String FANTASIA;
-	private String CATEGORIA;
-	
-	
+
+	public void setCategoria(String categoria) {
+		Categoria = categoria;
+	}	
 	
 }

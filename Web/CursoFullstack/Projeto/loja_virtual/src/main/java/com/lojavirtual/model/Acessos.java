@@ -1,5 +1,7 @@
 package com.lojavirtual.model;
 
+import java.util.Objects;
+
 import org.hibernate.bytecode.enhance.spi.EnhancementInfo;
 import org.springframework.security.core.GrantedAuthority;
 
@@ -23,7 +25,7 @@ public class Acessos  implements GrantedAuthority{
     private Long id;
     
     @Column(name = "DESCRICAO", nullable = false)
-    private String descricao;
+    private String Descricao;
 
 	@Override
 	public String getAuthority() {
@@ -40,11 +42,28 @@ public class Acessos  implements GrantedAuthority{
 	}
 
 	public String getDescricao() {
-		return descricao;
+		return Descricao;
 	}
 
 	public void setDescricao(String descricao) {
-		this.descricao = descricao;
+		this.Descricao = descricao;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(id);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Acessos other = (Acessos) obj;
+		return Objects.equals(id, other.id);
 	}
     
 

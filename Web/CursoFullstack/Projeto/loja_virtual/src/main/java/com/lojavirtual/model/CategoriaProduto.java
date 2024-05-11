@@ -23,7 +23,7 @@ public class CategoriaProduto implements Serializable{
     private Long id;
     
     @Column(name = "DESCRICAO", nullable = false)
-    private String descricao;
+    private String Descricao;
 
 	public Long getId() {
 		return id;
@@ -34,11 +34,11 @@ public class CategoriaProduto implements Serializable{
 	}
 
 	public String getDescricao() {
-		return descricao;
+		return Descricao;
 	}
 
 	public void setDescricao(String descricao) {
-		this.descricao = descricao;
+		this.Descricao = descricao;
 	}
 
 	@Override

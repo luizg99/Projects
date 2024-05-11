@@ -29,17 +29,17 @@ public abstract class Pessoas implements Serializable{
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "SEQ_PESSOAS")
     private Long id;
     
-    @Column(name = "NOME", nullable = false)
-    private String nome;
+    @Column(nullable = false)
+    private String Nome;
     
-    @Column(name = "E_MAIL")
-    private String e_mail;
+    @Column(nullable = false)
+    private String Email;
     
-    @Column(name = "TELEFONE")
-    private String telefone;
+    @Column(nullable = false)
+    private String Telefone;
     
-    @OneToMany(mappedBy = "pessoa_id", orphanRemoval = true, cascade = CascadeType.ALL, fetch = FetchType.LAZY)     
-    private List<Enderecos> enderecos = new ArrayList<Enderecos>();
+    @OneToMany(mappedBy = "Pessoa", orphanRemoval = true, cascade = CascadeType.ALL, fetch = FetchType.LAZY)     
+    private List<Enderecos> Enderecos = new ArrayList<Enderecos>();
 
 	public Long getId() {
 		return id;
@@ -50,27 +50,35 @@ public abstract class Pessoas implements Serializable{
 	}
 
 	public String getNome() {
-		return nome;
+		return Nome;
 	}
 
 	public void setNome(String nome) {
-		this.nome = nome;
+		Nome = nome;
 	}
 
-	public String getE_mail() {
-		return e_mail;
+	public String getEmail() {
+		return Email;
 	}
 
-	public void setE_mail(String e_mail) {
-		this.e_mail = e_mail;
+	public void setEmail(String email) {
+		Email = email;
 	}
 
 	public String getTelefone() {
-		return telefone;
+		return Telefone;
 	}
 
 	public void setTelefone(String telefone) {
-		this.telefone = telefone;
+		Telefone = telefone;
+	}
+
+	public List<Enderecos> getEnderecos() {
+		return Enderecos;
+	}
+
+	public void setEnderecos(List<Enderecos> enderecos) {
+		Enderecos = enderecos;
 	}
 
 	@Override

@@ -1,9 +1,11 @@
 package com.lojavirtual.model;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 import com.lojavirtual.enums.TipoEndereco;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -27,21 +29,35 @@ public class Enderecos implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "SEQ_ENDERECOS")
     private Long id;
-
-    private String rua;
-    private String cep;
-    private String numero;
-    private String complemento;
-    private String bairro;
-    private String cidade;
-    private String uf;
     
+    @Column(nullable = false)
+    private String Rua;
+    
+    @Column(nullable = false)
+    private String Cep;
+    
+    @Column(nullable = false)
+    private String Numero;
+    
+    private String Complemento;
+    
+    @Column(nullable = false)
+    private String Bairro;
+    
+    @Column(nullable = false)
+    private String Cidade;
+    
+    @Column(nullable = false)
+    private String Uf;
+    
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private TipoEndereco tipoEndereco;
+    private TipoEndereco TipoEndereco;
     
     @ManyToOne(targetEntity = Pessoas.class)
     @JoinColumn(name = "PESSOA_ID", nullable = false, foreignKey = @ForeignKey(value = ConstraintMode.CONSTRAINT, name = "FK_ENDERECOS_PESSOA_ID"))
-    private Pessoas pessoa_id;
+    private Pessoas Pessoa;
+
 
 	public Long getId() {
 		return id;
@@ -52,77 +68,92 @@ public class Enderecos implements Serializable {
 	}
 
 	public String getRua() {
-		return rua;
+		return Rua;
 	}
 
 	public void setRua(String rua) {
-		this.rua = rua;
+		Rua = rua;
 	}
 
 	public String getCep() {
-		return cep;
+		return Cep;
 	}
 
 	public void setCep(String cep) {
-		this.cep = cep;
+		Cep = cep;
 	}
 
 	public String getNumero() {
-		return numero;
+		return Numero;
 	}
 
 	public void setNumero(String numero) {
-		this.numero = numero;
+		Numero = numero;
 	}
 
 	public String getComplemento() {
-		return complemento;
+		return Complemento;
 	}
 
 	public void setComplemento(String complemento) {
-		this.complemento = complemento;
+		Complemento = complemento;
 	}
 
 	public String getBairro() {
-		return bairro;
+		return Bairro;
 	}
 
 	public void setBairro(String bairro) {
-		this.bairro = bairro;
+		Bairro = bairro;
 	}
 
 	public String getCidade() {
-		return cidade;
+		return Cidade;
 	}
 
 	public void setCidade(String cidade) {
-		this.cidade = cidade;
+		Cidade = cidade;
 	}
 
 	public String getUf() {
-		return uf;
+		return Uf;
 	}
 
 	public void setUf(String uf) {
-		this.uf = uf;
-	}
-
-	public Pessoas getPessoa_id() {
-		return pessoa_id;
-	}
-
-	public void setPessoa_id(Pessoas pessoa_id) {
-		this.pessoa_id = pessoa_id;
+		Uf = uf;
 	}
 
 	public TipoEndereco getTipoEndereco() {
-		return tipoEndereco;
+		return TipoEndereco;
 	}
 
 	public void setTipoEndereco(TipoEndereco tipoEndereco) {
-		this.tipoEndereco = tipoEndereco;
+		TipoEndereco = tipoEndereco;
 	}
-    
-    
+
+	public Pessoas getPessoa() {
+		return Pessoa;
+	}
+
+	public void setPessoa(Pessoas pessoa) {
+		Pessoa = pessoa;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(id);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Enderecos other = (Enderecos) obj;
+		return Objects.equals(id, other.id);
+	}
     
 }

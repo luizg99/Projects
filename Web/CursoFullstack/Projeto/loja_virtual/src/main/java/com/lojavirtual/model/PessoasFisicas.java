@@ -18,25 +18,26 @@ public class PessoasFisicas extends Pessoas{
 	private static final long serialVersionUID = 1L;
 
 	@Column(nullable = false)
-	private String cpf;
-
-	@Temporal(TemporalType.DATE)
-	private Date data_nascimento;
+	private String Cpf;
 	
+	@Column(nullable = false)
+	@Temporal(TemporalType.DATE)
+	private Date DataNascimento;
+
 	public String getCpf() {
-		return cpf;
+		return Cpf;
 	}
 
 	public void setCpf(String cpf) {
-		this.cpf = cpf;
+		Cpf = cpf;
 	}
 
-	public Date getData_nascimento() {
-		return data_nascimento;
+	public Date getDataNascimento() {
+		return DataNascimento;
 	}
 
-	public void setData_nascimento(Date data_nascimento) {
-		this.data_nascimento = data_nascimento;
+	public void setDataNascimento(Date dataNascimento) {
+		DataNascimento = dataNascimento;
 	}
 	
 }

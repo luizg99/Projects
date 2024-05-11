@@ -11,35 +11,35 @@ import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 
-@jakarta.persistence.Entity
-@Table(name = "MARCAS_PRODUTOS")
-@SequenceGenerator(name = "SEQ_MARCAS_PRODUTOS", sequenceName = "SEQ_MARCAS_PRODUTOS", allocationSize = 1, initialValue = 1) 
-public class MarcaProduto implements Serializable {
+@Entity
+@Table(name = "FORMAS_PAGAMENTOS")
+@SequenceGenerator(name = "SEQ_FORMAS_PAGAMENTOS", sequenceName = "SEQ_FORMAS_PAGAMENTOS", allocationSize = 1, initialValue = 1) 
+public class FormasPagamentos implements Serializable{
 
-    private static final long serialVersionUID = 1L;
-
+	private static final long serialVersionUID = 1L;
+	
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "SEQ_MARCAS_PRODUTOS")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "SEQ_FORMAS_PAGAMENTOS")
     private Long id;
     
     @Column(nullable = false)
     private String Descricao;
 
-    public Long getId() {
-        return id;
-    }
+	public Long getId() {
+		return id;
+	}
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+	public void setId(Long id) {
+		this.id = id;
+	}
 
-    public String getDescricao() {
-        return Descricao;
-    }
+	public String getDescricao() {
+		return Descricao;
+	}
 
-    public void setDescricao(String descricao) {
-        this.Descricao = descricao;
-    }
+	public void setDescricao(String descricao) {
+		this.Descricao = descricao;
+	}
 
 	@Override
 	public int hashCode() {
@@ -54,9 +54,8 @@ public class MarcaProduto implements Serializable {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		MarcaProduto other = (MarcaProduto) obj;
+		FormasPagamentos other = (FormasPagamentos) obj;
 		return Objects.equals(id, other.id);
 	}
-
 
 }

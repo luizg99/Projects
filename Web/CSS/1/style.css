@@ -7,6 +7,13 @@ body {
 	background-size: cover;
 }
 
+
+p {
+	line-height: 20px;
+	font-style: italic;
+	text-decoration: underline;
+}
+
 h2, p {
 	color: #AA3939;
 	text-align: center;
@@ -14,11 +21,16 @@ h2, p {
 	cursor: pointer;
 }
 
-p {
-	color: pink;
-}
-
 li {
 	list-style: none;
 	display: inline-block;
+}
+
+img {
+	float: right;
+}
+
+footer {
+	clear: both;
+	text-align: center;
 }

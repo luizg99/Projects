@@ -8,6 +8,9 @@ import java.util.Objects;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+import com.lojavirtual.controller.dto.LoginRequest;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.ConstraintMode;
@@ -82,6 +85,15 @@ public class Usuarios implements UserDetails{
 		return this.Login;
 	}
 
+	
+	public String getLogin() {
+		return Login;
+	}
+
+	public void setLogin(String login) {
+		Login = login;
+	}
+
 	@Override
 	public boolean isAccountNonExpired() {
 		return true;
@@ -100,6 +112,23 @@ public class Usuarios implements UserDetails{
 	@Override
 	public boolean isEnabled() {
 		return true;
+	}
+	
+	public boolean isEmpty() {
+		return false;
+	}
+	
+	public List<Acessos> getAcessos() {
+		return Acessos;
+	}
+
+	public void setAcessos(List<Acessos> acessos) {
+		this.Acessos = acessos;
+	}
+
+	
+	public boolean isLoginCorrect(LoginRequest loginRequest, PasswordEncoder passwordEncoder) {
+	    return passwordEncoder.matches(loginRequest.senha(), this.Senha);
 	}
 
 	@Override

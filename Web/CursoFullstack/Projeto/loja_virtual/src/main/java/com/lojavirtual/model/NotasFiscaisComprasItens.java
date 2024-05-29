@@ -37,7 +37,19 @@ public class NotasFiscaisComprasItens implements Serializable{
     @JoinColumn(name = "PRODUTO_ID", nullable = false, foreignKey = @ForeignKey(value = ConstraintMode.CONSTRAINT, name = "FK_NOTAS_FIS_COM_PRODUTO_ID"))
     private Produtos Produto;    
  
+    @ManyToOne(targetEntity = Pessoas.class)
+    @JoinColumn(name = "empresa_id", nullable = false, 
+    foreignKey = @ForeignKey(value = ConstraintMode.CONSTRAINT, name = "FK_EMPRESA_ID"))
+    private Pessoas Empresa;    
 
+
+	public Pessoas getEmpresa() {
+		return Empresa;
+	}
+
+	public void setEmpresa(Pessoas empresa) {
+		Empresa = empresa;
+	}
 
 	public Long getId() {
 		return id;

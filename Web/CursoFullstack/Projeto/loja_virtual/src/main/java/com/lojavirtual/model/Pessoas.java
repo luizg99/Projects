@@ -8,13 +8,17 @@ import java.util.Set;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
+import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
@@ -45,6 +49,20 @@ public abstract class Pessoas implements Serializable{
     @OneToMany(mappedBy = "Pessoa", orphanRemoval = true, cascade = CascadeType.ALL, fetch = FetchType.LAZY)     
     private List<Enderecos> Enderecos = new ArrayList<Enderecos>();
     
+    @ManyToOne(targetEntity = Pessoas.class)
+    @JoinColumn(name = "empresa_id", nullable = true, 
+    foreignKey = @ForeignKey(value = ConstraintMode.CONSTRAINT, name = "FK_EMPRESA_ID"))
+    private Pessoas Empresa;    
+
+
+	public Pessoas getEmpresa() {
+		return Empresa;
+	}
+
+	public void setEmpresa(Pessoas empresa) {
+		Empresa = empresa;
+	}
+	
     public void setTipoPessoa(String tipoPessoa) {
 		TipoPessoa = tipoPessoa;
 	}

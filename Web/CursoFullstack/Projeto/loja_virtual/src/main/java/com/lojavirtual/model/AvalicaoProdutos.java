@@ -36,13 +36,24 @@ public class AvalicaoProdutos implements Serializable{
     @ManyToOne(targetEntity = Pessoas.class)
     @JoinColumn(name = "PESSOA_ID", nullable = false, foreignKey = @ForeignKey(value = ConstraintMode.CONSTRAINT, name = "FK_AVALIACAO_PRODUTO_PESSOA_ID"))
     private Pessoas pessoa_id;
-   
+
     @OneToOne(targetEntity = Produtos.class)
     @JoinColumn(name = "PRODUTO_ID", nullable = false, foreignKey = @ForeignKey(value = ConstraintMode.CONSTRAINT, name = "FK_AVALIACAO_PRODUTO_PRODUTO_ID"))
     private Produtos Produto;
     
-    
-    
+    @ManyToOne(targetEntity = Pessoas.class)
+    @JoinColumn(name = "empresa_id", nullable = false, 
+    foreignKey = @ForeignKey(value = ConstraintMode.CONSTRAINT, name = "FK_EMPRESA_ID"))
+    private Pessoas Empresa;    
+
+	public Pessoas getEmpresa() {
+		return Empresa;
+	}
+
+	public void setEmpresa(Pessoas empresa) {
+		Empresa = empresa;
+	}
+
 	public Long getId() {
 		return id;
 	}

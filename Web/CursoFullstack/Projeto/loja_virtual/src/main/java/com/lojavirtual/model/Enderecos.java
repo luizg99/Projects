@@ -57,6 +57,20 @@ public class Enderecos implements Serializable {
     @ManyToOne(targetEntity = Pessoas.class)
     @JoinColumn(name = "PESSOA_ID", nullable = false, foreignKey = @ForeignKey(value = ConstraintMode.CONSTRAINT, name = "FK_ENDERECOS_PESSOA_ID"))
     private Pessoas Pessoa;
+    
+    @ManyToOne(targetEntity = Pessoas.class)
+    @JoinColumn(name = "empresa_id", nullable = false, 
+    foreignKey = @ForeignKey(value = ConstraintMode.CONSTRAINT, name = "FK_EMPRESA_ID"))
+    private Pessoas Empresa;    
+
+
+	public Pessoas getEmpresa() {
+		return Empresa;
+	}
+
+	public void setEmpresa(Pessoas empresa) {
+		Empresa = empresa;
+	}
 
 
 	public Long getId() {

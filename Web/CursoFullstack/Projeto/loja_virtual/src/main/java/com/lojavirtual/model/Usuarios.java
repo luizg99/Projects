@@ -39,7 +39,7 @@ public class Usuarios implements UserDetails{
 	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "SEQ_USUARIOS")
 	private long id;
 	
-	@Column(nullable = false)
+	@Column(nullable = false, unique = true)
 	private String Login;
 	
 	@Column(nullable = false)
@@ -51,10 +51,24 @@ public class Usuarios implements UserDetails{
 	
 	
     @ManyToOne(targetEntity = Pessoas.class)
-    @JoinColumn(name = "PESSOA_ID", nullable = false, foreignKey = @ForeignKey(value = ConstraintMode.CONSTRAINT, name = "FK_USUARIOS_PESSOA_ID"))
+    @JoinColumn(name = "PESSOA_ID", nullable = false, 
+    foreignKey = @ForeignKey(value = ConstraintMode.CONSTRAINT, name = "FK_USUARIOS_PESSOA_ID"))
     private Pessoas Pessoa;
+    
+    @ManyToOne(targetEntity = Pessoas.class)
+    @JoinColumn(name = "empresa_id", nullable = false, 
+    foreignKey = @ForeignKey(value = ConstraintMode.CONSTRAINT, name = "FK_EMPRESA_ID"))
+    private Pessoas Empresa;
 	
 	
+	public Pessoas getEmpresa() {
+		return Empresa;
+	}
+
+	public void setEmpresa(Pessoas empresa) {
+		Empresa = empresa;
+	}
+
 	@OneToMany(fetch = FetchType.LAZY)
 	@JoinTable(
 		name = "usuarios_acessos",

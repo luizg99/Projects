@@ -4,7 +4,11 @@ import java.util.Date;
 
 import ch.qos.logback.core.subst.Token.Type;
 import jakarta.persistence.Column;
+import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.Entity;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
@@ -23,7 +27,7 @@ public class PessoasFisicas extends Pessoas{
 	@Column(nullable = false)
 	@Temporal(TemporalType.DATE)
 	private Date DataNascimento;
-
+	
 	public String getCpf() {
 		return Cpf;
 	}

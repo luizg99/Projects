@@ -17,7 +17,7 @@ public class PessoasJuridicas extends Pessoas{
 	private static final long serialVersionUID = 1L;
 
 	@Column(nullable = false)
-	private String Cpf;
+	private String Cnpj;
 	
 	@Column(nullable = false)
 	private String InscricaoEstadual;
@@ -33,12 +33,13 @@ public class PessoasJuridicas extends Pessoas{
 	@Column(nullable = false)
 	private String Categoria;
 
-	public String getCpf() {
-		return Cpf;
+
+	public String getCnpj() {
+		return Cnpj;
 	}
 
-	public void setCpf(String cpf) {
-		Cpf = cpf;
+	public void setCnpj(String cnpj) {
+		Cnpj = cnpj;
 	}
 
 	public String getInscricaoEstadual() {

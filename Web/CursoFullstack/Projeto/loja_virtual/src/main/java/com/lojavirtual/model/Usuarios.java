@@ -89,6 +89,22 @@ public class Usuarios implements UserDetails{
 		return this.Acessos;
 	}
 	
+	public Date getDataAtualSenha() {
+		return DataAtualSenha;
+	}
+
+	public void setDataAtualSenha(Date dataAtualSenha) {
+		DataAtualSenha = dataAtualSenha;
+	}
+
+	public String getSenha() {
+		return Senha;
+	}
+
+	public void setSenha(String senha) {
+		Senha = senha;
+	}
+
 	@Override
 	public String getPassword() {
 		return this.Senha;

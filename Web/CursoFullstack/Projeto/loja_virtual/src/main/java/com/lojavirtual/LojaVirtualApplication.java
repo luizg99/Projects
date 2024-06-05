@@ -20,7 +20,7 @@ public class LojaVirtualApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(LojaVirtualApplication.class, args);
 		
-		System.out.println(new BCryptPasswordEncoder().encode("ALTIS")); // ISSO DAQ É SÓ PRA FAZER OQ ELE FEZ NO VIDEO DE GERAR A CHAVE CRIPTOGRAFADA)
+		System.out.println(new BCryptPasswordEncoder().encode("123456")); // ISSO DAQ É SÓ PRA FAZER OQ ELE FEZ NO VIDEO DE GERAR A CHAVE CRIPTOGRAFADA)
 	}
 
 }

@@ -7,9 +7,7 @@ import org.springframework.context.annotation.Profile;
 
 import com.lojavirtual.LojaVirtualApplication;
 import com.lojavirtual.controller.PessoaController;
-import com.lojavirtual.model.PessoasJuridicas;
-import com.lojavirtual.repository.PessoasRepository;
-import com.lojavirtual.service.PessoasUserService;
+import com.lojavirtual.model.PessoaJuridicaModel;
 
 import junit.framework.TestCase;
 import util.ExceptionMentoriaJava;
@@ -24,21 +22,21 @@ public class TestePessoaUsuario extends TestCase {
 	@Test
 	public void testCadPessoaFisica() throws ExceptionMentoriaJava {
 		
-		PessoasJuridicas pessoaJuridica = new PessoasJuridicas();
+		PessoaJuridicaModel pessoaJuridica = new PessoaJuridicaModel();
 				
 		pessoaJuridica.setCnpj("70459580132");
 		pessoaJuridica.setNome("Luiz");
 		pessoaJuridica.setEmail("luiz@gmail.com");
 		pessoaJuridica.setTelefone("62981265245");
-		pessoaJuridica.setInscricaoEstadual("12321332");
-		pessoaJuridica.setInscricaoMunicipal("123215423");
-		pessoaJuridica.setFantasia("ltda recursos");
-		pessoaJuridica.setRazaoSocial("ltda do luizn");
+		//pessoaJuridica.setInscricaoEstadual("12321332");
+		//pessoaJuridica.setInscricaoMunicipal("123215423");
+		//pessoaJuridica.setFantasia("ltda recursos");
+		//pessoaJuridica.setRazaoSocial("ltda do luizn");
 		pessoaJuridica.setCategoria("fodase");
-		pessoaJuridica.setEmpresa(pessoaJuridica);
+		//pessoaJuridica.setEmpresa(null);
 		
 		
-		//pessoaController.salvarPj(pessoaJuridica);
+		pessoaController.salvarPj(null);
 		
 		
 		

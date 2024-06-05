@@ -44,13 +44,13 @@ public abstract class Pessoas implements Serializable{
     private String Telefone;
     
     @Column
-    private String TipoPessoa;
+    private String tipo_pessoa;
     
     @OneToMany(mappedBy = "Pessoa", orphanRemoval = true, cascade = CascadeType.ALL, fetch = FetchType.LAZY)     
     private List<Enderecos> Enderecos = new ArrayList<Enderecos>();
     
     @ManyToOne(targetEntity = Pessoas.class)
-    @JoinColumn(name = "empresa_id", nullable = true, 
+    @JoinColumn(name = "empresa_id", nullable = false, 
     foreignKey = @ForeignKey(value = ConstraintMode.CONSTRAINT, name = "FK_EMPRESA_ID"))
     private Pessoas Empresa;    
 
@@ -62,13 +62,14 @@ public abstract class Pessoas implements Serializable{
 	public void setEmpresa(Pessoas empresa) {
 		Empresa = empresa;
 	}
-	
-    public void setTipoPessoa(String tipoPessoa) {
-		TipoPessoa = tipoPessoa;
+
+
+	public String getTipo_pessoa() {
+		return tipo_pessoa;
 	}
-    
-    public String getTipoPessoa() {
-		return TipoPessoa;
+
+	public void setTipo_pessoa(String tipo_pessoa) {
+		this.tipo_pessoa = tipo_pessoa;
 	}
 
 	public Long getId() {

@@ -3,6 +3,7 @@ package com.lojavirtual.model;
 import java.io.Serializable;
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.lojavirtual.enums.TipoEndereco;
 
 import jakarta.persistence.Column;
@@ -31,6 +32,9 @@ public class Enderecos implements Serializable {
     private Long id;
     
     @Column(nullable = false)
+	private String logradouro;
+    
+    @Column(nullable = false)
     private String Rua;
     
     @Column(nullable = false)
@@ -54,15 +58,25 @@ public class Enderecos implements Serializable {
     @Enumerated(EnumType.STRING)
     private TipoEndereco TipoEndereco;
     
+    @JsonIgnore
     @ManyToOne(targetEntity = Pessoas.class)
     @JoinColumn(name = "PESSOA_ID", nullable = false, foreignKey = @ForeignKey(value = ConstraintMode.CONSTRAINT, name = "FK_ENDERECOS_PESSOA_ID"))
     private Pessoas Pessoa;
     
+	@JsonIgnore
     @ManyToOne(targetEntity = Pessoas.class)
     @JoinColumn(name = "empresa_id", nullable = false, 
     foreignKey = @ForeignKey(value = ConstraintMode.CONSTRAINT, name = "FK_EMPRESA_ID"))
     private Pessoas Empresa;    
 
+
+	public String getLogradouro() {
+		return logradouro;
+	}
+
+	public void setLogradouro(String logradouro) {
+		this.logradouro = logradouro;
+	}
 
 	public Pessoas getEmpresa() {
 		return Empresa;

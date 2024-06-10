@@ -50,7 +50,7 @@ public abstract class Pessoas implements Serializable{
     private List<Enderecos> Enderecos = new ArrayList<Enderecos>();
     
     @ManyToOne(targetEntity = Pessoas.class)
-    @JoinColumn(name = "empresa_id", nullable = false, 
+    @JoinColumn(name = "empresa_id", nullable = true, 
     foreignKey = @ForeignKey(value = ConstraintMode.CONSTRAINT, name = "FK_EMPRESA_ID"))
     private Pessoas Empresa;    
 

@@ -53,18 +53,18 @@ public class PessoaUsuarioService {
 			usuarioPj = new Usuarios();
 			usuarioPj.setDataAtualSenha(Calendar.getInstance().getTime());
 			usuarioPj.setEmpresa(pessoaJuridica);
-			//usuarioPj.setPessoa(pessoaJuridica);
+			usuarioPj.setPessoa(pessoaJuridica);
 			usuarioPj.setLogin(pessoaJuridica.getEmail());
 
-			String senha = "" + Calendar.getInstance().getTimeInMillis();
+			String senha = "teste" + Calendar.getInstance().getTimeInMillis();
 			String senhaCriptografada = new BCryptPasswordEncoder().encode(senha);
 
-			//usuarioPj.setSenha(senhaCriptografada);
+			usuarioPj.setSenha(senhaCriptografada);
 
 			usuarioPj = usuarioRepository.save(usuarioPj);
 
-			//usuarioRepository.insereAcessoUsuarioPessoa(usuarioPj.getId());
-			//usuarioRepository.insereAcessoUsuarioPessoaJuridica(usuarioPj.getId(), "ROLE_ADMIN");
+			usuarioRepository.insereAcessoUsuarioPessoa(usuarioPj.getId());
+			usuarioRepository.insereAcessoUsuarioPessoaJuridica(usuarioPj.getId(), "ROLE_ADMIN");
 
 			StringBuilder mensagemHtml = new StringBuilder();
 			mensagemHtml.append("<b>Segue abaixo seus dados de acesso para a loja virtual</b><br>");
@@ -101,15 +101,15 @@ public class PessoaUsuarioService {
 			}
 
 			usuarioPf = new Usuarios();
-			//usuarioPf.setDataAtualSenha(Calendar.getInstance().getTime());
+			usuarioPf.setDataAtualSenha(Calendar.getInstance().getTime());
 			usuarioPf.setEmpresa(pessoaFisica.getEmpresa());
-			//usuarioPf.setPessoa(pessoaFisica);
+			usuarioPf.setPessoa(pessoaFisica);
 			usuarioPf.setLogin(pessoaFisica.getEmail());
 
 			String senha = "" + Calendar.getInstance().getTimeInMillis();
 			String senhaCriptografada = new BCryptPasswordEncoder().encode(senha);
 
-			//usuarioPf.setSenha(senhaCriptografada);
+			usuarioPf.setSenha(senhaCriptografada);
 
 			usuarioPf = usuarioRepository.save(usuarioPf);
 

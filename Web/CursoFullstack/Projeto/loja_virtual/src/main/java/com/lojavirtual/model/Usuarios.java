@@ -53,20 +53,28 @@ public class Usuarios implements UserDetails{
     @ManyToOne(targetEntity = Pessoas.class)
     @JoinColumn(name = "PESSOA_ID", nullable = false, 
     foreignKey = @ForeignKey(value = ConstraintMode.CONSTRAINT, name = "FK_USUARIOS_PESSOA_ID"))
-    private Pessoas Pessoa;
+    private Pessoas pessoa;
     
     @ManyToOne(targetEntity = Pessoas.class)
     @JoinColumn(name = "empresa_id", nullable = false, 
     foreignKey = @ForeignKey(value = ConstraintMode.CONSTRAINT, name = "FK_EMPRESA_ID"))
-    private Pessoas Empresa;
+    private Pessoas empresa;
 	
-	
+
 	public Pessoas getEmpresa() {
-		return Empresa;
+		return empresa;
 	}
 
 	public void setEmpresa(Pessoas empresa) {
-		Empresa = empresa;
+		this.empresa = empresa;
+	}
+
+	public Pessoas getPessoa() {
+		return pessoa;
+	}
+
+	public void setPessoa(Pessoas pessoa) {
+		this.pessoa = pessoa;
 	}
 
 	@OneToMany(fetch = FetchType.LAZY)
@@ -116,6 +124,14 @@ public class Usuarios implements UserDetails{
 	}
 
 	
+	public long getId() {
+		return id;
+	}
+
+	public void setId(long id) {
+		this.id = id;
+	}
+
 	public String getLogin() {
 		return Login;
 	}

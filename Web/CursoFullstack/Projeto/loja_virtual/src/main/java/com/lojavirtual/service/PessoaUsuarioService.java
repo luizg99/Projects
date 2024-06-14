@@ -31,7 +31,7 @@ public class PessoaUsuarioService {
 	private JdbcTemplate jdbcTemplate;
 
 	@Autowired
-	private EnvioEmailService envioEmailService;
+	private ServiceSendEmail sendEmail;
 
 	public PessoaJuridicaModel salvarPessoaJuridica(PessoaJuridicaModel pessoaJuridica) {
 
@@ -72,12 +72,12 @@ public class PessoaUsuarioService {
 			mensagemHtml.append("<b>Senha: </b>" + senha + "<br>");
 			mensagemHtml.append("<b>Obrigado!</b>");
 
-			//try {
-			//	envioEmailService.enviarEmailHtml("Acesso gerado para Loja Virtual", mensagemHtml.toString(),
-			//			pessoaJuridica.getEmail());
-			//} catch (Exception e) {
-			//	e.printStackTrace();
-			//}
+			try {
+				sendEmail.enviarEmailHtml("Acesso gerado para Loja Virtual", mensagemHtml.toString(),
+						pessoaJuridica.getEmail());
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 
 		return pessoaJuridica;

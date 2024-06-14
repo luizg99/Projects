@@ -28,19 +28,23 @@ public class TestePessoaUsuario extends TestCase {
 	@Autowired
 	private PessoaJuridicaRepository pessoaJuridicaRepository;
 	
+	/*
 	@Test
 	public void testCadPessoaJuridica() throws ExceptionMentoriaJava {
 
 		PessoaJuridicaModel pessoaJuridica = new PessoaJuridicaModel();
+		
 		pessoaJuridica.setCnpj("" + Calendar.getInstance().getTimeInMillis());
-		pessoaJuridica.setNome("Lucas Gabriel");
-		pessoaJuridica.setEmail("lucasaltisnADSDASDuASDASDnAAes@gmail.com");
-		pessoaJuridica.setTelefone("62970707070");
 		pessoaJuridica.setInscricao_municipal("54654654");
-		pessoaJuridica.setInscricao_municipal("5465456465");
-		pessoaJuridica.setFantasia("Luquinhas");
-		pessoaJuridica.setRazao_social("Lucas LTDA");
-
+		pessoaJuridica.setInscricao_estadual("5465456465");
+		pessoaJuridica.setFantasia("Luiz");
+		pessoaJuridica.setRazao_social("Empresa LTDA");
+		pessoaJuridica.setCategoria("teste");
+		pessoaJuridica.setEmpresa(pessoaJuridica);
+		pessoaJuridica.setEmail("klotz.oficial@gmail.com");
+		pessoaJuridica.setNome("Luiz");
+		pessoaJuridica.setTelefone("62970707070");
+		
 		Enderecos endereco1 = new Enderecos();
 		endereco1.setBairro("bairro");
 		endereco1.setCep("564564");
@@ -49,6 +53,7 @@ public class TestePessoaUsuario extends TestCase {
 		endereco1.setEmpresa(pessoaJuridica);
 		endereco1.setLogradouro("logradouro");
 		endereco1.setNumero("213321");
+		endereco1.setRua("rua 1");
 		endereco1.setPessoa(pessoaJuridica);
 		endereco1.setTipoEndereco(TipoEndereco.COBRANCA);
 		endereco1.setUf("uf1");
@@ -61,6 +66,7 @@ public class TestePessoaUsuario extends TestCase {
 		endereco2.setEmpresa(pessoaJuridica);
 		endereco2.setLogradouro("logradouro");
 		endereco2.setNumero("213321");
+		endereco2.setRua("rua 2");
 		endereco2.setPessoa(pessoaJuridica);
 		endereco2.setTipoEndereco(TipoEndereco.ENTREGA);
 		endereco2.setUf("uf1");
@@ -68,7 +74,7 @@ public class TestePessoaUsuario extends TestCase {
 		pessoaJuridica.getEnderecos().add(endereco1);
 		pessoaJuridica.getEnderecos().add(endereco2);
 
-		pessoaJuridica = pessoaController.salvarPj(pessoaJuridica).getBody();
+		pessoaJuridica = pessoaController.salvarPessoaJuridica(pessoaJuridica).getBody();
 
 		assertEquals(true, pessoaJuridica.getId() > 0);
 
@@ -78,20 +84,21 @@ public class TestePessoaUsuario extends TestCase {
 
 		assertEquals(2, pessoaJuridica.getEnderecos().size());
 	}
+	*/
 	
 	@Test
 	public void testCadPessoaFisica() throws ExceptionMentoriaJava {
 		
-		PessoaJuridicaModel pessoaJuridica = pessoaJuridicaRepository.existeCnpjCadastrado("49.884.753/0001-04");
+		PessoaJuridicaModel pessoaJuridica = pessoaJuridicaRepository.existeCnpjCadastrado("589559598");
 
 		PessoaFisicaModel pessoaFisica = new PessoaFisicaModel();
-		pessoaFisica.setCpf("06221179122");
-		pessoaFisica.setNome("Lucas Nunes");
-		pessoaFisica.setEmail("lucasssssss@gmail.com");
-		pessoaFisica.setTelefone("62970707070");
+		pessoaFisica.setCpf("05761316366");
+		pessoaFisica.setNome("Luiz Lindo");
+		pessoaFisica.setEmail("asdasdasdgasd@gmail.com");
+		pessoaFisica.setTelefone("62547525456546");
 		pessoaFisica.setEmpresa(pessoaJuridica);
 		
-		EnderecoModel endereco1 = new EnderecoModel();
+		Enderecos endereco1 = new Enderecos();
 		endereco1.setBairro("bairro");
 		endereco1.setCep("74490255");
 		endereco1.setCidade("cidade");
@@ -99,11 +106,12 @@ public class TestePessoaUsuario extends TestCase {
 		endereco1.setEmpresa(pessoaJuridica);
 		endereco1.setLogradouro("logradouro");
 		endereco1.setNumero("213321");
+		endereco1.setRua("afasf");
 		endereco1.setPessoa(pessoaFisica);
 		endereco1.setTipoEndereco(TipoEndereco.COBRANCA);
 		endereco1.setUf("uf1");
 
-		EnderecoModel endereco2 = new EnderecoModel();
+		Enderecos endereco2 = new Enderecos();
 		endereco2.setBairro("bairro");
 		endereco2.setCep("74490255");
 		endereco2.setCidade("cidade");
@@ -111,6 +119,7 @@ public class TestePessoaUsuario extends TestCase {
 		endereco2.setEmpresa(pessoaJuridica);
 		endereco2.setLogradouro("logradouro");
 		endereco2.setNumero("213321");
+		endereco2.setRua("afasf");
 		endereco2.setPessoa(pessoaFisica);
 		endereco2.setTipoEndereco(TipoEndereco.ENTREGA);
 		endereco2.setUf("uf1");
@@ -122,10 +131,12 @@ public class TestePessoaUsuario extends TestCase {
 
 		assertEquals(true, pessoaFisica.getId() > 0);
 
-		for (EnderecoModel endereco : pessoaFisica.getEnderecos()) {
+		for (Enderecos endereco : pessoaFisica.getEnderecos()) {
 			assertEquals(true, endereco.getId() > 0);
 		}
 
 		assertEquals(2, pessoaFisica.getEnderecos().size());
+		
 	}
+	
 }

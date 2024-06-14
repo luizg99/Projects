@@ -22,6 +22,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 @Entity
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
@@ -34,6 +36,8 @@ public abstract class Pessoas implements Serializable{
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "SEQ_PESSOAS")
     private Long id;
     
+    @NotBlank(message = "Nome deve ser informado")
+    @NotNull(message = "Não pode ser null")
     @Column(nullable = false)
     private String Nome;
     

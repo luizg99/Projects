@@ -2,7 +2,7 @@ package com.lojavirtual.service;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Properties;
-/*
+
 import javax.mail.Address;
 import javax.mail.Authenticator;
 import javax.mail.Message;
@@ -12,16 +12,17 @@ import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
-*/
+
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-@Service
-public class EnvioEmailService {
-/*
-	private String userName = "4321beyblade@gmail.com";
-	private String senha = "yprp xldh vgjc whcr";
 
+@Service
+public class ServiceSendEmail {
+
+	private String username = "luizgustavocalassa99@gmail.com";
+	private String senha = "nepy zgpt vike krcz";
+	
 	@Async
 	public void enviarEmailHtml(String assunto, String mensagem, String emailDestino)
 			throws UnsupportedEncodingException, MessagingException {
@@ -39,7 +40,7 @@ public class EnvioEmailService {
 			@Override
 			protected PasswordAuthentication getPasswordAuthentication() {
 
-				return new PasswordAuthentication(userName, senha);
+				return new PasswordAuthentication(username, senha);
 			}
 
 		});
@@ -49,12 +50,12 @@ public class EnvioEmailService {
 		Address[] toUser = InternetAddress.parse(emailDestino);
 
 		Message message = new MimeMessage(session);
-		message.setFrom(new InternetAddress(userName, "Nunes - da Altis Sistemas", "UTF-8"));
+		message.setFrom(new InternetAddress(username, "Luizito teste ", "UTF-8"));
 		message.setRecipients(Message.RecipientType.TO, toUser);
 		message.setSubject(assunto);
 		message.setContent(mensagem, "text/html; charset=utf-8");
 
 		Transport.send(message);
 	}
-*/
+	
 }

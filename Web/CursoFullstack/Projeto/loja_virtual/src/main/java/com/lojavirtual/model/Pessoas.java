@@ -24,6 +24,7 @@ import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 @Entity
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
@@ -36,11 +37,13 @@ public abstract class Pessoas implements Serializable{
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "SEQ_PESSOAS")
     private Long id;
     
+    @Size(min = 4, message = ("O nome deve ter no minimo 4 caracteres"))
     @NotBlank(message = "Nome deve ser informado")
     @NotNull(message = "Não pode ser null")
     @Column(nullable = false)
     private String Nome;
     
+    @jakarta.validation.constraints.Email
     @Column(nullable = false)
     private String Email;
     
@@ -66,7 +69,6 @@ public abstract class Pessoas implements Serializable{
 	public void setEmpresa(Pessoas empresa) {
 		Empresa = empresa;
 	}
-
 
 	public String getTipo_pessoa() {
 		return tipo_pessoa;

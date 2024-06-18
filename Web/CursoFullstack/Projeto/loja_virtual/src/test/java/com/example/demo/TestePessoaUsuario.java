@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Profile;
 import com.lojavirtual.LojaVirtualApplication;
 import com.lojavirtual.controller.PessoaController;
 import com.lojavirtual.enums.TipoEndereco;
+import com.lojavirtual.enums.TipoPessoa;
 import com.lojavirtual.model.Enderecos;
 import com.lojavirtual.model.PessoaFisicaModel;
 import com.lojavirtual.model.PessoaJuridicaModel;
@@ -28,31 +29,32 @@ public class TestePessoaUsuario extends TestCase {
 	@Autowired
 	private PessoaJuridicaRepository pessoaJuridicaRepository;
 	
-	/*
+	
 	@Test
 	public void testCadPessoaJuridica() throws ExceptionMentoriaJava {
 
 		PessoaJuridicaModel pessoaJuridica = new PessoaJuridicaModel();
 		
-		pessoaJuridica.setCnpj("" + Calendar.getInstance().getTimeInMillis());
-		pessoaJuridica.setInscricao_municipal("54654654");
-		pessoaJuridica.setInscricao_estadual("5465456465");
-		pessoaJuridica.setFantasia("Luiz");
+		pessoaJuridica.setCnpj("88.372.202/0001-05");
+		pessoaJuridica.setInscricao_municipal("141785575");
+		pessoaJuridica.setInscricao_estadual("4171717");
+		pessoaJuridica.setFantasia("Luiz1");
 		pessoaJuridica.setRazao_social("Empresa LTDA");
 		pessoaJuridica.setCategoria("teste");
 		pessoaJuridica.setEmpresa(pessoaJuridica);
 		pessoaJuridica.setEmail("klotz.oficial@gmail.com");
 		pessoaJuridica.setNome("Luiz");
 		pessoaJuridica.setTelefone("62970707070");
+		pessoaJuridica.setTipo_pessoa(TipoPessoa.JURIDICA.name());
 		
 		Enderecos endereco1 = new Enderecos();
 		endereco1.setBairro("bairro");
-		endereco1.setCep("564564");
+		endereco1.setCep("74923090");
 		endereco1.setCidade("cidade");
-		endereco1.setComplemento("adasdasds");
+		endereco1.setComplemento("aaaaaaaaaaaaa");
 		endereco1.setEmpresa(pessoaJuridica);
 		endereco1.setLogradouro("logradouro");
-		endereco1.setNumero("213321");
+		endereco1.setNumero("01");
 		endereco1.setRua("rua 1");
 		endereco1.setPessoa(pessoaJuridica);
 		endereco1.setTipoEndereco(TipoEndereco.COBRANCA);
@@ -60,9 +62,9 @@ public class TestePessoaUsuario extends TestCase {
 
 		Enderecos endereco2 = new Enderecos();
 		endereco2.setBairro("bairro");
-		endereco2.setCep("564564");
+		endereco2.setCep("74845060");
 		endereco2.setCidade("cidade");
-		endereco2.setComplemento("adasdasds");
+		endereco2.setComplemento("afafafafaf");
 		endereco2.setEmpresa(pessoaJuridica);
 		endereco2.setLogradouro("logradouro");
 		endereco2.setNumero("213321");
@@ -84,7 +86,7 @@ public class TestePessoaUsuario extends TestCase {
 
 		assertEquals(2, pessoaJuridica.getEnderecos().size());
 	}
-	*/
+	/*
 	
 	@Test
 	public void testCadPessoaFisica() throws ExceptionMentoriaJava {
@@ -137,6 +139,6 @@ public class TestePessoaUsuario extends TestCase {
 
 		assertEquals(2, pessoaFisica.getEnderecos().size());
 		
-	}
+	}*/
 	
 }

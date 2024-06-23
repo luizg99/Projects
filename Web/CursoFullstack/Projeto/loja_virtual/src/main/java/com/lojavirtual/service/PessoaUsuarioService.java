@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import com.lojavirtual.controller.dto.CepDTO;
+import com.lojavirtual.controller.dto.ConsultaCnpjDto;
 import com.lojavirtual.model.PessoaFisicaModel;
 import com.lojavirtual.model.PessoaJuridicaModel;
 import com.lojavirtual.model.Usuarios;
@@ -135,8 +136,8 @@ public class PessoaUsuarioService {
 		return new RestTemplate().getForEntity("https://viacep.com.br/ws/" + cep + "/json/", CepDTO.class).getBody();
 	}
 	
-	//public ConsultaCnpjDTO consultCnpj(String cnpj) {
-	//	return new RestTemplate().getForEntity("https://receitaws.com.br/v1/cnpj/" + cnpj, ConsultaCnpjDTO.class).getBody();
-	//}
+	public ConsultaCnpjDto consultaCnpj(String cnpj) {
+		return new RestTemplate().getForEntity("https://receitaws.com.br/v1/cnpj/" + cnpj, ConsultaCnpjDto.class).getBody();
+	}
 
 }

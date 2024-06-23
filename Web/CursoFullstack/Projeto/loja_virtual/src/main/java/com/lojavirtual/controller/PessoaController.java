@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.lojavirtual.controller.dto.CepDTO;
+import com.lojavirtual.controller.dto.ConsultaCnpjDto;
 import com.lojavirtual.enums.TipoPessoa;
 import com.lojavirtual.model.Acessos;
 import com.lojavirtual.model.Enderecos;
@@ -49,12 +50,12 @@ public class PessoaController {
 		return new ResponseEntity<CepDTO>(pessoaUsuarioService.consultaCep(cep), HttpStatus.OK); 
 	}
 	
-	/*
+	
 	@GetMapping(value = "/consultaCnpjReceita/{cnpj}")
-	public ResponseEntity<ConsultaCnpjDTO> consultaCnpjReceita(@PathVariable("cnpj") String cnpj) {
-		return new ResponseEntity<ConsultaCnpjDTO>(pessoaUsuarioService.consultCnpj(cnpj), HttpStatus.OK); 
+	public ResponseEntity<ConsultaCnpjDto> consultaCnpjReceita(@PathVariable("cnpj") String cnpj) {
+		return new ResponseEntity<ConsultaCnpjDto>(pessoaUsuarioService.consultaCnpj(cnpj), HttpStatus.OK); 
 	}
-	*/
+	
 	@GetMapping(value = "/consultaPessoaFisicaNome/{nome}")
 	public ResponseEntity<List<PessoaFisicaModel>> consultaPessoaFisicaNome(@PathVariable("nome") String nome) {
 		return new ResponseEntity<List<PessoaFisicaModel>>(pessoaFisicaRepository.pesquisaPorNome(nome.trim().toUpperCase()), HttpStatus.OK); 

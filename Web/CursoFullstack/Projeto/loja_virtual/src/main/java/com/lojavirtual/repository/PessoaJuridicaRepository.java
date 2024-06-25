@@ -2,6 +2,7 @@ package com.lojavirtual.repository;
 
 import java.util.List;
 
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
@@ -9,7 +10,7 @@ import org.springframework.stereotype.Repository;
 import com.lojavirtual.model.PessoaJuridicaModel;
 
 @Repository
-public interface PessoaJuridicaRepository extends CrudRepository<PessoaJuridicaModel, Long> {
+public interface PessoaJuridicaRepository extends JpaRepository<PessoaJuridicaModel, Long> {
 	
 	@Query(value = "select * from PESSOAS_JURIDICAS where CNPJ = ?1", nativeQuery = true)
 	public PessoaJuridicaModel existeCnpjCadastrado(String cnpj);

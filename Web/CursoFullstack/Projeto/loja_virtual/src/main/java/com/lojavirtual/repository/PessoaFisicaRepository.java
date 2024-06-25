@@ -2,6 +2,7 @@ package com.lojavirtual.repository;
 
 import java.util.List;
 
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
@@ -9,7 +10,7 @@ import org.springframework.stereotype.Repository;
 import com.lojavirtual.model.PessoaFisicaModel;
 
 @Repository
-public interface PessoaFisicaRepository extends CrudRepository<PessoaFisicaModel, Long> {
+public interface PessoaFisicaRepository extends JpaRepository<PessoaFisicaModel, Long> {
 
 	@Query(value = "select * from PESSOAS_FISICAS where CPF = ?1", nativeQuery = true)
 	public PessoaFisicaModel existeCpfCadastrado(String cpf);

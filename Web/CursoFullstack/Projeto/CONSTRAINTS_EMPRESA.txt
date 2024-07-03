@@ -1,71 +1,71 @@
 alter table AVALIACAO_PRODUTOS
-add constraint EMPRESA_FK foreign key (EMPRESA_ID)
+add constraint FK_AVALIACAO_PRODUTOS_EMP_ID foreign key (EMPRESA_ID)
 references PESSOAS_JURIDICAS (ID);
 
 alter table CATEGORIAS_PRODUTOS
-add constraint EMPRESA_FK foreign key (EMPRESA_ID)
+add constraint FK_CATEGORIAS_PRODUTOS_EMP_ID foreign key (EMPRESA_ID)
 references PESSOAS_JURIDICAS (ID);
 
 alter table CONTAS_PAGAR
-add constraint EMPRESA_FK foreign key (EMPRESA_ID)
+add constraint FK_CONTAS_PAGAR_EMP_ID foreign key (EMPRESA_ID)
 references PESSOAS_JURIDICAS (ID);
 
 alter table CONTAS_RECEBER
-add constraint EMPRESA_FK foreign key (EMPRESA_ID)
+add constraint FK_CONTAS_RECEBER_EMP_ID foreign key (EMPRESA_ID)
 references PESSOAS_JURIDICAS (ID);
 
 alter table CUPONS_DESCONTOS
-add constraint EMPRESA_FK foreign key (EMPRESA_ID)
+add constraint FK_CUPONS_DESCONTOS_EMP_ID foreign key (EMPRESA_ID)
 references PESSOAS_JURIDICAS (ID);
 
 alter table ENDERECOS
-add constraint EMPRESA_FK foreign key (EMPRESA_ID)
+add constraint FK_ENDERECOS_EMP_ID foreign key (EMPRESA_ID)
 references PESSOAS_JURIDICAS (ID);
 
 alter table FORMAS_PAGAMENTOS
-add constraint EMPRESA_FK foreign key (EMPRESA_ID)
+add constraint FK_FORMAS_PAGAMENTOS_EMP_ID foreign key (EMPRESA_ID)
 references PESSOAS_JURIDICAS (ID);
 
 alter table IMAGENS_PRODUTOS
-add constraint EMPRESA_FK foreign key (EMPRESA_ID)
+add constraint FK_IMAGENS_PRODUTOS_EMP_ID foreign key (EMPRESA_ID)
 references PESSOAS_JURIDICAS (ID);
 
 alter table MARCAS_PRODUTOS
-add constraint EMPRESA_FK foreign key (EMPRESA_ID)
+add constraint FK_MARCAS_PRODUTOS_EMP_ID foreign key (EMPRESA_ID)
 references PESSOAS_JURIDICAS (ID);
 
 alter table NOTAS_FISCAIS_COMPRAS
-add constraint EMPRESA_FK foreign key (EMPRESA_ID)
+add constraint FK_NOTAS_FIS_COMPRAS_EMP_ID foreign key (EMPRESA_ID)
 references PESSOAS_JURIDICAS (ID);
 
 alter table NOTAS_FISCAIS_COMPRAS_ITENS
-add constraint EMPRESA_FK foreign key (EMPRESA_ID)
+add constraint FK_NOT_FIS_COMPRAS_ITE_EMP_ID foreign key (EMPRESA_ID)
 references PESSOAS_JURIDICAS (ID);
 
 alter table NOTAS_FISCAIS_VENDAS
-add constraint EMPRESA_FK foreign key (EMPRESA_ID)
+add constraint FK_NOTAS_FISCAIS_VENDAS_EMP_ID foreign key (EMPRESA_ID)
 references PESSOAS_JURIDICAS (ID);
 
 alter table PESSOAS_FISICAS
-add constraint EMPRESA_FK foreign key (EMPRESA_ID)
+add constraint FK_PESSOAS_FISICAS_EMP_ID foreign key (EMPRESA_ID)
 references PESSOAS_JURIDICAS (ID);
 
 alter table PESSOAS_JURIDICAS
-add constraint EMPRESA_FK foreign key (EMPRESA_ID)
+add constraint FK_PESSOAS_JURIDICAS_EMP_ID foreign key (EMPRESA_ID)
 references PESSOAS_JURIDICAS (ID);
 
 alter table PRODUTOS
-add constraint EMPRESA_FK foreign key (EMPRESA_ID)
+add constraint FK_PRODUTOS_EMP_ID foreign key (EMPRESA_ID)
 references PESSOAS_JURIDICAS (ID);
 
 alter table STATUS_RASTREIOS
-add constraint EMPRESA_FK foreign key (EMPRESA_ID)
+add constraint FK_STATUS_RASTREIOS_EMP_ID foreign key (EMPRESA_ID)
 references PESSOAS_JURIDICAS (ID);
 
 alter table VENDAS
-add constraint EMPRESA_FK foreign key (EMPRESA_ID)
+add constraint FK_VENDAS_EMP_ID foreign key (EMPRESA_ID)
 references PESSOAS_JURIDICAS (ID);
 
 alter table VENDAS_ITENS
-add constraint EMPRESA_FK foreign key (EMPRESA_ID)
+add constraint FK_VENDAS_ITENS_EMP_ID foreign key (EMPRESA_ID)
 references PESSOAS_JURIDICAS (ID);

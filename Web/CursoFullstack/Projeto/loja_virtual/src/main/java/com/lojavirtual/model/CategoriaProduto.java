@@ -3,9 +3,12 @@ package com.lojavirtual.model;
 import java.io.Serializable;
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -28,19 +31,12 @@ public class CategoriaProduto implements Serializable{
     
     @Column(name = "DESCRICAO", nullable = false)
     private String Descricao;
-   
+    
     @ManyToOne(targetEntity = PessoaJuridicaModel.class)
     @JoinColumn(name = "empresa_id", nullable = false, 
-    foreignKey = @ForeignKey(value = ConstraintMode.CONSTRAINT, name = "FK_EMPRESA_ID"))
+    foreignKey = @ForeignKey(value = ConstraintMode.CONSTRAINT, name = "FK_CATEGORIAS_PRODUTOS_EMP_ID"))
     private PessoaJuridicaModel empresa;
 
-	public PessoaJuridicaModel getEmpresa() {
-		return empresa;
-	}
-
-	public void setEmpresa(PessoaJuridicaModel empresa) {
-		this.empresa = empresa;
-	}
 
 	public Long getId() {
 		return id;
@@ -57,6 +53,15 @@ public class CategoriaProduto implements Serializable{
 	public void setDescricao(String descricao) {
 		this.Descricao = descricao;
 	}
+	
+	public PessoaJuridicaModel getEmpresa() {
+		return empresa;
+	}
+
+	public void setEmpresa(PessoaJuridicaModel empresa) {
+		this.empresa = empresa;
+	}
+
 
 	@Override
 	public int hashCode() {

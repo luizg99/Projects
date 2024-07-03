@@ -4,8 +4,6 @@ import java.util.Date;
 
 import org.hibernate.validator.constraints.br.CPF;
 
-//import org.hibernate.validator.constraints.br.CPF;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.PrimaryKeyJoinColumn;

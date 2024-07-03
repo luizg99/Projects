@@ -23,7 +23,7 @@ public class NotasFiscaisComprasItens implements Serializable{
 	private static final long serialVersionUID = 1L;
 	
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "SEQ_NOTAS_FISCAIS_COMPRAS_ITENS")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "FK_NOT_FIS_COMPRAS_ITE_EMP_ID")
     private Long id;
     
     @Column(nullable = false)

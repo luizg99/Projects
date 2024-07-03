@@ -33,7 +33,7 @@ public class StatusRastreios implements Serializable{
    
     @ManyToOne(targetEntity = Pessoas.class)
     @JoinColumn(name = "empresa_id", nullable = false, 
-    foreignKey = @ForeignKey(value = ConstraintMode.CONSTRAINT, name = "FK_EMPRESA_ID"))
+    foreignKey = @ForeignKey(value = ConstraintMode.CONSTRAINT, name = "FK_STATUS_RASTREIOS_EMP_ID"))
     private Pessoas Empresa;    
 
 

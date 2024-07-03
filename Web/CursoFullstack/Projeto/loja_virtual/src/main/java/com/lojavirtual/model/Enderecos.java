@@ -66,7 +66,7 @@ public class Enderecos implements Serializable {
 	@JsonIgnore
     @ManyToOne(targetEntity = Pessoas.class)
     @JoinColumn(name = "empresa_id", nullable = false, 
-    foreignKey = @ForeignKey(value = ConstraintMode.CONSTRAINT, name = "FK_EMPRESA_ID"))
+    foreignKey = @ForeignKey(value = ConstraintMode.CONSTRAINT, name = "FK_ENDERECOS_EMP_ID"))
     private Pessoas Empresa;    
 
 

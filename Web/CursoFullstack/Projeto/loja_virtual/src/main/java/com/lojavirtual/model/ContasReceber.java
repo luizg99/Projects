@@ -57,7 +57,7 @@ public class ContasReceber implements Serializable {
     
     @ManyToOne(targetEntity = Pessoas.class)
     @JoinColumn(name = "empresa_id", nullable = false, 
-    foreignKey = @ForeignKey(value = ConstraintMode.CONSTRAINT, name = "FK_EMPRESA_ID"))
+    foreignKey = @ForeignKey(value = ConstraintMode.CONSTRAINT, name = "FK_CONTAS_RECEBER_EMP_ID"))
     private Pessoas Empresa;    
 
 

@@ -1,4 +1,53 @@
 alter table AVALIACAO_PRODUTOS
+drop constraint FK_AVALIACAO_PRODUTOS_EMP_ID;
+
+alter table CATEGORIAS_PRODUTOS
+drop constraint FK_CATEGORIAS_PRODUTOS_EMP_ID;
+
+alter table CONTAS_PAGAR
+drop constraint FK_CONTAS_PAGAR_EMP_ID;
+
+alter table CONTAS_RECEBER
+drop constraint FK_CONTAS_RECEBER_EMP_ID;
+
+alter table CUPONS_DESCONTOS
+drop constraint FK_CUPONS_DESCONTOS_EMP_ID;
+
+alter table ENDERECOS
+drop constraint FK_ENDERECOS_EMP_ID;
+
+alter table FORMAS_PAGAMENTOS
+drop constraint FK_FORMAS_PAGAMENTOS_EMP_ID;
+
+alter table IMAGENS_PRODUTOS
+drop constraint FK_IMAGENS_PRODUTOS_EMP_ID;
+
+alter table MARCAS_PRODUTOS
+drop constraint FK_MARCAS_PRODUTOS_EMP_ID;
+
+alter table NOTAS_FISCAIS_COMPRAS
+drop constraint FK_NOTAS_FIS_COMPRAS_EMP_ID;
+
+alter table NOTAS_FISCAIS_COMPRAS_ITENS
+drop constraint FK_NOT_FIS_COMPRAS_ITE_EMP_ID;
+
+alter table NOTAS_FISCAIS_VENDAS
+drop constraint FK_NOTAS_FISCAIS_VENDAS_EMP_ID;
+
+alter table PRODUTOS
+drop constraint FK_PRODUTOS_EMP_ID;
+
+alter table STATUS_RASTREIOS
+drop constraint FK_STATUS_RASTREIOS_EMP_ID;
+
+alter table VENDAS
+drop constraint FK_VENDAS_EMP_ID;
+
+alter table VENDAS_ITENS
+drop constraint FK_VENDAS_ITENS_EMP_ID;
+
+
+alter table AVALIACAO_PRODUTOS
 add constraint FK_AVALIACAO_PRODUTOS_EMP_ID foreign key (EMPRESA_ID)
 references PESSOAS_JURIDICAS (ID);
 
@@ -44,14 +93,6 @@ references PESSOAS_JURIDICAS (ID);
 
 alter table NOTAS_FISCAIS_VENDAS
 add constraint FK_NOTAS_FISCAIS_VENDAS_EMP_ID foreign key (EMPRESA_ID)
-references PESSOAS_JURIDICAS (ID);
-
-alter table PESSOAS_FISICAS
-add constraint FK_PESSOAS_FISICAS_EMP_ID foreign key (EMPRESA_ID)
-references PESSOAS_JURIDICAS (ID);
-
-alter table PESSOAS_JURIDICAS
-add constraint FK_PESSOAS_JURIDICAS_EMP_ID foreign key (EMPRESA_ID)
 references PESSOAS_JURIDICAS (ID);
 
 alter table PRODUTOS

@@ -24,7 +24,7 @@ import com.lojavirtual.service.AcessosService;
 
 @Controller
 @RestController
-public class AcessoController {
+public class MarcaController {
 
 	@Autowired
 	private AcessosService acessoService;

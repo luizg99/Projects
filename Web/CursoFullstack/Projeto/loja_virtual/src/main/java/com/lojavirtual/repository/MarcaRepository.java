@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import com.lojavirtual.model.Acessos;
+import com.lojavirtual.model.MarcaProduto;
 
 import jakarta.transaction.Transactional;
 
@@ -14,7 +15,7 @@ import jakarta.transaction.Transactional;
 @Repository
 //Definindo para o repositório gerenciar as transações com o banco de dados.
 @Transactional
-public interface AcessosRepository extends JpaRepository<Acessos, Long>{
-	@Query(value = "select * from acessos a where upper(trim(a.DESCRICAO)) like %?1%", nativeQuery = true)
+public interface MarcaRepository extends JpaRepository<MarcaProduto, Long>{
+	@Query(value = "select * from MARCAS_PRODUTOS a where upper(trim(a.DESCRICAO)) like %?1%", nativeQuery = true)
 	List<Acessos> buscarAcessoDescricao(String descricao);
 }

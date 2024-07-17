@@ -32,7 +32,7 @@ public class CategoriaProduto implements Serializable{
     @Column(name = "DESCRICAO", nullable = false)
     private String Descricao;
     
-    @ManyToOne(targetEntity = PessoaJuridicaModel.class)
+    @ManyToOne(targetEntity = Pessoas.class)
     @JoinColumn(name = "empresa_id", nullable = false, 
     foreignKey = @ForeignKey(value = ConstraintMode.CONSTRAINT, name = "FK_CATEGORIAS_PRODUTOS_EMP_ID"))
     private PessoaJuridicaModel empresa;

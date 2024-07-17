@@ -1,9 +1,13 @@
 package com.lojavirtual.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -21,6 +25,14 @@ public class CategoriaProdutoController {
 	
 	@Autowired
 	private CategoriaProdutoRepository categoriaProdutoRepository;
+	
+	@ResponseBody
+	@GetMapping(value = "**/buscarCategoriaProdutos/{descricao}")  
+	public ResponseEntity<List<CategoriaProduto>> buscarCategoriaProdutos(@PathVariable String descricao) {
+		List<CategoriaProduto> categoriaProdutos = categoriaProdutoRepository.buscarCategoriaDescricao(descricao.toUpperCase());
+	
+		return new ResponseEntity<List<CategoriaProduto>>(categoriaProdutos, HttpStatus.OK);
+	}
 	
 	@ResponseBody
 	@PostMapping(value = "**/salvarCategoriaProduto")
@@ -51,6 +63,5 @@ public class CategoriaProdutoController {
 		
 		return new ResponseEntity("Categoria removida.", HttpStatus.OK);
 	}
-	
 	
 }

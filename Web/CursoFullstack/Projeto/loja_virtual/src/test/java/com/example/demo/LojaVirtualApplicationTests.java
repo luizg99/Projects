@@ -20,7 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lojavirtual.LojaVirtualApplication;
 import com.lojavirtual.controller.AcessoController;
 import com.lojavirtual.model.Acessos;
-import com.lojavirtual.repository.AcessosRepository;
+import com.lojavirtual.repository.AcessoRepository;
 
 import junit.framework.TestCase;
 
@@ -38,7 +38,7 @@ public class LojaVirtualApplicationTests extends TestCase {
 	private AcessoController acessoController;
 
 	@Autowired
-	private AcessosRepository acessoRepository;
+	private AcessoRepository acessoRepository;
 	
 	@Autowired
 	private WebApplicationContext wac;

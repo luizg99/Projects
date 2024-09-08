@@ -1,7 +1,10 @@
 package com.lojavirtual.controller;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import com.lojavirtual.model.dto.RelatorioComprasProdutosNotaFiscalDTO;
+import com.lojavirtual.service.NotaFiscalCompraService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +28,9 @@ public class NotaFiscalCompraController {
 
 	@Autowired
 	private NotaFiscalCompraRepository notaFiscalCompraRepository;
+
+	@Autowired
+	private NotaFiscalCompraService notaFiscalCompraService;
 	
 	@PostMapping(value = "**/salvarNotaFiscalCompra") 
 	public ResponseEntity<NotaFiscalCompraModel> salvarNotaFiscalCompra(@RequestBody @Valid NotaFiscalCompraModel notaFiscalCompra) throws ExceptionMentoriaJava {
@@ -79,6 +85,15 @@ public class NotaFiscalCompraController {
 		notaFiscalCompraRepository.deleteById(id);
 
 		return new ResponseEntity<String>("Nota fiscal de compra removida.", HttpStatus.OK);
+	}
+
+	@PostMapping(value = "**/relatorioComprasProdutos")
+	public ResponseEntity<List<RelatorioComprasProdutosNotaFiscalDTO>> relatorioComprasProdutos(@RequestBody RelatorioComprasProdutosNotaFiscalDTO relatorioDTO) {
+		List<RelatorioComprasProdutosNotaFiscalDTO> retorno = new ArrayList<RelatorioComprasProdutosNotaFiscalDTO>();
+
+		retorno = notaFiscalCompraService.gerarRelatorioComprasProdutos(relatorioDTO);
+
+		return new ResponseEntity<List<RelatorioComprasProdutosNotaFiscalDTO>>(retorno, HttpStatus.OK);
 	}
 
 

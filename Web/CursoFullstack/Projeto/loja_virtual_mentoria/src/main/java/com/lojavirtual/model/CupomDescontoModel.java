@@ -18,6 +18,7 @@ import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
+import jakarta.validation.constraints.NotNull;
 
 @Entity
 @Table(name = "CUPONS_DESCONTOS")
@@ -29,20 +30,23 @@ public class CupomDescontoModel implements Serializable {
 	@Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "SEQ_CUPONS_DESC")
     private Long id;
-	
+
+	@NotNull(message = "Codigo de descrição do cupom deve ser preenchido.")
 	@Column(nullable = false)
 	private String codigoDescricao;
 	
 	private BigDecimal valorRealDesconto;
 	
 	private BigDecimal valorPercentualDesconto;
-	
+
+	@NotNull(message = "A data de validade do cupom deve ser preenchida.")
+	@Column(nullable = false)
 	@Temporal(TemporalType.DATE)
 	private Date dataValidade;
 	
-	@ManyToOne(targetEntity = PessoaModel.class)
+	@ManyToOne(targetEntity = PessoaJuridicaModel.class)
 	@JoinColumn(name = "EMPRESA_ID", nullable = false, foreignKey = @ForeignKey(value = ConstraintMode.CONSTRAINT, name = "FK_CUPOM_DESC_EMPRESA_ID"))
-	private PessoaModel empresa;
+	private PessoaJuridicaModel empresa;
 		
 	public Long getId() {
         return id;
@@ -84,11 +88,11 @@ public class CupomDescontoModel implements Serializable {
 		this.dataValidade = dataValidade;
 	}
 	
-	public PessoaModel getEmpresa() {
+	public PessoaJuridicaModel getEmpresa() {
 		return empresa;
 	}
 	
-	public void setEmpresa(PessoaModel empresa) {
+	public void setEmpresa(PessoaJuridicaModel empresa) {
 		this.empresa = empresa;
 	}
 

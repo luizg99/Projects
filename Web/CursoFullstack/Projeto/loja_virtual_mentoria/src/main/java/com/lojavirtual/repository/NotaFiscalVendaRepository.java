@@ -6,9 +6,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.lojavirtual.model.NotaFiscalVendaModel;
 
+import java.util.List;
+
 @Repository
 @Transactional
 public interface NotaFiscalVendaRepository extends JpaRepository<NotaFiscalVendaModel, Long> {
-	
 
+    List<NotaFiscalVendaModel> findByVendaId(Long vendaId);
 }

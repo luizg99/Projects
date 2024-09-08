@@ -3,6 +3,8 @@ package com.lojavirtual.model;
 import java.io.Serializable;
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.Entity;
 import jakarta.persistence.ForeignKey;
@@ -33,10 +35,12 @@ public class StatusRastreioModel implements Serializable {
 	
 	private String status;
 	
+	@JsonIgnore
 	@ManyToOne(targetEntity = VendaModel.class)
 	@JoinColumn(name = "VENDA_ID", nullable = false, foreignKey = @ForeignKey(value = ConstraintMode.CONSTRAINT, name = "FK_STATUS_RASTRE_VENDA_ID"))
 	private VendaModel venda;
 	
+	@JsonIgnore
 	@ManyToOne(targetEntity = PessoaJuridicaModel.class)
 	@JoinColumn(name = "EMPRESA_ID", nullable = false, foreignKey = @ForeignKey(value = ConstraintMode.CONSTRAINT, name = "FK_STATUS_RASTRE_EMPRESA_ID"))
 	private PessoaJuridicaModel empresa;
@@ -96,6 +100,7 @@ public class StatusRastreioModel implements Serializable {
 	public VendaModel getVenda() {
 		return venda;
 	}
+
 
 	@Override
 	public int hashCode() {

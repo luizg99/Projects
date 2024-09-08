@@ -15,7 +15,7 @@ import jakarta.transaction.Transactional;
 @Repository
 public interface UsuarioRepository extends CrudRepository<UsuarioModel, Long>{
 
-	@Query(value = "select * from USUARIOS where LOGIN = ?1", nativeQuery = true)
+	@Query(nativeQuery = true, value = "select * from USUARIOS where LOGIN = ?1")
 	Optional<UsuarioModel> findUserByLogin(String login);
 	
 	@Query(value = "select * from USUARIOS where pessoa_id = ?1 or login = ?2", nativeQuery = true)

@@ -99,6 +99,8 @@ public class VendaModel implements Serializable {
 
 	@OneToMany(mappedBy = "venda", orphanRemoval = true, cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	private List<VendaItemModel> itens = new ArrayList<VendaItemModel>();
+
+	private Boolean excluido = Boolean.FALSE;
 		
 	public Long getId() {
 		return id;
@@ -106,6 +108,14 @@ public class VendaModel implements Serializable {
 
 	public void setId(Long id) {
 		this.id = id;
+	}
+
+	public Boolean getExcluido() {
+		return excluido;
+	}
+	
+	public void setExcluido(Boolean excluido) {
+		this.excluido = excluido;
 	}
 
 	public PessoaFisicaModel getPessoa() {

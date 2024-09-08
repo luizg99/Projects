@@ -99,7 +99,6 @@ public class ProdutoModel implements Serializable {
 	
 	@OneToMany(mappedBy = "produto", orphanRemoval = true, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	private List<ImagemProdutoModel> imagens = new ArrayList<ImagemProdutoModel>();
-	
 		
 	public Long getId() {
         return id;

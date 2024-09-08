@@ -1,12 +1,9 @@
 package com.lojavirtual.util;
 
-import java.io.UnsupportedEncodingException;
 import java.sql.SQLException;
 import java.util.List;
 
-import javax.mail.MessagingException;
 
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;

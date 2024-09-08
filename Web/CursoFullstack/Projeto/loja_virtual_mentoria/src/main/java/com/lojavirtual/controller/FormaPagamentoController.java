@@ -17,6 +17,8 @@ import com.lojavirtual.util.ExceptionMentoriaJava;
 
 import jakarta.validation.Valid;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("**/formaPagamento")
 public class FormaPagamentoController {
@@ -42,12 +44,11 @@ public class FormaPagamentoController {
 		return new ResponseEntity<String>("Formas de pagamento removida.", HttpStatus.OK);
 	}
 	
-	@GetMapping(value = "/{id}")  
-	public ResponseEntity<FormaPagamentoModel> buscar(@PathVariable Long id) {
-		FormaPagamentoModel imagensProdutos = formaPagamentoRepository.findById(id).get();
-		
-		
-		return new ResponseEntity<FormaPagamentoModel>(imagensProdutos, HttpStatus.OK);
+	@GetMapping(value = "/{empresaId}")
+	public ResponseEntity<List<FormaPagamentoModel>> buscar(@PathVariable Long empresaId) {
+		List<FormaPagamentoModel> formasPagamentos = formaPagamentoRepository.findByEmpresaId(empresaId);
+
+		return new ResponseEntity<List<FormaPagamentoModel>>(formasPagamentos, HttpStatus.OK);
 	}
 
 }

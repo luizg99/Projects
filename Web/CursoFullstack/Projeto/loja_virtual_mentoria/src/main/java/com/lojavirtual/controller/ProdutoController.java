@@ -5,12 +5,15 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.imageio.ImageIO;
 import javax.mail.MessagingException;
 import javax.xml.bind.DatatypeConverter;
 
+import com.lojavirtual.model.dto.RelatorioProdutoAlertaEstoqueDTO;
+import com.lojavirtual.service.ProdutoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -35,6 +38,9 @@ public class ProdutoController {
 
 	@Autowired
 	private ProdutoRepository produtoRepository;
+
+	@Autowired
+	private ProdutoService produtoService;
 	
 	@Autowired
 	private EnvioEmailService envioEmailService;
@@ -173,5 +179,13 @@ public class ProdutoController {
 		List<ProdutoModel> produtos = produtoRepository.buscarProdutoNome(nome);
 
 		return new ResponseEntity<List<ProdutoModel>>(produtos, HttpStatus.OK);
+	}
+
+	@GetMapping(value = "/relatorioAlertaEstoque")
+	public ResponseEntity<List<RelatorioProdutoAlertaEstoqueDTO>> relatorioAlertaEstoqueBaixo() {
+		List<RelatorioProdutoAlertaEstoqueDTO> produtos = new ArrayList<>();
+		produtos = produtoService.gerarRelatorioAlertaEstoque();
+
+		return new ResponseEntity<>(produtos, HttpStatus.OK);
 	}
 }

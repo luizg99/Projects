@@ -9,23 +9,8 @@ import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.ConstraintMode;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.ForeignKey;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.SequenceGenerator;
-import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
+import com.lojavirtual.enums.StatusVenda;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
@@ -101,7 +86,19 @@ public class VendaModel implements Serializable {
 	private List<VendaItemModel> itens = new ArrayList<VendaItemModel>();
 
 	private Boolean excluido = Boolean.FALSE;
-		
+
+	@Column(nullable = true)
+	@NotNull(message = "Status da venda deve ser informada.")
+	@Enumerated(EnumType.STRING)
+	private StatusVenda status;
+
+	@Column(name = "CODIGO_ETIQUETA")
+	private String codigoEtiqueta;
+
+	private String urlEtiqueta;
+
+	private String servicoTransportadora;
+
 	public Long getId() {
 		return id;
 	}
@@ -228,6 +225,38 @@ public class VendaModel implements Serializable {
 
 	public List<VendaItemModel> getItens() {
 		return itens;
+	}
+
+	public StatusVenda getStatus() {
+		return status;
+	}
+
+	public void setStatus(StatusVenda status) {
+		this.status = status;
+	}
+
+	public String getCodigoEtiqueta() {
+		return codigoEtiqueta;
+	}
+
+	public void setCodigoEtiqueta(String codigoEtiqueta) {
+		this.codigoEtiqueta = codigoEtiqueta;
+	}
+
+	public String getUrlEtiqueta() {
+		return urlEtiqueta;
+	}
+
+	public void setUrlEtiqueta(String urlEtiqueta) {
+		this.urlEtiqueta = urlEtiqueta;
+	}
+
+	public String getServicoTransportadora() {
+		return servicoTransportadora;
+	}
+
+	public void setServicoTransportadora(String servicoTransportadora) {
+		this.servicoTransportadora = servicoTransportadora;
 	}
 
 	@Override

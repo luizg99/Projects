@@ -11,6 +11,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lojavirtual.enums.StatusContaReceber;
 import com.lojavirtual.model.*;
 import com.lojavirtual.model.dto.*;
+import com.lojavirtual.model.dto.MelhorEnvio.ConsultaFreteDTO;
+import com.lojavirtual.model.dto.MelhorEnvio.EmpresaTransporteDTO;
 import com.lojavirtual.repository.*;
 import com.lojavirtual.service.EnvioEmailService;
 import com.lojavirtual.service.VendaService;
@@ -275,11 +277,13 @@ public class VendaController {
 
 		return ResponseEntity.ok(relatorio);
 	}
-/*
+
 	@PostMapping(value = "/consultaFrete")
 	public ResponseEntity<List<EmpresaTransporteDTO>> consultaFrete(@RequestBody @Valid ConsultaFreteDTO consultaFreteDTO) throws IOException {
 		return ResponseEntity.ok(this.vendaService.consultaFretes(consultaFreteDTO));
 	}
+	
+	/*
 
 	@GetMapping(value = "/imprimeEtiquetaFrete/{id}")
 	public ResponseEntity<String> imprimeEtiquetaFrete(@PathVariable Long id) throws ExceptionMentoriaJava, IOException {
@@ -487,4 +491,5 @@ public class VendaController {
 		return ResponseEntity.ok(response.body().string());
 	}
 */
+	
 }

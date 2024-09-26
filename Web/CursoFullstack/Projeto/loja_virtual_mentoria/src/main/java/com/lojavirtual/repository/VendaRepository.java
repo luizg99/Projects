@@ -64,5 +64,12 @@ public interface VendaRepository extends JpaRepository<VendaModel, Long> {
 
     @Query(nativeQuery = true, value = "select distinct * from VENDAS where PESSOA_ID in( select ID from PESSOAS_FISICAS where upper(CPF) like CONCAT('%', :cpf, '%') ) and EXCLUIDO = FALSE " )
     List<VendaModel> findVendasPorCpfCliente(@Param("cpf") String cpf);
-}
 
+    @Modifying(flushAutomatically = true)
+    @Query(nativeQuery = true, value = "update VENDAS set CODIGO_ETIQUETA = ?1 where ID = ?2")
+    void updateCodigoEtiqueta(String codigoEtiqueta, Long id);
+
+    @Modifying(flushAutomatically = true)
+    @Query(nativeQuery = true, value = "update VENDAS set URL_ETIQUETA = ?1 where ID = ?2")
+    void updateUrlEtiqueta(String urlEtiqueta, Long id);
+}

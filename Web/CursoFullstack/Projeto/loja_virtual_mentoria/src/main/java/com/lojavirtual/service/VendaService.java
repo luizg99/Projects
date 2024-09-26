@@ -1,18 +1,26 @@
 package com.lojavirtual.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.lojavirtual.model.dto.RelatorioVendaStatusDTO;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.lojavirtual.model.dto.RelatorioVendaStatusDTO;
+import com.lojavirtual.model.dto.MelhorEnvio.ConsultaFreteDTO;
+import com.lojavirtual.model.dto.MelhorEnvio.EmpresaTransporteDTO;
+import com.lojavirtual.security.ApiTokenIntegracao;
+
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 @Service
 public class VendaService {
@@ -88,7 +96,7 @@ public class VendaService {
 
 		return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(RelatorioVendaStatusDTO.class));
 	}
-/*
+
 	public List<EmpresaTransporteDTO> consultaFretes(ConsultaFreteDTO consultaFreteDTO) throws IOException {
 		ObjectMapper mapper = new ObjectMapper();
 		String json = mapper.writeValueAsString(consultaFreteDTO);
@@ -98,11 +106,11 @@ public class VendaService {
 		MediaType mediaType = MediaType.parse("application/json");
 		okhttp3.RequestBody body = okhttp3.RequestBody.create(mediaType, json);
 		Request request = new Request.Builder()
-				.url(ApiTokenIntegracao.URL_MELHOR_ENVIO + "api/v2/me/shipment/calculate")
+				.url(ApiTokenIntegracao.URL_MELHOR_ENVIO_SAND_BOX + "api/v2/me/shipment/calculate")
 				.post(body)
 				.addHeader("Accept", "application/json")
 				.addHeader("Content-Type", "application/json")
-				.addHeader("Authorization", "Bearer " + ApiTokenIntegracao.TOKEN_MELHOR_ENVIO)
+				.addHeader("Authorization", "Bearer " + ApiTokenIntegracao.TOKEN_MELHOR_ENVIO_SAND_BX)
 				.addHeader("User-Agent", "lucasnunnes40@gmail.com")
 				.build();
 
@@ -140,6 +148,6 @@ public class VendaService {
 		}
 
 		return empresas;
-	}*/
+	}
 
-}
+}	

@@ -47,6 +47,9 @@ public class EnderecoModel implements Serializable {
 
 	@Column(nullable = false)
 	private String cidade;
+	
+	@Column(nullable = false)
+	private String estado;
 
 	@Column(nullable = false)
 	private String uf;

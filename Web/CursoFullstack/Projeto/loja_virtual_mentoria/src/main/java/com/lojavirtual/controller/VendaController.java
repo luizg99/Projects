@@ -4,28 +4,57 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+
+import javax.mail.MessagingException;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lojavirtual.enums.StatusContaReceber;
-import com.lojavirtual.model.*;
-import com.lojavirtual.model.dto.*;
+import com.lojavirtual.model.ContaReceberModel;
+import com.lojavirtual.model.EnderecoModel;
+import com.lojavirtual.model.PessoaFisicaModel;
+import com.lojavirtual.model.StatusRastreioModel;
+import com.lojavirtual.model.VendaItemModel;
+import com.lojavirtual.model.VendaModel;
+import com.lojavirtual.model.dto.RelatorioVendaStatusDTO;
+import com.lojavirtual.model.dto.VendaDTO;
+import com.lojavirtual.model.dto.VendaItemDTO;
 import com.lojavirtual.model.dto.MelhorEnvio.ConsultaFreteDTO;
 import com.lojavirtual.model.dto.MelhorEnvio.EmpresaTransporteDTO;
-import com.lojavirtual.repository.*;
+import com.lojavirtual.model.dto.MelhorEnvio.envioEtiqueta.EnvioEtiquetaDTO;
+import com.lojavirtual.model.dto.MelhorEnvio.envioEtiqueta.ProductsEnvioEtiquetaDTO;
+import com.lojavirtual.model.dto.MelhorEnvio.envioEtiqueta.TagsEnvioEtiquetaDto;
+import com.lojavirtual.model.dto.MelhorEnvio.envioEtiqueta.VolumesEnvioEtiquetaDTO;
+import com.lojavirtual.repository.ContaReceberRepository;
+import com.lojavirtual.repository.EnderecoRepository;
+import com.lojavirtual.repository.NotaFiscalVendaRepository;
+import com.lojavirtual.repository.StatusRastreioRepository;
+import com.lojavirtual.repository.VendaRepository;
+import com.lojavirtual.security.ApiTokenIntegracao;
 import com.lojavirtual.service.EnvioEmailService;
 import com.lojavirtual.service.VendaService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
 import com.lojavirtual.util.ExceptionMentoriaJava;
 
 import jakarta.validation.Valid;
-
-import javax.mail.MessagingException;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.MediaType;
 
 @RestController
 @RequestMapping(path = "**/venda")
@@ -283,7 +312,6 @@ public class VendaController {
 		return ResponseEntity.ok(this.vendaService.consultaFretes(consultaFreteDTO));
 	}
 	
-	/*
 
 	@GetMapping(value = "/imprimeEtiquetaFrete/{id}")
 	public ResponseEntity<String> imprimeEtiquetaFrete(@PathVariable Long id) throws ExceptionMentoriaJava, IOException {
@@ -360,20 +388,23 @@ public class VendaController {
 		tag.setTag("Identificação do pedido: " + venda.getId());
 		tag.setUrl(null);
 		envioEtiquetaDTO.getOptions().getTags().add(tag);
-
+		
+		
+		//Inserindo frete - Requisitando etiqueta
 		String json = new ObjectMapper().writeValueAsString(envioEtiquetaDTO);
-
+		
+		
 		OkHttpClient client = new OkHttpClient();
-
+		
 		okhttp3.MediaType mediaType = MediaType.parse("application/json");
         okhttp3.RequestBody body = okhttp3.RequestBody.create(mediaType, json);
 		okhttp3.Request request = new Request.Builder()
-                .url(ApiTokenIntegracao.URL_MELHOR_ENVIO + "api/v2/me/cart")
+                .url(ApiTokenIntegracao.URL_MELHOR_ENVIO_SAND_BOX + "api/v2/me/cart")
                 .post(body)
                 .addHeader("Accept", "application/json")
                 .addHeader("Content-Type", "application/json")
-                .addHeader("Authorization", "Bearer " + ApiTokenIntegracao.TOKEN_MELHOR_ENVIO)
-                .addHeader("User-Agent", "lucasnunnes40@gmail.com")
+                .addHeader("Authorization", "Bearer " + ApiTokenIntegracao.TOKEN_MELHOR_ENVIO_SAND_BX)
+                .addHeader("User-Agent", "luizfasam@gmail.com")
                 .build();
 
 		okhttp3.Response response = client.newCall(request).execute();
@@ -397,20 +428,22 @@ public class VendaController {
 			}
 			break;
 		}
-
+		
+		//Salvando o código da etiqueta.
 		vendaRepository.updateCodigoEtiqueta(idEtiqueta, venda.getId());
-
+		
+		//Fazendo a compra da etiqueta.
 		OkHttpClient clientCompraEtiqueta = new OkHttpClient();
 
 		okhttp3.MediaType mediaTypeCompraEtiqueta = MediaType.parse("application/json");
 		okhttp3.RequestBody bodyCompraEtiqueta = okhttp3.RequestBody.create(mediaTypeCompraEtiqueta, "{\n \"orders\": [\n \"" + idEtiqueta + "\"\n ]\n }" );
 		okhttp3.Request requestCompraEtiqueta = new Request.Builder()
-                .url(ApiTokenIntegracao.URL_MELHOR_ENVIO + "api/v2/me/shipment/checkout")
+                .url(ApiTokenIntegracao.URL_MELHOR_ENVIO_SAND_BOX + "api/v2/me/shipment/checkout")
                 .post(bodyCompraEtiqueta)
                 .addHeader("Accept", "application/json")
                 .addHeader("Content-Type", "application/json")
-                .addHeader("Authorization", "Bearer " + ApiTokenIntegracao.TOKEN_MELHOR_ENVIO)
-                .addHeader("User-Agent", "lucasnunnes40@gmail.com")
+                .addHeader("Authorization", "Bearer " + ApiTokenIntegracao.TOKEN_MELHOR_ENVIO_SAND_BX)
+                .addHeader("User-Agent", "luizfasam@gmail.com")
                 .build();
 
 		okhttp3.Response responseCompraEtiqueta = clientCompraEtiqueta.newCall(requestCompraEtiqueta).execute();
@@ -418,18 +451,19 @@ public class VendaController {
 		if (!responseCompraEtiqueta.isSuccessful()) {
 			return ResponseEntity.ok("Não foi possível realizar a compra da etiqueta.");
 		}
-
+		
+		//Fazendo a impressão da etiqueta.
 		OkHttpClient clientGeracao = new OkHttpClient();
 
 		okhttp3.MediaType mediaTypeGeracao = MediaType.parse("application/json");
 		okhttp3.RequestBody bodyGeracao = okhttp3.RequestBody.create(mediaTypeGeracao, "{\n \"orders\": [\n \"" + idEtiqueta + "\"\n ]\n }");
 		okhttp3.Request requestGeracao = new Request.Builder()
-                .url(ApiTokenIntegracao.URL_MELHOR_ENVIO + "api/v2/me/shipment/generate")
+                .url(ApiTokenIntegracao.URL_MELHOR_ENVIO_SAND_BOX + "api/v2/me/shipment/generate")
                 .post(bodyGeracao)
                 .addHeader("Accept", "application/json")
                 .addHeader("Content-Type", "application/json")
-                .addHeader("Authorization", "Bearer " + ApiTokenIntegracao.TOKEN_MELHOR_ENVIO)
-                .addHeader("User-Agent", "lucasnunnes40@gmail.com")
+                .addHeader("Authorization", "Bearer " + ApiTokenIntegracao.TOKEN_MELHOR_ENVIO_SAND_BX)
+                .addHeader("User-Agent", "luizfasam@gmail.com")
                 .build();
 
 		okhttp3.Response responseGeracao = clientGeracao.newCall(requestGeracao).execute();
@@ -437,18 +471,19 @@ public class VendaController {
 		if (!responseGeracao.isSuccessful()) {
 			return ResponseEntity.ok("Não foi possível gerar a etiqueta.");
 		}
-
+		
+		//Imprimindo a etiqueta
 		OkHttpClient clientImprime = new OkHttpClient();
 
 		okhttp3.MediaType mediaTypeImprime = MediaType.parse("application/json");
 		okhttp3.RequestBody bodyImprime = okhttp3.RequestBody.create(mediaTypeImprime, "{\n \"orders\": [\n \"" + idEtiqueta + "\"\n ]\n }");
 		okhttp3.Request requestImprime = new Request.Builder()
-				.url(ApiTokenIntegracao.URL_MELHOR_ENVIO + "api/v2/me/shipment/print")
+				.url(ApiTokenIntegracao.URL_MELHOR_ENVIO_SAND_BOX + "api/v2/me/shipment/print")
 				.post(bodyImprime)
 				.addHeader("Accept", "application/json")
 				.addHeader("Content-Type", "application/json")
-				.addHeader("Authorization", "Bearer " + ApiTokenIntegracao.TOKEN_MELHOR_ENVIO)
-				.addHeader("User-Agent", "lucasnunnes40@gmail.com")
+				.addHeader("Authorization", "Bearer " + ApiTokenIntegracao.TOKEN_MELHOR_ENVIO_SAND_BX)
+				.addHeader("User-Agent", "luizfasam@gmail.com")
 				.build();
 
 		okhttp3.Response responseImprime = clientImprime.newCall(requestImprime).execute();
@@ -462,7 +497,7 @@ public class VendaController {
 
 		return ResponseEntity.ok("Sucesso");
 	}
-
+/*
 	@GetMapping(value = "/cancelarEtiqueta/{vendaId}/{descricao}")
 	public ResponseEntity<String> cancelarEtiqueta(@PathVariable Long vendaId, @PathVariable String reason_id, @PathVariable String descricao) throws IOException {
 		VendaModel venda = vendaRepository.findById(vendaId).orElse(null);

@@ -87,7 +87,7 @@ public class VendaModel implements Serializable {
 
 	private Boolean excluido = Boolean.FALSE;
 
-	@Column(nullable = true)
+	@Column(nullable = false)
 	@NotNull(message = "Status da venda deve ser informada.")
 	@Enumerated(EnumType.STRING)
 	private StatusVenda status;

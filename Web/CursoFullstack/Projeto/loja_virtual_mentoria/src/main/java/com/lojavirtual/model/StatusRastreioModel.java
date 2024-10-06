@@ -27,6 +27,8 @@ public class StatusRastreioModel implements Serializable {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "SEQ_STATUS_RASTREIOS")
     private Long id;
 	
+	private String urlRastreio;
+
 	private String centroDistribuicao;
 	
 	private String cidade;
@@ -52,6 +54,14 @@ public class StatusRastreioModel implements Serializable {
     public void setId(Long id) {
         this.id = id;
     }
+    
+	public String getUrlRastreio() {
+		return urlRastreio;
+	}
+
+	public void setUrlRastreio(String urlRastreio) {
+		this.urlRastreio = urlRastreio;
+	}
     
 	public String getCentroDistribuicao() {
 		return centroDistribuicao;

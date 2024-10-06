@@ -54,6 +54,7 @@ import com.lojavirtual.util.ExceptionMentoriaJava;
 import jakarta.validation.Valid;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.Response;
 import okhttp3.MediaType;
 
 @RestController
@@ -400,7 +401,7 @@ public class VendaController {
                 .addHeader("Accept", "application/json")
                 .addHeader("Content-Type", "application/json")
                 .addHeader("Authorization", "Bearer " + ApiTokenIntegracao.TOKEN_MELHOR_ENVIO_SAND_BX)
-                .addHeader("User-Agent", "luizfasam@gmail.com")
+				.addHeader("User-Agent", "luizfasam@gmail.com")
                 .build();
 
 		okhttp3.Response response = client.newCall(request).execute();
@@ -414,16 +415,18 @@ public class VendaController {
 		JsonNode jsonNode = new ObjectMapper().readTree(respostaJson);
 		Iterator<JsonNode> iterator = jsonNode.iterator();
 
+
 		String idEtiqueta = "";
 		while (iterator.hasNext()) {
 			JsonNode node = iterator.next();
-			if (node.get("id").asText() != null) {
+			if (node.asText().contains("id")) {
 				idEtiqueta = node.get("id").asText();
 			} else {
 				idEtiqueta = node.asText();
 			}
 			break;
 		}
+				
 
 		vendaRepository.updateCodigoEtiqueta(idEtiqueta, venda.getId());
 
@@ -486,6 +489,51 @@ public class VendaController {
 
 		String urlEtiqueta = responseImprime.body().string();
 		vendaRepository.updateUrlEtiqueta(urlEtiqueta.replaceAll("'\'", ""), venda.getId());
+		
+		//código de rastreio
+        OkHttpClient clientRastreio = new OkHttpClient().newBuilder().build();
+        okhttp3.MediaType mediaTypeR = okhttp3.MediaType.parse("application/json");
+        okhttp3.RequestBody bodyR = okhttp3.RequestBody.create(mediaTypeR, "{\n    \"orders\": [\n        \"a54d16ed-1a73-4625-b73f-fb24833b9fb6\"\n    ]\n}");
+        okhttp3.Request requestR = new Request.Builder()
+		  .url(ApiTokenIntegracao.URL_MELHOR_ENVIO_SAND_BOX+ "api/v2/me/shipment/tracking")
+		  .method("POST", bodyR)
+		  .addHeader("Accept", "application/json")
+		  .addHeader("Content-Type", "application/json")
+		  .addHeader("Authorization", "Bearer " +  ApiTokenIntegracao.TOKEN_MELHOR_ENVIO_SAND_BX)
+		  .addHeader("User-Agent", "suporte@jdevtreinamento.com.br").build();
+		
+		Response responseR = clientRastreio.newCall(requestR).execute();
+		
+		JsonNode jsonNodeR = new ObjectMapper().readTree(responseR.body().string());
+		
+		
+		Iterator<JsonNode> iteratorR = jsonNodeR.iterator();
+		
+		String idEtiquetaR = "";
+		
+		while(iteratorR.hasNext()) {
+			JsonNode node = iteratorR.next();
+			 if (node.get("tracking") != null) {
+			     idEtiquetaR = node.get("tracking").asText();
+			 }else {
+				 idEtiquetaR = node.asText(); 
+			 }
+			break;
+		}
+		
+		 List<StatusRastreioModel> rastreios =	statusRastreioRepository.listaRastreioVenda(venda.getId());
+		 
+		 if (rastreios.isEmpty()) {
+			 
+			 StatusRastreioModel rastreio = new StatusRastreioModel();
+			 rastreio.setEmpresa(venda.getEmpresa());
+			 rastreio.setVenda(venda);
+			 //rastreio.setUrlRastreio("https://www.melhorrastreio.com.br/rastreio/" + idEtiquetaR);
+			 
+			 statusRastreioRepository.saveAndFlush(rastreio);
+		 }else {
+			 //statusRastreioRepository.salvaUrlRastreio("https://www.melhorrastreio.com.br/rastreio/" + idEtiquetaR, venda.getId());
+		 }
 
 		return ResponseEntity.ok("Sucesso");
 	}

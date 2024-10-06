@@ -111,7 +111,7 @@ public class VendaService {
 				.addHeader("Accept", "application/json")
 				.addHeader("Content-Type", "application/json")
 				.addHeader("Authorization", "Bearer " + ApiTokenIntegracao.TOKEN_MELHOR_ENVIO_SAND_BX)
-				.addHeader("User-Agent", "lucasnunnes40@gmail.com")
+				.addHeader("User-Agent", "luizfasam@gmail.com")
 				.build();
 
 		Response response = client.newCall(request).execute();

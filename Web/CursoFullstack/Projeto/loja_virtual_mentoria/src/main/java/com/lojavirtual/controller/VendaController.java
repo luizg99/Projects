@@ -311,7 +311,6 @@ public class VendaController {
 	public ResponseEntity<List<EmpresaTransporteDTO>> consultaFrete(@RequestBody @Valid ConsultaFreteDTO consultaFreteDTO) throws IOException {
 		return ResponseEntity.ok(this.vendaService.consultaFretes(consultaFreteDTO));
 	}
-	
 
 	@GetMapping(value = "/imprimeEtiquetaFrete/{id}")
 	public ResponseEntity<String> imprimeEtiquetaFrete(@PathVariable Long id) throws ExceptionMentoriaJava, IOException {
@@ -388,14 +387,11 @@ public class VendaController {
 		tag.setTag("Identificação do pedido: " + venda.getId());
 		tag.setUrl(null);
 		envioEtiquetaDTO.getOptions().getTags().add(tag);
-		
-		
-		//Inserindo frete - Requisitando etiqueta
+
 		String json = new ObjectMapper().writeValueAsString(envioEtiquetaDTO);
-		
-		
+
 		OkHttpClient client = new OkHttpClient();
-		
+
 		okhttp3.MediaType mediaType = MediaType.parse("application/json");
         okhttp3.RequestBody body = okhttp3.RequestBody.create(mediaType, json);
 		okhttp3.Request request = new Request.Builder()
@@ -428,11 +424,9 @@ public class VendaController {
 			}
 			break;
 		}
-		
-		//Salvando o código da etiqueta.
+
 		vendaRepository.updateCodigoEtiqueta(idEtiqueta, venda.getId());
-		
-		//Fazendo a compra da etiqueta.
+
 		OkHttpClient clientCompraEtiqueta = new OkHttpClient();
 
 		okhttp3.MediaType mediaTypeCompraEtiqueta = MediaType.parse("application/json");
@@ -451,8 +445,7 @@ public class VendaController {
 		if (!responseCompraEtiqueta.isSuccessful()) {
 			return ResponseEntity.ok("Não foi possível realizar a compra da etiqueta.");
 		}
-		
-		//Fazendo a impressão da etiqueta.
+
 		OkHttpClient clientGeracao = new OkHttpClient();
 
 		okhttp3.MediaType mediaTypeGeracao = MediaType.parse("application/json");
@@ -471,8 +464,7 @@ public class VendaController {
 		if (!responseGeracao.isSuccessful()) {
 			return ResponseEntity.ok("Não foi possível gerar a etiqueta.");
 		}
-		
-		//Imprimindo a etiqueta
+
 		OkHttpClient clientImprime = new OkHttpClient();
 
 		okhttp3.MediaType mediaTypeImprime = MediaType.parse("application/json");
@@ -497,8 +489,8 @@ public class VendaController {
 
 		return ResponseEntity.ok("Sucesso");
 	}
-/*
-	@GetMapping(value = "/cancelarEtiqueta/{vendaId}/{descricao}")
+
+	@GetMapping(value = "/cancelarEtiqueta/{vendaId}/{reason_id}/{descricao}")
 	public ResponseEntity<String> cancelarEtiqueta(@PathVariable Long vendaId, @PathVariable String reason_id, @PathVariable String descricao) throws IOException {
 		VendaModel venda = vendaRepository.findById(vendaId).orElse(null);
 		if (venda == null) {
@@ -510,12 +502,12 @@ public class VendaController {
 		okhttp3.MediaType mediaType = MediaType.parse("application/json");
 		okhttp3.RequestBody body = okhttp3.RequestBody.create(mediaType, "{\"order\":{\"reason_id\":\"" + reason_id +"\",\"id\":\"" + venda.getCodigoEtiqueta() +"\",\"description\":\"" + descricao +"\"}}");
 		okhttp3.Request request = new Request.Builder()
-				.url(ApiTokenIntegracao.URL_MELHOR_ENVIO + "api/v2/me/shipment/cancel")
+				.url(ApiTokenIntegracao.URL_MELHOR_ENVIO_SAND_BOX + "api/v2/me/shipment/cancel")
 				.post(body)
 				.addHeader("Accept", "application/json")
 				.addHeader("Content-Type", "application/json")
-				.addHeader("Authorization", "Bearer " + ApiTokenIntegracao.TOKEN_MELHOR_ENVIO)
-				.addHeader("User-Agent", "lucasnunnes40@gmail.com")
+				.addHeader("Authorization", "Bearer " + ApiTokenIntegracao.TOKEN_MELHOR_ENVIO_SAND_BX)
+				.addHeader("User-Agent", "luizfasam@gmail.com")
 				.build();
 
 		okhttp3.Response response = client.newCall(request).execute();
@@ -525,6 +517,5 @@ public class VendaController {
 
 		return ResponseEntity.ok(response.body().string());
 	}
-*/
-	
+
 }

@@ -17,10 +17,10 @@ public interface StatusRastreioRepository extends JpaRepository<StatusRastreioMo
 	
 	List<StatusRastreioModel> findByVendaIdOrderById(Long vendaId);
 	
-	@Query(value = "select s from STATUS_RASTREIOS s where s.venda_id = ?1 order by s.id")
-	public List<StatusRastreioModel> listaRastreioVenda(Long idVenda);
+	//@Query(value = "select s from STATUS_RASTREIOS s where s.venda_id = ?1 order by s.id")
+	//public List<StatusRastreioModel> listaRastreioVenda(Long idVenda);
 
-	@Modifying(flushAutomatically = true)
-	@Query(nativeQuery = true, value = "update VENDAS set URL_RASTREIO = ?1 where id = ?2")
-	public void salvarUrlRastreio(String urlRastreio, Long idVenda);
+	//@Modifying(flushAutomatically = true)
+	//@Query(nativeQuery = true, value = "update VENDAS set URL_RASTREIO = ?1 where id = ?2")
+	//public void salvarUrlRastreio(String urlRastreio, Long idVenda);
 }

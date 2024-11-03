@@ -490,7 +490,7 @@ public class VendaController {
 		String urlEtiqueta = responseImprime.body().string();
 		vendaRepository.updateUrlEtiqueta(urlEtiqueta.replaceAll("'\'", ""), venda.getId());
 		
-		//código de rastreio
+	/*	//código de rastreio
         OkHttpClient clientRastreio = new OkHttpClient().newBuilder().build();
         okhttp3.MediaType mediaTypeR = okhttp3.MediaType.parse("application/json");
         okhttp3.RequestBody bodyR = okhttp3.RequestBody.create(mediaTypeR, "{\n    \"orders\": [\n        \"a54d16ed-1a73-4625-b73f-fb24833b9fb6\"\n    ]\n}");
@@ -534,7 +534,7 @@ public class VendaController {
 		 }else {
 			 //statusRastreioRepository.salvaUrlRastreio("https://www.melhorrastreio.com.br/rastreio/" + idEtiquetaR, venda.getId());
 		 }
-
+*/
 		return ResponseEntity.ok("Sucesso");
 	}
 

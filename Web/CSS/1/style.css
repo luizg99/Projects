@@ -1,0 +1,36 @@
+/*Selector {
+
+}*/
+
+body {
+	background-image: url(C:/Projects/Web/Imagens/imagem_de_fundo.jpg);
+	background-size: cover;
+}
+
+
+p {
+	line-height: 20px;
+	font-style: italic;
+	text-decoration: underline;
+}
+
+h2, p {
+	color: #AA3939;
+	text-align: center;
+	border: 5px solid rgba(255, 176, 170, 0.5);
+	cursor: pointer;
+}
+
+li {
+	list-style: none;
+	display: inline-block;
+}
+
+img {
+	float: right;
+}
+
+footer {
+	clear: both;
+	text-align: center;
+}

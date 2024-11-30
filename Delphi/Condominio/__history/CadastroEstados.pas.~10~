@@ -1,0 +1,60 @@
+unit CadastroEstados;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, FireDAC.Stan.Intf,
+  FireDAC.Stan.Option, FireDAC.Stan.Error, FireDAC.UI.Intf, FireDAC.Phys.Intf,
+  FireDAC.Stan.Def, FireDAC.Stan.Pool, FireDAC.Stan.Async, FireDAC.Phys,
+  FireDAC.Phys.FB, FireDAC.Phys.FBDef, FireDAC.VCLUI.Wait, FireDAC.Comp.Client,
+  Data.DB, FireDAC.Stan.Param, FireDAC.DatS, FireDAC.DApt.Intf, FireDAC.DApt,
+  FireDAC.Comp.DataSet;
+
+type
+  TFormEstados = class(TForm)
+    Label1: TLabel;
+    eCodigo: TEdit;
+    eNome: TEdit;
+    Label2: TLabel;
+    eUf: TEdit;
+    Label3: TLabel;
+    FDConnection1: TFDConnection;
+    FDTransaction1: TFDTransaction;
+    FDQuery1: TFDQuery;
+    Button1: TButton;
+    FDQuery1ESTADO_ID: TIntegerField;
+    FDQuery1NOME: TStringField;
+    FDQuery1UF: TStringField;
+    procedure Button1Click(Sender: TObject);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  FormEstados: TFormEstados;
+
+implementation
+
+{$R *.dfm}
+
+procedure TFormEstados.Button1Click(Sender: TObject);
+begin
+  with FDQuery1 do
+  begin
+    Close;
+    SQL.Clear;
+    SQL.Add('insert into ESTADOS (ESTADO_ID, NOME, UF) ');
+    SQL.Add('values');
+    SQL.Add('(:p1, :p2, :p3) ');
+
+    ParamByName(':p1').AsInteger := StrToInt(eCodigo.Text);
+    ParamByName(':p2').AsString  := eNome.Text;
+    ParamByName(':p3').AsString  := eUf.Text;
+    ExecSQL;
+  end;
+end;
+
+end.

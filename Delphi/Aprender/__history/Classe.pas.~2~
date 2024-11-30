@@ -1,0 +1,12 @@
+unit Classe;
+
+interface
+
+type
+  TPessoa = class
+
+  end;
+
+implementation
+
+end.

@@ -1,0 +1,6 @@
+Repository parte final que salva no banco
+
+Service Intermediaria faz as validações 
+
+Controller comunicação com a view(end pointers, entrada de dados)
+

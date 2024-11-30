@@ -1,0 +1,9 @@
+armazenar uma lista de saudacao em um json ou txt
+armazenar uma lista de mensagens em um json ou txt
+
+permitir cadastrar mensagens(botao separado), consultar e excliur(botao separado).
+
+um bloco de texto para informar os numeros e ao iniciar o processo salvar em um json
+
+ao iniciar, abrir o zap, enviar msg saudação para 5 numeros depois enviar a msg principal para meu numero, encaminhar a msg
+para os ultimos 5 numeros enviados.

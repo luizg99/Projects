@@ -1,13 +1,15 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from PIL import Image
 import pandas as pd
 import time
 import os
 from io import BytesIO
 import _Biblioteca as lib
+
 
 # Configurações do Selenium WebDriver
 driver_path = r"C:\Users\altis\Desktop\ProjetoIptvManterLinkUsuarioAtualizado\chromedriver-win64\chromedriver.exe"
@@ -17,7 +19,7 @@ url = "https://iboplayer.com/device/login"
 captcha_api_key = "0439b8069b74afca88f8062c8eb51716"
 
 # Caminho da planilha Excel
-planilha_path = r"C:\Users\altis\Desktop\ProjetoIptvManterLinkUsuarioAtualizado\Clientes.xlsx"
+planilha_path = r"C:\ProjetosLuiz\Projects\Python\ProjetoIptvManterLinkUsuarioAtualizado\Clientes.xlsx"
 
 link_atualizado_tvs = 'http://grianze.com'
 link_atualizado_bit = 'http://play.biturl.vip'
@@ -29,11 +31,15 @@ def processar_cliente(mac_address, device_key, servidor, driver, tentativas=2):
 
     while tentativa_atual < tentativas:
         try:
-            # Aguarde 10 segundos antes de interagir
-            time.sleep(10)
+            driver.get('https://iboplayer.com/device/login')
 
-            # Preencher o campo MAC Address e Device Key
-            driver.find_element(By.ID, "max-address").send_keys(mac_address)
+            # Esperar o campo "max-address" existir
+            mac_address_field = WebDriverWait(driver, 15).until(
+                EC.presence_of_element_located((By.ID, "max-address"))
+            )
+            # Enviar o texto (MAC Address)
+            mac_address_field.send_keys(mac_address)
+            # Enviar o texto (device key)
             driver.find_element(By.ID, "device-key").send_keys(device_key)
 
             time.sleep(1)
@@ -52,23 +58,31 @@ def processar_cliente(mac_address, device_key, servidor, driver, tentativas=2):
             top_offset = int(height * 0.1)
             captcha_cropped = captcha_image.crop((0, top_offset, width, height))
 
+            #Salva a imagem do captcha em documentos para ter uma ideia de como está sendo enviado a imagem...
             processed_path = os.path.join(os.path.expanduser("~"), "Documents", "captcha_black_and_white.png")
             captcha_cropped.save(processed_path)
 
-            captcha_text = lib.solve_captcha_with_2captcha(processed_path, captcha_api_key)
+            captcha_text = lib.solve_captcha_with_2captcha(processed_path, captcha_api_key, captcha_type = 'base64')
             driver.find_element(By.XPATH, "//label[text()='Captcha']/following-sibling::input").send_keys(captcha_text)
 
             # Clicar no botão de login
             driver.find_element(By.XPATH, '/html/body/div/main/div/form/button').click()
-            time.sleep(10)
 
-            # Clicar no botão de editar playlist
-            driver.find_element(By.XPATH,
-                                "//*[name()='svg' and contains(@class, 'text-blue-500') and contains(@class, 'cursor-pointer')]").click()
-            time.sleep(6)
+            # Esperar o elemento SVG existir
+            svg_element = WebDriverWait(driver, 15).until(
+                EC.presence_of_element_located(
+                    (By.XPATH, "//*[name()='svg' and contains(@class, 'text-blue-500') and contains(@class, 'cursor-pointer')]")
+                )
+            )
+            # Clicar no elemento SVG
+            svg_element.click()
 
             # Substituir o valor do campo "Host"
-            host_input = driver.find_element(By.XPATH, '//*[@id="host"]')
+            # Espera até 10 segundos para que o elemento exista no DOM
+            host_input = WebDriverWait(driver, 15).until(
+                EC.presence_of_element_located((By.XPATH, '//*[@id="host"]'))
+            )
+
             host_input.clear()
 
             if servidor == 'TVS':
@@ -84,7 +98,14 @@ def processar_cliente(mac_address, device_key, servidor, driver, tentativas=2):
             time.sleep(2)
 
             # Logout
-            driver.find_element(By.XPATH, '//*[@id="root"]/main/aside/a[7]').click()
+            # Esperar até que o botão de logout exista e seja clicável
+            logout_button = WebDriverWait(driver, 10).until(
+                EC.element_to_be_clickable((By.XPATH, '//*[@id="root"]/main/aside/a[7]'))
+            )
+            # Clicar no botão de logout
+            logout_button.click()
+
+            time.sleep(3)
             print(f"Processamento concluído para MAC: {mac_address}")
 
             return True  # Sucesso

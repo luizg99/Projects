@@ -103,9 +103,10 @@ def processar_cliente(mac_address, device_key, servidor, driver, tentativas=3):
             return True  # Sucesso
 
         except Exception as e:
-            print(f"Ocorreu um erro com MAC {mac_address}: {e}")
+            #print(f"Ocorreu um erro com MAC {mac_address}: {e}")
+            print(f"Ocorreu um erro com MAC {mac_address}.")
             driver.refresh()
-            tentativa_atual == tentativa_atual + 1
+            tentativa_atual += 1
             continue
 
         finally:

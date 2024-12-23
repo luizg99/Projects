@@ -57,7 +57,7 @@ def main():
         for mac_address, device_key, servidor in clientes_falhados:
             print(f"Reprocessando MAC: {mac_address}, Servidor: {servidor}")
             if siteAtivacao == 'iboplayer.com':
-                sucesso = IboPlayer.processar_cliente(mac_address, device_key, servidor)
+                sucesso = IboPlayer.processar_cliente(mac_address, device_key, servidor, driver)
             elif siteAtivacao == 'iboplayer.pro':
                 print('Faltam implementar')
 

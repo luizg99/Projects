@@ -16,8 +16,8 @@ link_atualizado_tvs = 'http://grianze.com'
 link_atualizado_uniplay = 'http://grianze.com'
 link_atualizado_bit = 'http://play.biturl.vip'
 
-def processar_cliente(mac_address, device_key, servidor, driver, tentativas=2):
-    tentativa_atual = 0
+def processar_cliente(mac_address, device_key, servidor, driver, tentativas=3):
+    tentativa_atual = 1
 
     while tentativa_atual < tentativas:
         try:
@@ -98,13 +98,14 @@ def processar_cliente(mac_address, device_key, servidor, driver, tentativas=2):
             logout_button.click()
 
             time.sleep(3)
-            print(f"Processamento concluído para MAC: {mac_address}")
+            print(f"Processamento concluído para MAC: {mac_address}" + f" com {tentativa_atual} tentativas")
 
             return True  # Sucesso
 
         except Exception as e:
             print(f"Ocorreu um erro com MAC {mac_address}: {e}")
             driver.refresh()
+            tentativa_atual == tentativa_atual + 1
             continue
 
         finally:

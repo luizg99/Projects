@@ -12,8 +12,8 @@ import _Biblioteca as lib
 # Configuração da API Key do 2Captcha
 captcha_api_key = "0439b8069b74afca88f8062c8eb51716"
 
-link_atualizado_tvs = 'http://grianze.com'
-link_atualizado_uniplay = 'http://grianze.com'
+link_atualizado_tvs = 'http://clalo.mov/'
+link_atualizado_uniplay = 'http://fgoflito.com/'
 link_atualizado_bit = 'http://play.biturl.vip'
 
 def processar_cliente(mac_address, device_key, servidor, driver, tentativas=3):

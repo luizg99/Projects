@@ -1,8 +1,9 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 import pandas as pd
-
+import _Biblioteca as lib
 import IboPlayer
+import IboPlayerPro
 
 
 # Configurações do Selenium WebDriver
@@ -12,8 +13,13 @@ url = "https://iboplayer.com/device/login"
 # Caminho da planilha Excel
 planilha_path = r"C:\ProjetosLuiz\Projects\Python\ProjetoIptvManterLinkUsuarioAtualizado\Clientes.xlsx"
 
+# Links atualizados
+lib.link_atualizado_tvs = 'http://clalo.mov/'
+lib.link_atualizado_uniplay = 'http://fgoflito.com/'
+lib.link_atualizado_bit = 'http://play.biturl.vip'
 
-
+# Configuração da API Key do 2Captcha
+lib.captcha_api_key = "0439b8069b74afca88f8062c8eb51716"
 
 # Função principal para executar o processo para cada cliente
 
@@ -44,7 +50,7 @@ def main():
         if siteAtivacao == 'iboplayer.com':
             sucesso = IboPlayer.processar_cliente(mac_address, device_key, servidor, driver)
         elif siteAtivacao == 'iboplayer.pro':
-            print('Faltam implementar')
+            sucesso = IboPlayerPro.processar_cliente(mac_address, device_key, servidor, driver)
 
         if not sucesso:
             clientes_falhados.append((mac_address, device_key, servidor))
@@ -59,7 +65,7 @@ def main():
             if siteAtivacao == 'iboplayer.com':
                 sucesso = IboPlayer.processar_cliente(mac_address, device_key, servidor, driver)
             elif siteAtivacao == 'iboplayer.pro':
-                print('Faltam implementar')
+                sucesso = IboPlayerPro.processar_cliente(mac_address, device_key, servidor, driver)
 
             if not sucesso:
                 novos_falhados.append((mac_address, device_key, servidor))

@@ -2,6 +2,13 @@ import requests
 import base64
 import time
 
+
+link_atualizado_tvs = ''
+link_atualizado_uniplay = ''
+link_atualizado_bit = ''
+
+# Configuração da API Key do 2Captcha
+captcha_api_key = ''
 # Função para resolver o CAPTCHA usando 2Captcha
 def solve_captcha_with_2captcha(image_path, api_key, captcha_type='base64', **kwargs):
     """

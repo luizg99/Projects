@@ -3,12 +3,12 @@
     "target": "ES2017",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
-    "skipLibCheck": true,
+    "skipLibCheck": true, // Ignorar verificações de tipos de bibliotecas
     "strict": true,
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",
-    "moduleResolution": "bundler",
+    "moduleResolution": "node", // Altere de "bundler" para "node" para melhor compatibilidade com Next.js
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",

@@ -13,7 +13,7 @@
   --red-900: #FF3f4b;
 
 }
-}
+
 
 @media (prefers-color-scheme: dark) {
   :root {
@@ -29,8 +29,8 @@ body {
 }
 
 body {
-  color: var(--foreground);
-  background: var(--foreground);
+  color: var(--dark-700);
+  background: var(--dark-700);
   font-family: Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

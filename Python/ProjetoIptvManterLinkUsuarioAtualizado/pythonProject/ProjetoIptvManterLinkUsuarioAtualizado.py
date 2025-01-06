@@ -10,8 +10,8 @@ import IboPlayerPro
 driver_path = r"C:\ProjetosLuiz\Projects\Python\ProjetoIptvManterLinkUsuarioAtualizado\chromedriver-win64\chromedriver.exe"
 url = "https://iboplayer.com/device/login"
 
-# Caminho da planilha Excel
-planilha_path = r"C:\ProjetosLuiz\Projects\Python\ProjetoIptvManterLinkUsuarioAtualizado\Clientes.xlsx"
+# Configurações do Google Sheets
+sheet_url = 'https://docs.google.com/spreadsheets/d/1ifSYQKY2W-DA0D0wYY00tKag90Tp5FJP3mdZ0lConUs/export?format=csv'
 
 # Links atualizados
 lib.link_atualizado_tvs = 'http://clalo.mov/'
@@ -27,7 +27,7 @@ lib.captcha_api_key = "0439b8069b74afca88f8062c8eb51716"
 # Função para processar a planilha
 def main():
     print("Lendo a planilha...")
-    df = pd.read_excel(planilha_path)
+    df = lib.getGoogleSheetData(sheet_url)
 
     # Inicializa listas para controle de tentativas
     clientes_falhados = []
@@ -37,13 +37,13 @@ def main():
     driver.maximize_window()
     driver.get(url)
 
+    print(df.columns)
     # Primeira tentativa com todos os clientes
     for index, row in df.iterrows():
-        mac_address = row['MAC Address']
-        device_key = row['Device Key']
-        servidor = row['Servidor']
-        siteAtivacao = row['Site ativação']
-
+        mac_address: str = row['MAC Address']
+        device_key: str = str(row['Device Key'])
+        servidor: str = row['Servidor']
+        siteAtivacao: str = row['Site ativação']
 
         print(f"Processando MAC: {mac_address}, servidor: {servidor}")
 

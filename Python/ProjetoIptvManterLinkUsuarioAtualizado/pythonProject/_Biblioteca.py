@@ -1,7 +1,7 @@
 import requests
 import base64
 import time
-
+import pandas as pd
 
 link_atualizado_tvs = ''
 link_atualizado_uniplay = ''
@@ -57,3 +57,9 @@ def solve_captcha_with_2captcha(image_path, api_key, captcha_type='base64', **kw
 
         if result_json.get("request") != "CAPCHA_NOT_READY":
             raise Exception(f"Erro ao resolver CAPTCHA: {result_json.get('request')}")
+
+# Lê a planilha usando pandas
+# Lê a planilha usando pandas
+def getGoogleSheetData(url):
+    df = pd.read_csv(url, sep=',', quotechar='"', dtype=str).dropna(how="all")  # Remove linhas totalmente vazias
+    return df

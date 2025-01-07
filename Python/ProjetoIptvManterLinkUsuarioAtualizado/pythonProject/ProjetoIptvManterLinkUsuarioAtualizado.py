@@ -11,23 +11,19 @@ driver_path = r"C:\ProjetosLuiz\Projects\Python\ProjetoIptvManterLinkUsuarioAtua
 url = "https://iboplayer.com/device/login"
 
 # Configurações do Google Sheets
-sheet_url = 'https://docs.google.com/spreadsheets/d/1ifSYQKY2W-DA0D0wYY00tKag90Tp5FJP3mdZ0lConUs/export?format=csv'
-
-# Links atualizados
-lib.link_atualizado_tvs = 'http://clalo.mov/'
-lib.link_atualizado_uniplay = 'http://fgoflito.com/'
-lib.link_atualizado_bit = 'http://play.biturl.vip'
+sheet_url_clientes = 'https://docs.google.com/spreadsheets/d/1ifSYQKY2W-DA0D0wYY00tKag90Tp5FJP3mdZ0lConUs/export?format=csv'
 
 # Configuração da API Key do 2Captcha
 lib.captcha_api_key = "0439b8069b74afca88f8062c8eb51716"
 
-# Função principal para executar o processo para cada cliente
+#Atualizando links
+lib.atualizarLinks()
 
 
 # Função para processar a planilha
 def main():
     print("Lendo a planilha...")
-    df = lib.getGoogleSheetData(sheet_url)
+    df = lib.getGoogleSheetData(sheet_url_clientes)
 
     # Inicializa listas para controle de tentativas
     clientes_falhados = []
@@ -37,7 +33,6 @@ def main():
     driver.maximize_window()
     driver.get(url)
 
-    print(df.columns)
     # Primeira tentativa com todos os clientes
     for index, row in df.iterrows():
         mac_address: str = row['MAC Address']
@@ -53,14 +48,14 @@ def main():
             sucesso = IboPlayerPro.processar_cliente(mac_address, device_key, servidor, driver)
 
         if not sucesso:
-            clientes_falhados.append((mac_address, device_key, servidor))
+            clientes_falhados.append((mac_address, device_key, servidor, siteAtivacao))
 
     # Realiza até 4 novas tentativas para os clientes que falharam
     tentativa = 1
-    while clientes_falhados and tentativa <= 4:
+    while clientes_falhados and tentativa < 3:
         print(f"\nTentativa {tentativa} para clientes que falharam...")
         novos_falhados = []
-        for mac_address, device_key, servidor in clientes_falhados:
+        for mac_address, device_key, servidor, siteAtivacao in clientes_falhados:
             print(f"Reprocessando MAC: {mac_address}, Servidor: {servidor}")
             if siteAtivacao == 'iboplayer.com':
                 sucesso = IboPlayer.processar_cliente(mac_address, device_key, servidor, driver)

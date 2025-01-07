@@ -4,11 +4,7 @@ import pandas as pd
 import _Biblioteca as lib
 import IboPlayer
 import IboPlayerPro
-
-
-# Configurações do Selenium WebDriver
-driver_path = r"C:\ProjetosLuiz\Projects\Python\ProjetoIptvManterLinkUsuarioAtualizado\chromedriver-win64\chromedriver.exe"
-url = "https://iboplayer.com/device/login"
+from webdriver_manager.chrome import ChromeDriverManager
 
 # Configurações do Google Sheets
 sheet_url_clientes = 'https://docs.google.com/spreadsheets/d/1ifSYQKY2W-DA0D0wYY00tKag90Tp5FJP3mdZ0lConUs/export?format=csv'
@@ -28,10 +24,9 @@ def main():
     # Inicializa listas para controle de tentativas
     clientes_falhados = []
 
-    service = Service(driver_path)
-    driver = webdriver.Chrome(service=service)
+    # Cria o driver usando WebDriver Manager
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
     driver.maximize_window()
-    driver.get(url)
 
     # Primeira tentativa com todos os clientes
     for index, row in df.iterrows():
@@ -79,3 +74,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    input("\nPressione Enter para fechar...")

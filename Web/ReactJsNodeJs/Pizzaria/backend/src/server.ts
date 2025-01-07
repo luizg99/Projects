@@ -16,6 +16,7 @@ app.use(
   express.static(path.resolve(__dirname, '..', 'tmp'))
 )
 
+//para funcionar só com essa versão especifica: npm install --save-dev @types/express@^4.17.13    
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   if(err instanceof Error){
     //Se for uma instancia do tipo error

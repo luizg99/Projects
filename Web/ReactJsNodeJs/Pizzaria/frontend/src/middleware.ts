@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCookieServer } from '@/lib/cookieServer'
 import { api } from "@/services/api"
+import { getCookie } from 'cookies-next';
 
 export async function middleware(req: NextRequest){
   const { pathname } = req.nextUrl
@@ -9,7 +10,7 @@ export async function middleware(req: NextRequest){
     return NextResponse.next();
   }
 
-  const token = getCookieServer();
+  const token = await getCookieServer();
   
   if(pathname.startsWith("/dashboard")){
     if(!token){

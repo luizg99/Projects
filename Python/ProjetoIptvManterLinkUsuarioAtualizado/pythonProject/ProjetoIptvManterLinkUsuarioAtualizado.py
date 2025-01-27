@@ -1,10 +1,10 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
-import pandas as pd
 import _Biblioteca as lib
 import IboPlayer
 import IboPlayerPro
 from webdriver_manager.chrome import ChromeDriverManager
+import Interface
 
 # Configurações do Google Sheets
 sheet_url_clientes = 'https://docs.google.com/spreadsheets/d/1ifSYQKY2W-DA0D0wYY00tKag90Tp5FJP3mdZ0lConUs/export?format=csv'
@@ -18,6 +18,14 @@ lib.atualizarLinks()
 
 # Função para processar a planilha
 def main():
+    # Exibe a interface e obtém os servidores selecionados
+    ui = Interface.InterfaceAtualizacao()
+    opcoes = ui.exibir()
+
+    if not opcoes['selecionado']:
+        print("Nenhum servidor selecionado. Saindo...")
+        return
+
     print("Lendo a planilha...")
     df = lib.getGoogleSheetData(sheet_url_clientes)
 
@@ -34,6 +42,14 @@ def main():
         device_key: str = str(row['Device Key'])
         servidor: str = row['Servidor']
         siteAtivacao: str = row['Site ativação']
+
+        # Pula servidores não marcados
+        if servidor == 'TVS' and not opcoes['TVS']:
+            continue
+        elif servidor == 'UNIPLAY' and not opcoes['UNIPLAY']:
+            continue
+        elif servidor == 'BIT' and not opcoes['BIT']:
+            continue
 
         print(f"Processando MAC: {mac_address}, servidor: {servidor}")
 

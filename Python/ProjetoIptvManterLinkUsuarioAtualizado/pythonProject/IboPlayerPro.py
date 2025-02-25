@@ -1,12 +1,7 @@
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
-from PIL import Image
 import time
-import os
-from io import BytesIO
 import _Biblioteca as lib
 
 def processar_cliente(mac_address, device_key, servidor, driver, tentativas=3):

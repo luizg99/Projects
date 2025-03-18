@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import ttk
 import json
 from selenium import webdriver
 from selenium.common import NoSuchElementException
@@ -15,37 +16,195 @@ import pandas as pd
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
-# Variável global para armazenar a janela de consulta de mensagens a enviar
-janela_consultar_enviar = None
+# Variáveis globais
+MensagensSaudacao = []
+MensagensEnviar = []
 
+# Função para carregar mensagens de saudação
+def carregar_mensagens_saudacao():
+    global MensagensSaudacao
+    try:
+        with open("MensagensSaudacao.json", "r") as arquivo_json:
+            dados = json.load(arquivo_json)
+            if "MensagensSaudacao" in dados:
+                MensagensSaudacao = dados["MensagensSaudacao"]
+    except FileNotFoundError:
+        MensagensSaudacao = []
+
+# Função para carregar mensagens a enviar
+def carregar_mensagens_enviar():
+    global MensagensEnviar
+    try:
+        with open("MensagensEnviar.json", "r") as arquivo_json:
+            dados = json.load(arquivo_json)
+            if "MensagensEnviar" in dados:
+                MensagensEnviar = dados["MensagensEnviar"]
+    except FileNotFoundError:
+        MensagensEnviar = []
+
+# Função para salvar mensagens de saudação
+def salvar_mensagens_saudacao():
+    with open("MensagensSaudacao.json", "w", encoding="utf-8") as arquivo_json:
+        json.dump({"MensagensSaudacao": MensagensSaudacao}, arquivo_json, ensure_ascii=False)
+
+# Função para salvar mensagens a enviar
+def salvar_mensagens_enviar():
+    with open("MensagensEnviar.json", "w", encoding="utf-8") as arquivo_json:
+        json.dump({"MensagensEnviar": MensagensEnviar}, arquivo_json, ensure_ascii=False)
+
+# Função para ler JSON
+def ler_json(filename):
+    with open(filename, 'r', encoding='utf-8-sig') as file:
+        data = file.read()
+        return json.loads(data)
+
+# Função para formatar número de telefone
+def format_phone_number(phone_number):
+    digits = ''.join(filter(str.isdigit, phone_number))
+    if len(digits) == 10:
+        return f'{digits[2:]}'
+    elif len(digits) == 11:
+        return f'{digits[3:]}'
+    return None
+
+# Função para salvar números de telefone
+def salvar_numeros_telefones(numeros):
+    with open("NumerosTelefones.json", "w") as arquivo_json:
+        json.dump({"numeros": numeros}, arquivo_json)
+
+# Função para exibir mensagem de sucesso
+def exibir_mensagem_sucesso(mensagem):
+    janela_sucesso = tk.Toplevel()
+    janela_sucesso.title("Sucesso")
+    label_sucesso = tk.Label(janela_sucesso, text=mensagem)
+    label_sucesso.pack()
+    fechar_button = tk.Button(janela_sucesso, text="Fechar", command=janela_sucesso.destroy)
+    fechar_button.pack()
+
+# Função para abrir a janela de edição de mensagem
+def abrir_janela_edicao(index, mensagem):
+    janela_edicao = tk.Toplevel()
+    janela_edicao.title("Editar Mensagem")
+    mensagem_editar_entry = tk.Text(janela_edicao, height=10, width=30)
+    mensagem_editar_entry.pack()
+    mensagem_editar_entry.insert("1.0", mensagem)
+
+    def finalizar_edicao():
+        nova_mensagem = mensagem_editar_entry.get("1.0", "end-1c")
+        MensagensEnviar[index] = nova_mensagem
+        salvar_mensagens_enviar()
+        janela_edicao.destroy()
+        abrir_janela_consultar_enviar()
+
+    finalizar_button = tk.Button(janela_edicao, text="Finalizar Alteração", command=finalizar_edicao)
+    finalizar_button.pack()
+
+# Função para abrir a janela de consulta de mensagens a enviar
+def abrir_janela_consultar_enviar():
+    janela_consultar_enviar = tk.Toplevel()
+    janela_consultar_enviar.title("Consultar Mensagens Enviar")
+    lista_mensagens_enviar = tk.Listbox(janela_consultar_enviar, height=10, width=40)
+    lista_mensagens_enviar.pack()
+
+    for mensagem in MensagensEnviar:
+        lista_mensagens_enviar.insert(tk.END, mensagem)
+
+    def excluir_mensagem_selecionada():
+        selecionados = lista_mensagens_enviar.curselection()
+        for index in selecionados[::-1]:
+            lista_mensagens_enviar.delete(index)
+            del MensagensEnviar[index]
+        salvar_mensagens_enviar()
+
+    def editar_mensagem_selecionada():
+        selecionados = lista_mensagens_enviar.curselection()
+        if selecionados:
+            index = selecionados[0]
+            mensagem_selecionada = MensagensEnviar[index]
+            abrir_janela_edicao(index, mensagem_selecionada)
+
+    excluir_button = tk.Button(janela_consultar_enviar, text="Excluir Mensagem Selecionada", command=excluir_mensagem_selecionada)
+    excluir_button.pack()
+
+    editar_button = tk.Button(janela_consultar_enviar, text="Editar Mensagem Selecionada", command=editar_mensagem_selecionada)
+    editar_button.pack()
+
+# Função para abrir a janela de cadastro de mensagens de saudação
+def abrir_janela_cadastro_saudacao():
+    janela_cadastro_saudacao = tk.Toplevel()
+    janela_cadastro_saudacao.title("Cadastro de Mensagens de Saudação")
+    mensagem_saudacao_label = tk.Label(janela_cadastro_saudacao, text="Insira as mensagens de saudação (uma por linha):")
+    mensagem_saudacao_label.pack()
+
+    mensagem_saudacao_entry = tk.Text(janela_cadastro_saudacao, height=10, width=30)
+    mensagem_saudacao_entry.pack()
+
+    if MensagensSaudacao:
+        mensagem_saudacao_entry.insert("1.0", "\n".join(MensagensSaudacao))
+
+    def cadastrar_mensagens_saudacao():
+        mensagens = mensagem_saudacao_entry.get("1.0", "end-1c").split('\n')
+        mensagens = [msg.strip() for msg in mensagens if msg.strip()]
+        if mensagens:
+            MensagensSaudacao.clear()
+            MensagensSaudacao.extend(mensagens)
+            salvar_mensagens_saudacao()
+            exibir_mensagem_sucesso("Mensagens de saudação cadastradas com sucesso!")
+
+    cadastrar_button = tk.Button(janela_cadastro_saudacao, text="Cadastrar", command=cadastrar_mensagens_saudacao)
+    cadastrar_button.pack()
+
+# Função para abrir a janela de cadastro de mensagens a enviar
+def abrir_janela_cadastro_enviar():
+    janela_cadastro_enviar = tk.Toplevel()
+    janela_cadastro_enviar.title("Cadastro de Mensagens a Enviar")
+    mensagem_enviar_label = tk.Label(janela_cadastro_enviar, text="Insira a mensagem a enviar:")
+    mensagem_enviar_label.pack()
+
+    mensagem_enviar_entry = tk.Text(janela_cadastro_enviar, height=10, width=30)
+    mensagem_enviar_entry.pack()
+
+    def cadastrar_mensagem_enviar():
+        mensagem = mensagem_enviar_entry.get("1.0", "end-1c")
+        if mensagem:
+            MensagensEnviar.append(mensagem)
+            salvar_mensagens_enviar()
+            exibir_mensagem_sucesso("Mensagem a enviar cadastrada com sucesso!")
+
+    cadastrar_button = tk.Button(janela_cadastro_enviar, text="Cadastrar", command=cadastrar_mensagem_enviar)
+    cadastrar_button.pack()
+
+# Função para salvar números a enviar
+def Salvar_numeros_a_enviar(telefone_text):
+    numeros = telefone_text.get("1.0", "end-1c").split('\n')
+    numeros = [numero.strip() for numero in numeros if numero.strip()]
+    if numeros:
+        salvar_numeros_telefones(numeros)
+
+# Função para iniciar o envio de números
+def iniciar_envio_numeros(telefone_text):
+    numeros = telefone_text.get("1.0", "end-1c").split('\n')
+    numeros = [numero.strip() for numero in numeros if numero.strip()]
+    if numeros:
+        exibir_mensagem_sucesso(f"Iniciando envio para os números: {', '.join(numeros)}")
+        # Aqui você pode adicionar a lógica de envio de mensagens
+    else:
+        exibir_mensagem_sucesso("Nenhum número válido foi inserido.")
+
+# Função para obter dados do Google Sheets
 def getGoogleSheetData(url):
-    df = pd.read_csv(url, sep=',', quotechar='"', dtype=str).dropna(how="all")  # Remove linhas totalmente vazias
+    df = pd.read_csv(url, sep=',', quotechar='"', dtype=str).dropna(how="all")
     return df
 
-
+# Função para formatar telefone
 def formatar_telefone(telefone):
-    """
-    Formata o número de telefone, removendo o código do país, DDD, traços e espaços.
-    Exemplo: "55 62 8126-5245" -> "6281265245"
-    """
-    # Remove todos os caracteres não numéricos
     telefone_formatado = ''.join(filter(str.isdigit, telefone))
-
-    # Remove o código do país (55) e o DDD (62)
     if len(telefone_formatado) >= 2:
-        telefone_formatado = telefone_formatado[2:]  # Remove os primeiros 4 dígitos (55 + DDD)
-
+        telefone_formatado = telefone_formatado[2:]
     return telefone_formatado
 
-
 def atualizar_google_sheets(df, sheet_url):
-    """
-    Atualiza o Google Sheets com as alterações feitas no DataFrame.
-    """
     try:
-        # Substitui valores NaN por strings vazias
-        df = df.fillna("")
-
         # Configura as credenciais da API do Google Sheets
         scope = [
             "https://spreadsheets.google.com/feeds",
@@ -58,8 +217,26 @@ def atualizar_google_sheets(df, sheet_url):
         # Abre a planilha pelo URL
         sheet = client.open_by_url(sheet_url).sheet1
 
-        # Atualiza a planilha com os dados do DataFrame
-        sheet.update([df.columns.values.tolist()] + df.values.tolist())
+        # Substitui valores NaN por None (ou string vazia)
+        df = df.where(pd.notna(df), None)  # Substitui NaN por None
+
+        # Obtém o índice da coluna 'Data ultimo envio' no DataFrame
+        coluna_nome = 'Data ultimo envio'
+        if coluna_nome not in df.columns:
+            raise ValueError(f"A coluna '{coluna_nome}' não foi encontrada no DataFrame.")
+
+        # Obtém a letra da coluna correspondente no Google Sheets
+        coluna_index = df.columns.get_loc(coluna_nome)  # Índice da coluna no DataFrame
+        coluna_letra = chr(ord('A') + coluna_index)  # Converte o índice para letra (A, B, C, ...)
+
+        # Atualiza apenas a coluna 'Data ultimo envio'
+        coluna_data = df[coluna_nome].tolist()
+
+        # Define o intervalo de atualização (ex: 'B2:B' + número de linhas)
+        intervalo = f"{coluna_letra}2:{coluna_letra}{len(coluna_data) + 1}"
+
+        # Nova convenção de argumentos: valores primeiro, intervalo segundo
+        sheet.update(values=[[valor] for valor in coluna_data], range_name=intervalo)
     except Exception as e:
         print(f"Erro ao atualizar o Google Sheets: {str(e)}")
 
@@ -76,8 +253,8 @@ def enviar_mensagens_planilha():
         df = pd.read_csv(sheet_url_clientes)
 
         # Verificar se as colunas necessárias existem
-        if 'Data Vencimento' not in df.columns or 'Data ultimo envio' not in df.columns or 'Telefone' not in df.columns:
-            status_label.config(text="Erro: A planilha não contém as colunas necessárias.")
+        if 'Data vencimento' not in df.columns or 'Data ultimo envio' not in df.columns or 'Telefone' not in df.columns:
+            print("Erro: A planilha não contém as colunas necessárias.")
             return
 
         # Data atual no formato da planilha (exemplo: 18/03/2025)
@@ -86,12 +263,12 @@ def enviar_mensagens_planilha():
         # Iterar sobre as linhas da planilha
         for index, row in df.iterrows():
             telefone = row['Telefone']
-            data_vencimento = row['Data Vencimento']  # Pega o valor da coluna "Data Vencimento"
+            data_vencimento = row['Data vencimento']  # Pega o valor da coluna "Data vencimento"
             data_ultimo_envio = row['Data ultimo envio']
 
             # Verificar se a data de vencimento está vazia ou é nula
             if pd.isna(data_vencimento) or data_vencimento.strip() == "":
-                continue  # Pula para a próxima iteração (ou seja, "vaza")
+                continue  # Pula para a próxima iteração
 
             # Verificar se a data de vencimento é um dia após a data atual
             if data_vencimento == (datetime.datetime.now() + datetime.timedelta(days=1)).strftime('%d/%m/%Y'):
@@ -104,28 +281,26 @@ def enviar_mensagens_planilha():
                     mensagem = random.choice(MensagensEnviar)  # Escolhe uma mensagem aleatória
                     enviar_mensagem(telefone_formatado, mensagem)
 
-                    # Atualizar a coluna "data ultimo envio" com a data atual
+                    # Atualizar a coluna "Data ultimo envio" com a data atual
                     df.at[index, 'Data ultimo envio'] = data_atual
 
-        # Salvar a planilha atualizada no Google Sheets
-        atualizar_google_sheets(df, sheet_url_clientes)
-        status_label.config(text="Mensagens enviadas e planilha atualizada com sucesso!")
+            # Salvar a planilha atualizada no Google Sheets
+            atualizar_google_sheets(df, sheet_url_clientes)
+            print(f"Mensagens enviadas e planilha atualizada com sucesso!")
     except Exception as e:
-        status_label.config(text=f"Erro: {str(e)}")
+        print(f"Erro: {str(e)}")
 
-
-# Função para enviar a mensagem via WhatsApp
+# Função para enviar mensagem via WhatsApp
 def enviar_mensagem(telefone, mensagem):
     try:
         service = Service(ChromeDriverManager().install())
         navegador = webdriver.Chrome(service=service)
         navegador.get("https://web.whatsapp.com")
 
-        # Esperando o usuário logar
         while True:
             try:
                 navegador.find_element('id', 'side')
-                break  # Sai do loop se o elemento 'side' for encontrado
+                break
             except NoSuchElementException:
                 time.sleep(1)
 
@@ -135,7 +310,7 @@ def enviar_mensagem(telefone, mensagem):
         while True:
             try:
                 navegador.find_element('id', 'side')
-                break  # Sai do loop se o elemento 'side' for encontrado
+                break
             except NoSuchElementException:
                 time.sleep(1)
 
@@ -144,126 +319,171 @@ def enviar_mensagem(telefone, mensagem):
         time.sleep(3)
         navegador.close()
     except Exception as e:
-        status_label.config(text=f"Erro ao enviar mensagem para {telefone}: {str(e)}")
+        exibir_mensagem_sucesso(f"Erro ao enviar mensagem para {telefone}: {str(e)}")
 
-# Função para abrir a janela de cadastro de mensagens de saudação
-def abrir_janela_cadastro_saudacao():
-    janela_cadastro_saudacao = tk.Toplevel(janela_principal)
-    janela_cadastro_saudacao.title("Cadastro de Mensagens de Saudação")
+# --- Novas funções para atualizar data de vencimento com base no texto colado ---
 
-    mensagem_saudacao_label = tk.Label(janela_cadastro_saudacao, text="Insira as mensagens de saudação (uma por linha):")
-    mensagem_saudacao_label.pack()
+def atualizar_data_vencimento_usuario(usuario, nova_data):
+    try:
+        scope = [
+            "https://spreadsheets.google.com/feeds",
+            "https://www.googleapis.com/auth/spreadsheets",
+            "https://www.googleapis.com/auth/drive"
+        ]
+        creds = ServiceAccountCredentials.from_json_keyfile_name('credenciais.json', scope)
+        client = gspread.authorize(creds)
+        # Utilize a URL base da planilha (remova a parte de exportação)
+        sheet_url = "https://docs.google.com/spreadsheets/d/1ifSYQKY2W-DA0D0wYY00tKag90Tp5FJP3mdZ0lConUs/edit"
+        sheet = client.open_by_url(sheet_url).sheet1
 
-    mensagem_saudacao_entry = tk.Text(janela_cadastro_saudacao, height=10, width=30)
-    mensagem_saudacao_entry.pack()
+        # Procura o usuário na coluna "Usuário"
+        cell = sheet.find(usuario)
+        if cell is None:
+            print("Usuário não encontrado.")
+            return False
+        row = cell.row
 
-    # Preenche a caixa de texto com as mensagens de saudação cadastradas, se houver
-    if MensagensSaudacao:
-        mensagem_saudacao_entry.insert("1.0", "\n".join(MensagensSaudacao))
+        # Procura a coluna "Data vencimento" no cabeçalho
+        header_cell = sheet.find("Data vencimento")
+        if header_cell is None:
+            print("Coluna 'Data vencimento' não encontrada.")
+            return False
+        col = header_cell.col
 
-    cadastrar_button = tk.Button(janela_cadastro_saudacao, text="Cadastrar",
-                                 command=lambda: cadastrar_mensagens_saudacao(mensagem_saudacao_entry))
-    cadastrar_button.pack()
+        # Atualiza a célula com a nova data
+        sheet.update_cell(row, col, nova_data)
+        return True
+    except Exception as e:
+        print(f"Erro ao atualizar a data de vencimento: {e}")
+        return False
 
-    janela_cadastro_saudacao.transient(janela_principal)  # Define a janela de cadastro como janela filha da janela principal
-    janela_cadastro_saudacao.grab_set()  # Impede que a janela principal seja clicada enquanto a janela de cadastro estiver aberta
 
-# Função para cadastrar mensagens de saudação
-def cadastrar_mensagens_saudacao(mensagem_saudacao_entry):
-    mensagens = mensagem_saudacao_entry.get("1.0", "end-1c").split('\n')
-    mensagens = [msg.strip() for msg in mensagens if msg.strip()]
+def processar_texto_e_atualizar(texto):
+    linhas = texto.splitlines()
+    usuario = None
+    nova_data = None
 
-    if mensagens:
-        MensagensSaudacao.clear()
-        MensagensSaudacao.extend(mensagens)
-        status_label.config(text="Mensagens de saudação cadastradas com sucesso!")
-        salvar_mensagens_saudacao()
+    # Percorre o array de strings para identificar as informações
+    for linha in linhas:
+        if "Usuário:" in linha and usuario is None:
+            usuario = linha.split("Usuário:")[1].strip()
+        if "O novo vencimento é:" in linha and nova_data is None:
+            # Extrai o texto completo após o marcador
+            nova_data_full = linha.split("O novo vencimento é:")[1].strip()
+            # Pega apenas a data (primeiro elemento antes do espaço)
+            nova_data = nova_data_full.split()[0]
 
-# Função para salvar as mensagens de saudação em um arquivo JSON
-def salvar_mensagens_saudacao():
-    with open("MensagensSaudacao.json", "w", encoding="utf-8") as arquivo_json:
-        json.dump({"MensagensSaudacao": MensagensSaudacao}, arquivo_json, ensure_ascii=False)
+    # Verifica se o usuário foi encontrado
+    if not usuario:
+        return "Usuário não encontrado no texto. Não foi possível atualizar."
 
-# Função para abrir a janela de cadastro de mensagens a enviar
-def abrir_janela_cadastro_enviar():
-    global janela_cadastro_enviar
-    janela_cadastro_enviar = tk.Toplevel(janela_principal)
-    janela_cadastro_enviar.title("Cadastro de Mensagens a Enviar")
+    # Verifica se uma data foi encontrada
+    if not nova_data:
+        return "Data de vencimento não encontrada no texto. Não foi possível atualizar."
 
-    mensagem_enviar_label = tk.Label(janela_cadastro_enviar, text="Insira a mensagem a enviar:")
-    mensagem_enviar_label.pack()
+    # Verifica se a data é válida (formato DD/MM/YYYY)
+    try:
+        datetime.datetime.strptime(nova_data, '%d/%m/%Y')
+    except ValueError:
+        return "Data de vencimento inválida. Certifique-se de que a data está no formato DD/MM/YYYY."
 
-    mensagem_enviar_entry = tk.Text(janela_cadastro_enviar, height=10, width=30)
-    mensagem_enviar_entry.pack()
+    # Atualiza a data de vencimento no Google Sheets
+    atualizado = atualizar_data_vencimento_usuario(usuario, nova_data)
+    if atualizado:
+        return f"Data de vencimento do usuário {usuario} atualizada para {nova_data} com sucesso!"
+    else:
+        return "Falha ao atualizar a data de vencimento. Verifique os logs."
 
-    cadastrar_button = tk.Button(janela_cadastro_enviar, text="Cadastrar",
-                                 command=lambda: cadastrar_mensagem_enviar(mensagem_enviar_entry))
-    cadastrar_button.pack()
+# Página de Atualização de Data de Vencimento do Cliente
+class PaginaAtualizarDataVencimentoCliente(tk.Frame):
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        self.controller = controller
 
-    janela_cadastro_enviar.transient(janela_principal)  # Define a janela de cadastro como janela filha da janela principal
-    janela_cadastro_enviar.grab_set()  # Impede que a janela principal seja clicada enquanto a janela de cadastro estiver aberta
+        label_instrucao = tk.Label(self, text="Cole o texto contendo os dados do usuário e a nova data de vencimento:")
+        label_instrucao.pack()
 
-# Função para cadastrar mensagem a enviar
-def cadastrar_mensagem_enviar(mensagem_enviar_entry):
-    mensagem = mensagem_enviar_entry.get("1.0", "end-1c")
+        self.texto_entry = tk.Text(self, height=10, width=40)
+        self.texto_entry.pack()
 
-    if mensagem:
-        MensagensEnviar.append(mensagem)
-        salvar_mensagens_enviar()
-        status_label.config(text="Mensagem cadastrada com sucesso!")
+        atualizar_button = tk.Button(self, text="Atualizar data de vencimento", command=self.atualizar_data)
+        atualizar_button.pack()
 
-    janela_cadastro_enviar.destroy()
+    def atualizar_data(self):
+        texto = self.texto_entry.get("1.0", "end-1c")
+        resultado = processar_texto_e_atualizar(texto)
+        exibir_mensagem_sucesso(resultado)
 
-# Função para salvar as mensagens a enviar em um arquivo JSON
-def salvar_mensagens_enviar():
-    with open("MensagensEnviar.json", "w", encoding="utf-8") as arquivo_json:
-        json.dump({"MensagensEnviar": MensagensEnviar}, arquivo_json, ensure_ascii=False)
+# --- Páginas já existentes ---
 
-# Cria a janela principal
-janela_principal = tk.Tk()
-janela_principal.title("Interface Principal")
+# Página de Cadastro
+class PaginaCadastro(tk.Frame):
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        self.controller = controller
 
-# Cria um botão para abrir a janela de cadastro de mensagens de saudação
-abrir_janela_cadastro_saudacao_button = tk.Button(janela_principal, text="Cadastrar Mensagem Saudação",
-                                                  command=abrir_janela_cadastro_saudacao)
-abrir_janela_cadastro_saudacao_button.pack()
+        cadastrar_saudacao_button = tk.Button(self, text="Cadastrar Mensagem Saudação", command=abrir_janela_cadastro_saudacao)
+        cadastrar_saudacao_button.pack()
 
-# Cria um botão para abrir a janela de cadastro de mensagens a enviar
-abrir_janela_cadastro_enviar_button = tk.Button(janela_principal, text="Cadastrar Mensagem a Enviar",
-                                                command=abrir_janela_cadastro_enviar)
-abrir_janela_cadastro_enviar_button.pack()
+        cadastrar_enviar_button = tk.Button(self, text="Cadastrar Mensagem a Enviar", command=abrir_janela_cadastro_enviar)
+        cadastrar_enviar_button.pack()
 
-# Cria um botão para iniciar o envio de mensagens com base na planilha
-iniciar_envio_button = tk.Button(janela_principal, text="Iniciar Envio", command=enviar_mensagens_planilha)
-iniciar_envio_button.pack()
+        consultar_enviar_button = tk.Button(self, text="Consultar Mensagens Enviar", command=abrir_janela_consultar_enviar)
+        consultar_enviar_button.pack()
 
-# Cria um rótulo para exibir o status
-status_label = tk.Label(janela_principal, text="")
-status_label.pack()
+# Página de Envio Padrão
+class PaginaEnvioPadrao(tk.Frame):
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        self.controller = controller
 
-# Inicializa a lista de mensagens de saudação
-MensagensSaudacao = []
+        numeros_label = tk.Label(self, text="Digite os números de telefone (um por linha):")
+        numeros_label.pack()
 
-# Inicializa a lista de mensagens de saudação com mensagens padrão, se houver
-try:
-    with open("MensagensSaudacao.json", "r") as arquivo_json:
-        dados = json.load(arquivo_json)
-        if "MensagensSaudacao" in dados:
-            MensagensSaudacao = dados["MensagensSaudacao"]
-except FileNotFoundError:
-    pass
+        self.numeros_entry = tk.Text(self, height=10, width=30)
+        self.numeros_entry.pack()
 
-# Inicializa a lista de mensagens a enviar
-MensagensEnviar = []
+        iniciar_envio_button = tk.Button(self, text="Iniciar Envio Padrão", command=lambda: iniciar_envio_numeros(self.numeros_entry))
+        iniciar_envio_button.pack()
 
-# Inicializa a lista de mensagens a enviar com mensagens padrão, se houver
-try:
-    with open("MensagensEnviar.json", "r") as arquivo_json:
-        dados = json.load(arquivo_json)
-        if "MensagensEnviar" in dados:
-            MensagensEnviar = dados["MensagensEnviar"]
-except FileNotFoundError:
-    pass
+# Página de Lembrete Vencimento
+class PaginaLembreteVencimento(tk.Frame):
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        self.controller = controller
 
-# Inicia a interface gráfica
-janela_principal.mainloop()
+        iniciar_lembrete_button = tk.Button(self, text="Iniciar Envio de Lembretes", command=enviar_mensagens_planilha)
+        iniciar_lembrete_button.pack()
+
+# Classe principal da aplicação
+class App(tk.Tk):
+    def __init__(self):
+        super().__init__()
+        self.title("Interface Principal")
+        self.geometry("600x400")
+
+        carregar_mensagens_saudacao()
+        carregar_mensagens_enviar()
+
+        self.notebook = ttk.Notebook(self)
+        self.notebook.pack(fill="both", expand=True)
+
+        self.pagina_principal = tk.Frame(self.notebook)
+        self.pagina_cadastro = PaginaCadastro(self.notebook, self)
+        self.pagina_envio_padrao = PaginaEnvioPadrao(self.notebook, self)
+        self.pagina_lembrete_vencimento = PaginaLembreteVencimento(self.notebook, self)
+        self.pagina_atualizar_data_vencimento = PaginaAtualizarDataVencimentoCliente(self.notebook, self)
+
+        self.notebook.add(self.pagina_principal, text="Principal")
+        self.notebook.add(self.pagina_cadastro, text="Cadastro")
+        self.notebook.add(self.pagina_envio_padrao, text="Envio Padrão")
+        self.notebook.add(self.pagina_lembrete_vencimento, text="Lembrete Vencimento")
+        self.notebook.add(self.pagina_atualizar_data_vencimento, text="Atualizar data vencimento cliente")
+
+        self.status_label = tk.Label(self, text="", bd=1, relief=tk.SUNKEN, anchor=tk.W)
+        self.status_label.pack(side=tk.BOTTOM, fill=tk.X)
+
+# Iniciar a aplicação
+if __name__ == "__main__":
+    app = App()
+    app.mainloop()

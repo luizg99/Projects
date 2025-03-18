@@ -265,7 +265,6 @@ def iniciar_envio_numeros():
             time.sleep(3)
         except Exception:
             print('O número: ', numero, ' é invalido por isso não foi enviado nem uma mensagem.   ', datetime.date.today())
-
             if i < len(numerosArray['numeros']) - 1:
                 continue
 

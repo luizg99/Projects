@@ -20,6 +20,12 @@ from oauth2client.service_account import ServiceAccountCredentials
 MensagensSaudacao = []
 MensagensEnviar = []
 
+def get_chrome_driver():
+    service = Service(ChromeDriverManager().install())
+    options = webdriver.ChromeOptions()
+    options.add_argument(r"user-data-dir=C:\WhatsAppProfile")
+    return webdriver.Chrome(service=service, options=options)
+
 # Função para carregar mensagens de saudação
 def carregar_mensagens_saudacao():
     global MensagensSaudacao
@@ -182,7 +188,7 @@ def Salvar_numeros_a_enviar(telefone_text):
         salvar_numeros_telefones(numeros)
 
 def iniciar_envio_numeros(numeros_entry):
-    # Salva os números digitados na Text widget em um arquivo JSON
+    # Salva os números digitados
     numeros = numeros_entry.get("1.0", "end-1c").split('\n')
     numeros = [numero.strip() for numero in numeros if numero.strip()]
     if numeros:
@@ -196,12 +202,11 @@ def iniciar_envio_numeros(numeros_entry):
     Saudacao = ler_json('MensagensSaudacao.json')
     MensagemEnviar = ler_json('MensagensEnviar.json')
 
-    # Inicializa o navegador e abre o WhatsApp Web
-    service = Service(ChromeDriverManager().install())
-    navegador = webdriver.Chrome(service=service)
+    # Abre o navegador utilizando a função que salva a sessão
+    navegador = get_chrome_driver()
     navegador.get("https://web.whatsapp.com")
 
-    # Aguarda o login do usuário (verificando o elemento 'side')
+    # Aguarda o login (caso a sessão não esteja salva ainda)
     while True:
         try:
             navegador.find_element('id', 'side')
@@ -213,10 +218,9 @@ def iniciar_envio_numeros(numeros_entry):
     NumerosEncaminhar = []
     UltimaMensagem = ''
 
-    # Itera sobre os números salvos
     for i, numero in enumerate(numerosArray['numeros']):
         try:
-            tempoEsperar = random.randint(5, 15)  # Intervalo aleatório entre envios
+            tempoEsperar = random.randint(5, 15)
             time.sleep(tempoEsperar)
             mensagemSaudacao = random.choice(Saudacao["MensagensSaudacao"])
             link = f"https://web.whatsapp.com/send?phone=55{numero}&text={mensagemSaudacao}"
@@ -241,7 +245,6 @@ def iniciar_envio_numeros(numeros_entry):
 
         NumerosEncaminhar.append(numero)
 
-        # A cada 5 envios, encaminha uma mensagem adicional
         if count >= 5:
             mensagem = random.choice(MensagemEnviar["MensagensEnviar"])
             while UltimaMensagem == mensagem:
@@ -375,14 +378,15 @@ def enviar_mensagens_planilha():
             print("Erro: A planilha não contém as colunas necessárias.")
             return
 
-        # Data atual no formato da planilha (exemplo: 18/03/2025)
-        data_atual = datetime.datetime.now().strftime('%d/%m/%Y')
-
         # Iterar sobre as linhas da planilha
         for index, row in df.iterrows():
             telefone = row['Telefone']
             data_vencimento = row['Data vencimento']  # Pega o valor da coluna "Data vencimento"
             data_ultimo_envio = row['Data ultimo envio']
+
+            # Verifica se o telefone está vazio ou nulo
+            if pd.isna(telefone) or telefone.strip() == "":
+                continue  # pula para a próxima linha do DataFrame
 
             # Verificar se a data de vencimento está vazia ou é nula
             if pd.isna(data_vencimento) or data_vencimento.strip() == "":
@@ -397,45 +401,45 @@ def enviar_mensagens_planilha():
 
                     # Enviar a mensagem
                     mensagem = random.choice(MensagensEnviar)  # Escolhe uma mensagem aleatória
-                    enviar_mensagem(telefone_formatado, mensagem)
+                    enviar_mensagem(telefone_formatado, mensagem, df, index, sheet_url_clientes)
 
-                    # Atualizar a coluna "Data ultimo envio" com a data atual
-                    df.at[index, 'Data ultimo envio'] = data_atual
 
-            # Salvar a planilha atualizada no Google Sheets
-            atualizar_google_sheets(df, sheet_url_clientes)
-            print(f"Mensagens enviadas e planilha atualizada com sucesso!")
     except Exception as e:
         print(f"Erro: {str(e)}")
 
-# Função para enviar mensagem via WhatsApp
-def enviar_mensagem(telefone, mensagem):
+def enviar_mensagem(telefone, mensagem, df, index, sheet_url_clientes):
     try:
-        service = Service(ChromeDriverManager().install())
-        navegador = webdriver.Chrome(service=service)
-        navegador.get("https://web.whatsapp.com")
+        # Data atual no formato da planilha (exemplo: 18/03/2025)
+        data_atual = datetime.datetime.now().strftime('%d/%m/%Y')
 
+        navegador = get_chrome_driver()
+        navegador.get("https://web.whatsapp.com")
+        # Aguarda até que o elemento com id "side" esteja disponível (indicando que o WhatsApp carregou)
         while True:
             try:
                 navegador.find_element('id', 'side')
                 break
             except NoSuchElementException:
                 time.sleep(1)
-
         link = f"https://web.whatsapp.com/send?phone=55{telefone}&text={mensagem}"
         navegador.get(link)
-
         while True:
             try:
                 navegador.find_element('id', 'side')
                 break
             except NoSuchElementException:
                 time.sleep(1)
-
         time.sleep(4)
         navegador.find_element('xpath', '//*[@id="main"]/footer/div[1]/div/span/div/div[2]/div[1]/div[2]/div/p').send_keys(Keys.ENTER)
         time.sleep(3)
         navegador.close()
+
+        # Atualizar a coluna "Data ultimo envio" com a data atual
+        df.at[index, 'Data ultimo envio'] = data_atual
+
+        # Salvar a planilha atualizada no Google Sheets
+        atualizar_google_sheets(df, sheet_url_clientes)
+        print(f"Mensagens enviadas e planilha atualizada com sucesso!")
     except Exception as e:
         exibir_mensagem_sucesso(f"Erro ao enviar mensagem para {telefone}: {str(e)}")
 

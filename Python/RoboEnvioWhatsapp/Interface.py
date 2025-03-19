@@ -409,21 +409,19 @@ def enviar_mensagens_planilha():
             if data_vencimento.strip() == (data_atual_date + datetime.timedelta(days=1)).strftime('%d/%m/%Y'):
                 # Se data_ultimo_envio estiver vazio ou for menor que data_atual, enviar
                 if pd.isna(data_ultimo_envio) or data_ultimo_envio.strip() == "":
-                    # sem envio anterior => pode mandar
                     enviar_novamente = True
                 else:
-                    # verifica se o último envio foi antes de hoje
                     try:
                         data_ultimo_envio_date = datetime.datetime.strptime(data_ultimo_envio.strip(), '%d/%m/%Y')
                         enviar_novamente = (data_ultimo_envio_date < data_atual_date)
                     except ValueError:
-                        enviar_novamente = True  # se não conseguir converter, envia
+                        enviar_novamente = True
 
                 if enviar_novamente:
                     telefone_formatado = formatar_telefone(telefone)
-                    mensagem = random.choice(MensagensEnviar)
+                    # Define a mensagem fixa substituindo [data] pela data de vencimento
+                    mensagem = f"Caro cliente, estamos passando para informar que sua assinatura vence em {data_vencimento.strip()}. Para evitar interrupções no serviço 📺🎬📽, pedimos que realize a renovação dentro do prazo. Qualquer dúvida, estamos à disposição! 😊\n\nObs: Caso não queira receber lembretes de vencimento digite 'Não receber'."
                     enviar_mensagem(telefone_formatado, mensagem, df, index, sheet_url_clientes)
-                    # Atualiza a coluna "Data ultimo envio" com a data atual
                     df.at[index, "Data ultimo envio"] = data_atual_str
 
             # ------------------------------------------------------------
@@ -431,29 +429,25 @@ def enviar_mensagens_planilha():
             # => reenviar mensagem se passaram 7 dias desde a última cobrança
             # ------------------------------------------------------------
             elif data_vencimento_date < data_atual_date:
-                # Verifica se já enviamos alguma mensagem antes
                 if pd.isna(data_ultimo_envio) or data_ultimo_envio.strip() == "":
-                    # Nunca enviou => envia agora
                     telefone_formatado = formatar_telefone(telefone)
-                    mensagem = random.choice(MensagensEnviar)
+                    # Define a mensagem fixa para cliente vencido, usando também a data de vencimento
+                    mensagem = f"Caro cliente, estamos passando para informar que sua assinatura vence em {data_vencimento.strip()}. Para evitar interrupções no serviço 📺🎬📽, pedimos que realize a renovação dentro do prazo. Qualquer dúvida, estamos à disposição! 😊\n\nObs: Caso não queira receber lembretes de vencimento digite 'Não receber'."
                     enviar_mensagem(telefone_formatado, mensagem, df, index, sheet_url_clientes)
                     df.at[index, "Data ultimo envio"] = data_atual_str
                 else:
-                    # Já houve um envio anterior, verificar se já se passaram 7 dias
                     try:
                         data_ultimo_envio_date = datetime.datetime.strptime(data_ultimo_envio.strip(), '%d/%m/%Y')
                         diferenca_dias = (data_atual_date - data_ultimo_envio_date).days
 
                         if diferenca_dias >= 7:
-                            # Já se passaram 7 dias => enviar novamente
                             telefone_formatado = formatar_telefone(telefone)
-                            mensagem = random.choice(MensagensEnviar)
+                            mensagem = f"Caro cliente, estamos passando para informar que sua assinatura vence em {data_vencimento.strip()}. Para evitar interrupções no serviço 📺🎬📽, pedimos que realize a renovação dentro do prazo. Qualquer dúvida, estamos à disposição! 😊\n\nObs: Caso não queira receber lembretes de vencimento digite 'Não receber'."
                             enviar_mensagem(telefone_formatado, mensagem, df, index, sheet_url_clientes)
                             df.at[index, "Data ultimo envio"] = data_atual_str
                     except ValueError:
-                        # Se não conseguir converter a data_ultimo_envio, envia por segurança
                         telefone_formatado = formatar_telefone(telefone)
-                        mensagem = random.choice(MensagensEnviar)
+                        mensagem = f"Caro cliente, estamos passando para informar que sua assinatura vence em {data_vencimento.strip()}. Para evitar interrupções no serviço 📺🎬📽, pedimos que realize a renovação dentro do prazo. Qualquer dúvida, estamos à disposição! 😊\n\nObs: Caso não queira receber lembretes de vencimento digite 'Não receber'."
                         enviar_mensagem(telefone_formatado, mensagem, df, index, sheet_url_clientes)
                         df.at[index, "Data ultimo envio"] = data_atual_str
 

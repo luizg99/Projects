@@ -366,43 +366,96 @@ def enviar_mensagens_planilha():
         # Grid 0 é a principal
         vGridId = 0
 
-        # Grid de testes
-        # vGridId = 493313803
-
-        sheet_url_clientes = f"https://docs.google.com/spreadsheets/d/1ifSYQKY2W-DA0D0wYY00tKag90Tp5FJP3mdZ0lConUs/export?format=csv&gid={vGridId}"
-        # Carregar a planilha
+        sheet_url_clientes = (
+            f"https://docs.google.com/spreadsheets/d/1ifSYQKY2W-DA0D0wYY00tKag90Tp5FJP3mdZ0lConUs/export?format=csv&gid={vGridId}"
+        )
+        # Carregar a planilha em um DataFrame
         df = pd.read_csv(sheet_url_clientes)
 
         # Verificar se as colunas necessárias existem
-        if 'Data vencimento' not in df.columns or 'Data ultimo envio' not in df.columns or 'Telefone' not in df.columns:
-            print("Erro: A planilha não contém as colunas necessárias.")
-            return
+        colunas_necessarias = ["Data vencimento", "Data ultimo envio", "Telefone"]
+        for col in colunas_necessarias:
+            if col not in df.columns:
+                print(f"Erro: A planilha não contém a coluna '{col}'.")
+                return
 
-        # Iterar sobre as linhas da planilha
+        # Data atual (string e objeto datetime)
+        data_atual_str = datetime.datetime.now().strftime('%d/%m/%Y')
+        data_atual_date = datetime.datetime.strptime(data_atual_str, '%d/%m/%Y')
+
         for index, row in df.iterrows():
-            telefone = row['Telefone']
-            data_vencimento = row['Data vencimento']  # Pega o valor da coluna "Data vencimento"
-            data_ultimo_envio = row['Data ultimo envio']
+            telefone = row["Telefone"]
+            data_vencimento = row["Data vencimento"]
+            data_ultimo_envio = row["Data ultimo envio"]
 
-            # Verifica se o telefone está vazio ou nulo
+            # 1) Se telefone está vazio, pula
             if pd.isna(telefone) or telefone.strip() == "":
-                continue  # pula para a próxima linha do DataFrame
+                continue
 
-            # Verificar se a data de vencimento está vazia ou é nula
+            # 2) Se data de vencimento está vazia, pula
             if pd.isna(data_vencimento) or data_vencimento.strip() == "":
-                continue  # Pula para a próxima iteração
+                continue
 
-            # Verificar se a data de vencimento é um dia após a data atual
-            if data_vencimento == (datetime.datetime.now() + datetime.timedelta(days=1)).strftime('%d/%m/%Y'):
-                # Verificar se a data do último envio é menor que a data atual ou está vazia
-                if pd.isna(data_ultimo_envio) or data_ultimo_envio < data_atual:
-                    # Formatar o número de telefone
+            # Converte a data de vencimento em objeto datetime
+            try:
+                data_vencimento_date = datetime.datetime.strptime(data_vencimento.strip(), '%d/%m/%Y')
+            except ValueError:
+                # Se não conseguir converter, pula
+                continue
+
+            # ------------------------------------------------------------
+            # SITUAÇÃO 1: Vencimento é amanhã => manda lembrete
+            # ------------------------------------------------------------
+            if data_vencimento.strip() == (data_atual_date + datetime.timedelta(days=1)).strftime('%d/%m/%Y'):
+                # Se data_ultimo_envio estiver vazio ou for menor que data_atual, enviar
+                if pd.isna(data_ultimo_envio) or data_ultimo_envio.strip() == "":
+                    # sem envio anterior => pode mandar
+                    enviar_novamente = True
+                else:
+                    # verifica se o último envio foi antes de hoje
+                    try:
+                        data_ultimo_envio_date = datetime.datetime.strptime(data_ultimo_envio.strip(), '%d/%m/%Y')
+                        enviar_novamente = (data_ultimo_envio_date < data_atual_date)
+                    except ValueError:
+                        enviar_novamente = True  # se não conseguir converter, envia
+
+                if enviar_novamente:
                     telefone_formatado = formatar_telefone(telefone)
-
-                    # Enviar a mensagem
-                    mensagem = random.choice(MensagensEnviar)  # Escolhe uma mensagem aleatória
+                    mensagem = random.choice(MensagensEnviar)
                     enviar_mensagem(telefone_formatado, mensagem, df, index, sheet_url_clientes)
+                    # Atualiza a coluna "Data ultimo envio" com a data atual
+                    df.at[index, "Data ultimo envio"] = data_atual_str
 
+            # ------------------------------------------------------------
+            # SITUAÇÃO 2: Cliente já está vencido (data_vencimento < hoje)
+            # => reenviar mensagem se passaram 7 dias desde a última cobrança
+            # ------------------------------------------------------------
+            elif data_vencimento_date < data_atual_date:
+                # Verifica se já enviamos alguma mensagem antes
+                if pd.isna(data_ultimo_envio) or data_ultimo_envio.strip() == "":
+                    # Nunca enviou => envia agora
+                    telefone_formatado = formatar_telefone(telefone)
+                    mensagem = random.choice(MensagensEnviar)
+                    enviar_mensagem(telefone_formatado, mensagem, df, index, sheet_url_clientes)
+                    df.at[index, "Data ultimo envio"] = data_atual_str
+                else:
+                    # Já houve um envio anterior, verificar se já se passaram 7 dias
+                    try:
+                        data_ultimo_envio_date = datetime.datetime.strptime(data_ultimo_envio.strip(), '%d/%m/%Y')
+                        diferenca_dias = (data_atual_date - data_ultimo_envio_date).days
+
+                        if diferenca_dias >= 7:
+                            # Já se passaram 7 dias => enviar novamente
+                            telefone_formatado = formatar_telefone(telefone)
+                            mensagem = random.choice(MensagensEnviar)
+                            enviar_mensagem(telefone_formatado, mensagem, df, index, sheet_url_clientes)
+                            df.at[index, "Data ultimo envio"] = data_atual_str
+                    except ValueError:
+                        # Se não conseguir converter a data_ultimo_envio, envia por segurança
+                        telefone_formatado = formatar_telefone(telefone)
+                        mensagem = random.choice(MensagensEnviar)
+                        enviar_mensagem(telefone_formatado, mensagem, df, index, sheet_url_clientes)
+                        df.at[index, "Data ultimo envio"] = data_atual_str
 
     except Exception as e:
         print(f"Erro: {str(e)}")

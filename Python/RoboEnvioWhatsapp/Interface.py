@@ -478,7 +478,7 @@ def enviar_mensagem(telefone, mensagem, df, index, sheet_url_clientes):
                 time.sleep(1)
         time.sleep(4)
         navegador.find_element('xpath', '//*[@id="main"]/footer/div[1]/div/span/div/div[2]/div[1]/div[2]/div/p').send_keys(Keys.ENTER)
-        time.sleep(3)
+        time.sleep(15)
         navegador.close()
 
         # Atualizar a coluna "Data ultimo envio" com a data atual

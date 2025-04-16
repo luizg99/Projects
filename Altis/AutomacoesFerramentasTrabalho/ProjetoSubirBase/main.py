@@ -27,8 +27,8 @@ class FTPBackupManager:
         self.ftp_host = tk.StringVar()
         self.ftp_user = tk.StringVar()
         self.ftp_password = tk.StringVar()
-        self.dest_folder = tk.StringVar(value="C:/subirbase")
-        self.client_folder = tk.StringVar(value="backup-bd/")
+        self.dest_folder = tk.StringVar(value=r"C:\subirbase")  # raw string
+        self.client_folder = tk.StringVar(value="MIMACO")
         self.ftp = None
         self.current_directory = "/"
 
@@ -322,12 +322,11 @@ class FTPBackupManager:
         self.status_var.set(f"Backup mais recente: {latest}")
 
     def show_last_backups(self):
-        """Entra na pasta selecionada e mostra os últimos 3 arquivos de backup"""
+        """Mostra até 3 backups mais recentes, seguidos de seus arquivos FILES (se houver)"""
         if not self.ftp:
             messagebox.showwarning("Aviso", "Conecte-se ao FTP primeiro")
             return
 
-        # Verifica se algum diretório está selecionado
         selection = self.file_list.selection()
         if not selection:
             messagebox.showwarning("Aviso", "Selecione uma pasta do cliente na lista")
@@ -342,16 +341,16 @@ class FTPBackupManager:
             return
 
         try:
-            # Entrar na pasta do cliente
             self.ftp.cwd(selected_name)
             self.current_directory = self.ftp.pwd()
 
-            # Buscar arquivos de backup dentro da pasta
             files = []
             self.ftp.dir(files.append)
 
             backup_pattern = re.compile(r'.*\.(zip|7z|rar|tar|gz|bak|dmp)$', re.IGNORECASE)
-            backup_files = []
+
+            backups = []
+            files_extra = []
 
             for item in files:
                 parts = item.split()
@@ -359,53 +358,47 @@ class FTPBackupManager:
                     name_idx = item.find(parts[7]) + len(parts[7]) + 1
                     name = item[name_idx:].strip()
 
-                    if not parts[0].startswith('d') and backup_pattern.match(name):
+                    if not parts[0].startswith('d'):
                         date_str = f"{parts[5]} {parts[6]} {parts[7]}"
                         try:
                             current_year = datetime.datetime.now().year
                             parsed_date = parse(f"{date_str} {current_year}", fuzzy=True)
                             size = int(parts[4])
-                            backup_files.append((name, parsed_date, size))
+                            if "FILES" in name.upper():
+                                files_extra.append((name, parsed_date, size))
+                            elif backup_pattern.match(name):
+                                backups.append((name, parsed_date, size))
                         except Exception as e:
                             print(f"Erro ao processar {name}: {e}")
 
-            # Ordenar e pegar os 3 mais recentes
-            backup_files.sort(key=lambda x: x[1], reverse=True)
-            top3 = backup_files[:3]
+            # Ordenar backups por data (decrescente)
+            backups.sort(key=lambda x: x[1], reverse=True)
+            top3_backups = backups[:3]
 
             # Limpar lista atual
-            for item in self.file_list.get_children():
-                self.file_list.delete(item)
+            self.file_list.delete(*self.file_list.get_children())
 
-            # Mostrar os 3 backups na grid
-            for name, date, size in top3:
+            # Exibir backups, depois seus FILES
+            for backup in top3_backups:
+                name, date, size = backup
                 self.file_list.insert("", tk.END, values=(name, date.strftime("%b %d %H:%M"), size))
 
-            if top3:
-                self.status_var.set(f"Mostrando os últimos 3 backups de '{selected_name}'")
+            for backup in top3_backups:
+                date = backup[1].date()
+                matching_file = next((f for f in files_extra if f[1].date() == date), None)
+                if matching_file:
+                    name, date, size = matching_file
+                    self.file_list.insert("", tk.END, values=(name, date.strftime("%b %d %H:%M"), size))
+
+            if top3_backups:
+                self.status_var.set(f"Backups + FILES exibidos para '{selected_name}'")
             else:
                 self.status_var.set(f"Nenhum backup encontrado em '{selected_name}'")
+                messagebox.showinfo("Informação", "Nenhum backup encontrado nessa pasta.")
 
         except Exception as e:
             messagebox.showerror("Erro", f"Falha ao acessar pasta '{selected_name}': {str(e)}")
 
-
-            # Ordenar e pegar os 3 mais recentes
-            backup_files.sort(key=lambda x: x[1], reverse=True)
-            top3 = backup_files[:3]
-
-            # Limpar lista atual
-            for item in self.file_list.get_children():
-                self.file_list.delete(item)
-
-            # Mostrar os 3 backups na grid
-            for name, date, size in top3:
-                self.file_list.insert("", tk.END, values=(name, date.strftime("%b %d %H:%M"), size))
-
-            if top3:
-                self.status_var.set(f"Mostrando os últimos 3 backups de '{selected_name}'")
-            else:
-                self.status_var.set(f"Nenhum backup encontrado em '{selected_name}'")
     def get_selected_file(self):
         """Retorna o nome do arquivo selecionado ou None"""
         selection = self.file_list.selection()
@@ -417,82 +410,114 @@ class FTPBackupManager:
         return values[0]
 
     def download_file(self, filename, dest_path):
-        """Baixa um arquivo do FTP para o destino especificado"""
+        """Baixa um arquivo do FTP com barra de progresso real"""
         if not self.ftp:
             return False
 
         try:
+            # Obter o tamanho total do arquivo
+            total_size = self.ftp.size(filename)
+            downloaded = 0
+
             self.status_var.set(f"Baixando {filename}...")
-            self.progress.start()
+            self.progress.config(mode='determinate', maximum=total_size, value=0)
+            self.progress.start(10)  # só pra mostrar algo no início
             self.root.update()
 
-            # Criar diretório de destino se não existir
+            # Criar diretório de destino
             os.makedirs(os.path.dirname(dest_path), exist_ok=True)
 
-            # Baixar o arquivo
             with open(dest_path, 'wb') as f:
-                self.ftp.retrbinary(f'RETR {filename}', f.write)
+                def callback(data):
+                    nonlocal downloaded
+                    f.write(data)
+                    downloaded += len(data)
+                    self.progress['value'] = downloaded
+                    self.root.update_idletasks()
+
+                self.ftp.retrbinary(f'RETR {filename}', callback)
 
             self.status_var.set(f"Download de {filename} concluído")
             return True
+
         except Exception as e:
             messagebox.showerror("Erro", f"Falha ao baixar arquivo: {str(e)}")
             self.status_var.set("Falha no download")
             return False
+
         finally:
             self.progress.stop()
+            self.progress['value'] = 0
+            self.progress.config(mode='indeterminate')  # volta ao modo original
 
     def extract_file(self, filepath, dest_folder):
-        """Extrai um arquivo para o destino especificado"""
+        """Extrai um arquivo para o destino especificado com barra de progresso real"""
         try:
             self.status_var.set(f"Extraindo {os.path.basename(filepath)}...")
-            self.progress.start()
-            self.root.update()
+            self.progress.config(mode='indeterminate')
+            self.progress.start(10)
+            self.root.update_idletasks()
 
             filename = os.path.basename(filepath).lower()
-
-            # Criar o diretório de destino se não existir
             os.makedirs(dest_folder, exist_ok=True)
-
-            # Extrair de acordo com o formato
             extracted_files = []
+
+            # Progressivo real para formatos iteráveis
+            def extract_with_progress(file_list, extractor_func):
+                total = len(file_list)
+                self.progress.stop()
+                self.progress.config(mode='determinate', maximum=total, value=0)
+
+                for i, item in enumerate(file_list, 1):
+                    extractor_func(item)
+                    self.progress['value'] = i
+                    self.root.update_idletasks()
 
             if filename.endswith('.zip'):
                 with zipfile.ZipFile(filepath, 'r') as zip_ref:
-                    zip_ref.extractall(dest_folder)
-                    extracted_files = zip_ref.namelist()
+                    file_list = zip_ref.namelist()
+                    extract_with_progress(file_list, lambda item: zip_ref.extract(item, dest_folder))
+                    extracted_files = file_list
+
             elif filename.endswith('.7z'):
                 with py7zr.SevenZipFile(filepath, mode='r') as z:
-                    z.extractall(dest_folder)
-                    extracted_files = z.getnames()
+                    file_list = z.getnames()
+                    extract_with_progress(file_list, lambda _: z.extractall(dest_folder))
+                    extracted_files = file_list
+
             elif filename.endswith('.rar'):
                 with rarfile.RarFile(filepath, 'r') as rf:
-                    rf.extractall(dest_folder)
-                    extracted_files = rf.namelist()
+                    file_list = rf.namelist()
+                    extract_with_progress(file_list, lambda item: rf.extract(item, dest_folder))
+                    extracted_files = file_list
+
             elif filename.endswith('.tar'):
                 with tarfile.open(filepath, 'r') as tar:
-                    tar.extractall(dest_folder)
-                    extracted_files = tar.getnames()
+                    file_list = tar.getnames()
+                    extract_with_progress(file_list, lambda item: tar.extract(item, dest_folder))
+                    extracted_files = file_list
+
             elif filename.endswith('.gz'):
                 if filename.endswith('.tar.gz'):
                     with tarfile.open(filepath, 'r:gz') as tar:
-                        tar.extractall(dest_folder)
-                        extracted_files = tar.getnames()
+                        file_list = tar.getnames()
+                        extract_with_progress(file_list, lambda item: tar.extract(item, dest_folder))
+                        extracted_files = file_list
                 else:
-                    # Extrair arquivo .gz simples
                     output_file = os.path.join(dest_folder, os.path.splitext(os.path.basename(filepath))[0])
                     with gzip.open(filepath, 'rb') as f_in:
                         with open(output_file, 'wb') as f_out:
-                            f_out.write(f_in.read())
+                            data = f_in.read()
+                            f_out.write(data)
                     extracted_files = [output_file]
+
             else:
-                # Para outros formatos, apenas copiar
                 import shutil
                 dest_file = os.path.join(dest_folder, os.path.basename(filepath))
                 shutil.copy2(filepath, dest_file)
                 extracted_files = [dest_file]
 
-            # Armazenar o caminho do arquivo DMP ou o primeiro arquivo extraído
+            # Armazenar caminho do .dmp ou outro extraído
             dmp_files = [f for f in extracted_files if f.lower().endswith('.dmp')]
             if dmp_files:
                 self.last_extracted_file = os.path.join(dest_folder, dmp_files[0])
@@ -503,12 +528,16 @@ class FTPBackupManager:
 
             self.status_var.set(f"Extração de {os.path.basename(filepath)} concluída")
             return True
+
         except Exception as e:
             messagebox.showerror("Erro", f"Falha ao extrair arquivo: {str(e)}")
             self.status_var.set("Falha na extração")
             return False
+
         finally:
             self.progress.stop()
+            self.progress.config(mode='indeterminate')
+            self.progress['value'] = 0
 
     def scriptDeletarBase(self, TextodeleteUser):
         with open(diretorioNomeArquivo, "w") as script:
@@ -572,45 +601,41 @@ class FTPBackupManager:
             script.write("\n")
             script.close()
 
-    def execute_upload_script(self):
-        """Executa o comando para subir a base no Oracle"""
+    def subir_base_oracle(self, diretorioBase):
+        """Executa o processo completo de subir a base no Oracle"""
         try:
             self.status_var.set("Iniciando processo de subir a base...")
             self.progress.start()
             self.root.update()
 
-            # Obter valores dos campos
-            TextoToUser = "MASTER"  # Campo para usuário de destino
-            TextofromUser = "MASTER"  # Campo para usuário de origem
+            TextoToUser = "MASTER"
+            TextofromUser = "ALTIS"
 
-            # Verificar se os campos estão preenchidos
             if not TextoToUser or not TextofromUser:
                 messagebox.showerror("Erro", "Preencha os campos de usuário de origem e destino")
                 return False
 
-            # Obter caminho do arquivo extraído
-            diretorioBase = self.last_extracted_file
-            if not diretorioBase or not os.path.exists(diretorioBase):
-                messagebox.showerror("Erro", "Arquivo de base não encontrado")
+            if not diretorioBase or not diretorioBase.lower().endswith(".dmp") or not os.path.exists(diretorioBase):
+                messagebox.showerror("Erro", "Arquivo .dmp não encontrado.")
                 return False
 
-            # Executar o comando apropriado de acordo com a versão do Oracle
-            self.scriptDeletarBase(TextofromUser)
-            self.scriptCriarUsuario(TextoToUser)
-            self.scriptCompleto(TextoToUser, TextofromUser)
+            self.scriptCompleto(TextodeleteUser=TextoToUser, TextoToUser=TextoToUser)
 
-            subprocess.call(["sqlplus", "/nolog", "@" + diretorioNomeArquivo])
+            subprocess.call(f'start cmd /k sqlplus /nolog @{diretorioNomeArquivo}', shell=True)
 
-            os.system(
-                f"start /wait cmd /c D:/Oracle21c/bin/imp.exe {TextoToUser}/ALTIS@XE file={diretorioNomeArquivo} fromuser={TextofromUser} touser={TextoToUser}")
-
+            comando_imp = (
+                f'start cmd /k "C:/Oracle21c/bin/imp.exe {TextoToUser}/ALTIS@XE '
+                f'file=\"{diretorioBase}\" fromuser={TextofromUser} touser={TextoToUser}"'
+            )
+            subprocess.call(comando_imp, shell=True)
 
             self.status_var.set("Processo de importação iniciado com sucesso")
-            messagebox.showinfo("Sucesso", "Processo de importação da base iniciado")
+            messagebox.showinfo("Sucesso", "Base Oracle foi preparada e a importação iniciada com sucesso.")
             return True
+
         except Exception as e:
-            messagebox.showerror("Erro", f"Falha ao iniciar a importação: {str(e)}")
-            self.status_var.set("Falha ao iniciar a importação")
+            messagebox.showerror("Erro", f"Falha ao subir base: {str(e)}")
+            self.status_var.set("Erro durante o processo de importação")
             return False
         finally:
             self.progress.stop()
@@ -649,15 +674,13 @@ class FTPBackupManager:
             messagebox.showwarning("Aviso", "Selecione uma pasta de destino")
             return
 
-        # Caminho completo para o arquivo baixado
         dest_path = os.path.join(dest_folder, filename)
 
-        # Executar em uma thread separada para não bloquear a UI
         def process():
             if self.download_file(filename, dest_path):
                 if self.extract_file(dest_path, dest_folder):
-                    self.execute_upload_script()
-
+                    caminho_dmp = self.last_extracted_file
+                    self.subir_base_oracle(caminho_dmp)
         threading.Thread(target=process).start()
 
     def select_folder(self):

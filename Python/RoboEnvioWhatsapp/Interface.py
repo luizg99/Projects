@@ -9,7 +9,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 import datetime
 import random
-import os
+from selenium.webdriver import ActionChains
 import time
 import pyperclip
 import pandas as pd
@@ -19,6 +19,12 @@ from oauth2client.service_account import ServiceAccountCredentials
 # Variáveis globais
 MensagensSaudacao = []
 MensagensEnviar = []
+
+def get_chrome_driver():
+    service = Service(ChromeDriverManager().install())
+    options = webdriver.ChromeOptions()
+    options.add_argument(r"user-data-dir=C:\WhatsAppProfile")
+    return webdriver.Chrome(service=service, options=options)
 
 # Função para carregar mensagens de saudação
 def carregar_mensagens_saudacao():
@@ -181,15 +187,130 @@ def Salvar_numeros_a_enviar(telefone_text):
     if numeros:
         salvar_numeros_telefones(numeros)
 
-# Função para iniciar o envio de números
-def iniciar_envio_numeros(telefone_text):
-    numeros = telefone_text.get("1.0", "end-1c").split('\n')
+def iniciar_envio_numeros(numeros_entry):
+    # Salva os números digitados
+    numeros = numeros_entry.get("1.0", "end-1c").split('\n')
     numeros = [numero.strip() for numero in numeros if numero.strip()]
     if numeros:
-        exibir_mensagem_sucesso(f"Iniciando envio para os números: {', '.join(numeros)}")
-        # Aqui você pode adicionar a lógica de envio de mensagens
+        salvar_numeros_telefones(numeros)
     else:
-        exibir_mensagem_sucesso("Nenhum número válido foi inserido.")
+        exibir_mensagem_sucesso("Nenhum número informado!")
+        return
+
+    # Carrega os dados dos arquivos JSON
+    numerosArray = ler_json('NumerosTelefones.json')
+    Saudacao = ler_json('MensagensSaudacao.json')
+    MensagemEnviar = ler_json('MensagensEnviar.json')
+
+    # Abre o navegador utilizando a função que salva a sessão
+    navegador = get_chrome_driver()
+    navegador.get("https://web.whatsapp.com")
+
+    # Aguarda o login (caso a sessão não esteja salva ainda)
+    while True:
+        try:
+            navegador.find_element('id', 'side')
+            break
+        except NoSuchElementException:
+            time.sleep(1)
+
+    count = 0
+    NumerosEncaminhar = []
+    UltimaMensagem = ''
+
+    for i, numero in enumerate(numerosArray['numeros']):
+        try:
+            tempoEsperar = random.randint(5, 15)
+            time.sleep(tempoEsperar)
+            mensagemSaudacao = random.choice(Saudacao["MensagensSaudacao"])
+            link = f"https://web.whatsapp.com/send?phone=55{numero}&text={mensagemSaudacao}"
+            navegador.get(link)
+
+            count += 1
+
+            while True:
+                try:
+                    navegador.find_element('id', 'side')
+                    break
+                except NoSuchElementException:
+                    time.sleep(1)
+            time.sleep(4)
+            navegador.find_element('xpath','//*[@id="main"]/footer/div[1]/div/span[2]/div/div[2]/div[1]/div/div[1]/p') \
+                     .send_keys(Keys.ENTER)
+            time.sleep(3)
+        except Exception:
+            print(f'O número: {numero} é inválido, nenhuma mensagem foi enviada. {datetime.date.today()}')
+            if i < len(numerosArray['numeros']) - 1:
+                continue
+
+        NumerosEncaminhar.append(numero)
+
+        if count >= 5:
+            mensagem = random.choice(MensagemEnviar["MensagensEnviar"])
+            while UltimaMensagem == mensagem:
+                mensagem = random.choice(MensagemEnviar["MensagensEnviar"])
+
+            navegador.get("https://web.whatsapp.com")
+            while True:
+                try:
+                    navegador.find_element('id', 'side')
+                    break
+                except NoSuchElementException:
+                    time.sleep(1)
+            time.sleep(4)
+            navegador.find_element('xpath', '//*[@id="side"]/div[1]/div/div/button/div[2]/span').click()
+            navegador.find_element('xpath', '//*[@id="side"]/div[1]/div/div/div[2]/div/div[1]/p') \
+                     .send_keys("você")
+            navegador.find_element('xpath', '//*[@id="side"]/div[1]/div/div/div[2]/div/div[1]/p') \
+                     .send_keys(Keys.ENTER)
+            time.sleep(1)
+            pyperclip.copy(mensagem)
+            navegador.find_element('xpath', '//*[@id="main"]/footer/div[1]/div/span[2]/div/div[2]/div[1]/div/div[1]/p') \
+                     .send_keys(Keys.CONTROL + "v")
+            navegador.find_element('xpath', '//*[@id="main"]/footer/div[1]/div/span[2]/div/div[2]/div[1]/div/div[1]/p') \
+                     .send_keys(Keys.ENTER)
+            time.sleep(2)
+            UltimaMensagem = mensagem
+
+            lista_elementos = navegador.find_elements('class name', '_2AOIt')
+            elemento = None
+            for item in lista_elementos:
+                msg_sem_quebra = mensagem.replace("\n", "")
+                texto = item.text.replace("\n", "")
+                if msg_sem_quebra in texto:
+                    elemento = item
+                    break
+
+            if elemento:
+                ActionChains(navegador).move_to_element(elemento).perform()
+                elemento.find_element('class name', '_3u9t-').click()
+                time.sleep(0.5)
+                navegador.find_element('xpath', '//*[@id="app"]/div/span[4]/div/ul/div/li[4]/div').click()
+                navegador.find_element('xpath', '//*[@id="main"]/span[2]/div/button[5]/span').click()
+                time.sleep(1)
+                if NumerosEncaminhar:
+                    for numEncaminhar in NumerosEncaminhar:
+                        numEncaminhar = format_phone_number(numEncaminhar)
+                        navegador.find_element('xpath', '//*[@id="app"]/div/span[2]/div/div/div/div/div/div/div/div[1]/div/div/div[2]/div/div[1]/p') \
+                                 .send_keys(numEncaminhar)
+                        time.sleep(1)
+                        navegador.find_element('xpath', '//*[@id="app"]/div/span[2]/div/div/div/div/div/div/div/div[1]/div/div/div[2]/div/div[1]/p') \
+                                 .send_keys(Keys.ENTER)
+                        time.sleep(1)
+                        navegador.find_element('xpath','//*[@id="app"]/div/span[2]/div/div/div/div/div/div/div/div[1]/div/div/div[2]/div/div[1]/p') \
+                                 .send_keys(Keys.CONTROL + 'a')
+                        time.sleep(1)
+                        navegador.find_element('xpath', '//*[@id="app"]/div/span[2]/div/div/div/div/div/div/div/div[1]/div/div/div[2]/div/div[1]/p') \
+                                 .send_keys(Keys.BACKSPACE)
+                        time.sleep(1)
+                    navegador.find_element('xpath', '//*[@id="app"]/div/span[2]/div/div/div/div/div/div/div/span/div/div/div/span') \
+                             .click()
+                    time.sleep(3)
+                    NumerosEncaminhar.clear()
+                    count = 0
+
+    exibir_mensagem_sucesso('Processo finalizado com sucesso.')
+    navegador.close()
 
 # Função para obter dados do Google Sheets
 def getGoogleSheetData(url):
@@ -245,79 +366,137 @@ def enviar_mensagens_planilha():
         # Grid 0 é a principal
         vGridId = 0
 
-        # Grid de testes
-        # vGridId = 493313803
-
-        sheet_url_clientes = f"https://docs.google.com/spreadsheets/d/1ifSYQKY2W-DA0D0wYY00tKag90Tp5FJP3mdZ0lConUs/export?format=csv&gid={vGridId}"
-        # Carregar a planilha
+        sheet_url_clientes = (
+            f"https://docs.google.com/spreadsheets/d/1ifSYQKY2W-DA0D0wYY00tKag90Tp5FJP3mdZ0lConUs/export?format=csv&gid={vGridId}"
+        )
+        # Carregar a planilha em um DataFrame
         df = pd.read_csv(sheet_url_clientes)
 
         # Verificar se as colunas necessárias existem
-        if 'Data vencimento' not in df.columns or 'Data ultimo envio' not in df.columns or 'Telefone' not in df.columns:
-            print("Erro: A planilha não contém as colunas necessárias.")
-            return
+        colunas_necessarias = ["Data vencimento", "Data ultimo envio", "Telefone"]
+        for col in colunas_necessarias:
+            if col not in df.columns:
+                print(f"Erro: A planilha não contém a coluna '{col}'.")
+                return
 
-        # Data atual no formato da planilha (exemplo: 18/03/2025)
-        data_atual = datetime.datetime.now().strftime('%d/%m/%Y')
+        # Data atual (string e objeto datetime)
+        data_atual_str = datetime.datetime.now().strftime('%d/%m/%Y')
+        data_atual_date = datetime.datetime.strptime(data_atual_str, '%d/%m/%Y')
 
-        # Iterar sobre as linhas da planilha
         for index, row in df.iterrows():
-            telefone = row['Telefone']
-            data_vencimento = row['Data vencimento']  # Pega o valor da coluna "Data vencimento"
-            data_ultimo_envio = row['Data ultimo envio']
+            telefone = row["Telefone"]
+            data_vencimento = row["Data vencimento"]
+            data_ultimo_envio = row["Data ultimo envio"]
 
-            # Verificar se a data de vencimento está vazia ou é nula
+            # 1) Se telefone está vazio, pula
+            if pd.isna(telefone) or telefone.strip() == "":
+                continue
+
+            # 2) Se data de vencimento está vazia, pula
             if pd.isna(data_vencimento) or data_vencimento.strip() == "":
-                continue  # Pula para a próxima iteração
+                continue
 
-            # Verificar se a data de vencimento é um dia após a data atual
-            if data_vencimento == (datetime.datetime.now() + datetime.timedelta(days=1)).strftime('%d/%m/%Y'):
-                # Verificar se a data do último envio é menor que a data atual ou está vazia
-                if pd.isna(data_ultimo_envio) or data_ultimo_envio < data_atual:
-                    # Formatar o número de telefone
+            # Converte a data de vencimento em objeto datetime
+            try:
+                data_vencimento_date = datetime.datetime.strptime(data_vencimento.strip(), '%d/%m/%Y')
+            except ValueError:
+                # Se não conseguir converter, pula
+                continue
+
+            mensagem = (f"Caro cliente, estamos passando para informar que sua assinatura vence em {data_vencimento.strip()}. "
+                        f"Para evitar interrupções no serviço 📺🎬📽, pedimos que realize a renovação dentro do prazo. Qualquer dúvida, estamos à disposição!"
+                        f"R$27,00"
+                        f" 😊\n\nObs: Caso não queira receber lembretes de vencimento digite 'Não receber'." )
+
+            # ------------------------------------------------------------
+            # SITUAÇÃO 1: Vencimento é amanhã ou 3 dias antes => manda lembrete
+            # ------------------------------------------------------------
+            if data_vencimento.strip() in [
+                (data_atual_date + datetime.timedelta(days=1)).strftime('%d/%m/%Y'),
+                (data_atual_date + datetime.timedelta(days=2)).strftime('%d/%m/%Y'),
+                (data_atual_date + datetime.timedelta(days=3)).strftime('%d/%m/%Y')
+            ]:
+                enviar_novamente = False
+                # Se data_ultimo_envio estiver vazio ou for menor que data_atual, enviar
+                if pd.isna(data_ultimo_envio) or data_ultimo_envio.strip() == "":
+                    enviar_novamente = True
+                else:
+                    try:
+
+                        data_ultimo_envio_date = datetime.datetime.strptime(data_ultimo_envio.strip(), '%d/%m/%Y')
+                        diferenca_dias = (data_atual_date - data_ultimo_envio_date).days
+                        if diferenca_dias >= 7:
+                            enviar_novamente = True
+
+                    except ValueError:
+                        enviar_novamente = True
+
+                if enviar_novamente:
                     telefone_formatado = formatar_telefone(telefone)
+                    # Define a mensagem fixa substituindo [data] pela data de vencimento
+                    enviar_mensagem(telefone_formatado, mensagem, df, index, sheet_url_clientes)
+                    df.at[index, "Data ultimo envio"] = data_atual_str
 
-                    # Enviar a mensagem
-                    mensagem = random.choice(MensagensEnviar)  # Escolhe uma mensagem aleatória
-                    enviar_mensagem(telefone_formatado, mensagem)
+            # ------------------------------------------------------------
+            # SITUAÇÃO 2: Cliente já está vencido (data_vencimento < hoje)
+            # => reenviar mensagem se passaram 7 dias desde a última cobrança
+            # ------------------------------------------------------------
+            elif data_vencimento_date < data_atual_date:
 
-                    # Atualizar a coluna "Data ultimo envio" com a data atual
-                    df.at[index, 'Data ultimo envio'] = data_atual
+                if (pd.isna(data_ultimo_envio) or data_ultimo_envio.strip() == ""):
+                    telefone_formatado = formatar_telefone(telefone)
+                    enviar_mensagem(telefone_formatado, mensagem, df, index, sheet_url_clientes)
+                    df.at[index, "Data ultimo envio"] = data_atual_str
+                else:
+                    try:
+                        data_ultimo_envio_date = datetime.datetime.strptime(data_ultimo_envio.strip(), '%d/%m/%Y')
+                        diferenca_dias = (data_atual_date - data_ultimo_envio_date).days
 
-            # Salvar a planilha atualizada no Google Sheets
-            atualizar_google_sheets(df, sheet_url_clientes)
-            print(f"Mensagens enviadas e planilha atualizada com sucesso!")
+                        if diferenca_dias >= 7:
+                            telefone_formatado = formatar_telefone(telefone)
+                            enviar_mensagem(telefone_formatado, mensagem, df, index, sheet_url_clientes)
+                            df.at[index, "Data ultimo envio"] = data_atual_str
+                    except ValueError:
+                        telefone_formatado = formatar_telefone(telefone)
+                        enviar_mensagem(telefone_formatado, mensagem, df, index, sheet_url_clientes)
+                        df.at[index, "Data ultimo envio"] = data_atual_str
+
     except Exception as e:
         print(f"Erro: {str(e)}")
 
-# Função para enviar mensagem via WhatsApp
-def enviar_mensagem(telefone, mensagem):
+def enviar_mensagem(telefone, mensagem, df, index, sheet_url_clientes):
     try:
-        service = Service(ChromeDriverManager().install())
-        navegador = webdriver.Chrome(service=service)
-        navegador.get("https://web.whatsapp.com")
+        # Data atual no formato da planilha (exemplo: 18/03/2025)
+        data_atual = datetime.datetime.now().strftime('%d/%m/%Y')
 
+        navegador = get_chrome_driver()
+        navegador.get("https://web.whatsapp.com")
+        # Aguarda até que o elemento com id "side" esteja disponível (indicando que o WhatsApp carregou)
         while True:
             try:
                 navegador.find_element('id', 'side')
                 break
             except NoSuchElementException:
                 time.sleep(1)
-
         link = f"https://web.whatsapp.com/send?phone=55{telefone}&text={mensagem}"
         navegador.get(link)
-
         while True:
             try:
                 navegador.find_element('id', 'side')
                 break
             except NoSuchElementException:
                 time.sleep(1)
-
         time.sleep(4)
         navegador.find_element('xpath', '//*[@id="main"]/footer/div[1]/div/span/div/div[2]/div[1]/div[2]/div/p').send_keys(Keys.ENTER)
-        time.sleep(3)
+        time.sleep(15)
         navegador.close()
+
+        # Atualizar a coluna "Data ultimo envio" com a data atual
+        df.at[index, 'Data ultimo envio'] = data_atual
+
+        # Salvar a planilha atualizada no Google Sheets
+        atualizar_google_sheets(df, sheet_url_clientes)
+        print(f"Mensagens enviadas e planilha atualizada com sucesso!")
     except Exception as e:
         exibir_mensagem_sucesso(f"Erro ao enviar mensagem para {telefone}: {str(e)}")
 
@@ -442,6 +621,17 @@ class PaginaEnvioPadrao(tk.Frame):
 
         self.numeros_entry = tk.Text(self, height=10, width=30)
         self.numeros_entry.pack()
+
+        # Load phone numbers from "NumerosTelefones.json" and insert them into the telefone_text widget
+        try:
+            with open("NumerosTelefones.json", "r") as arquivo_json:
+                dados = json.load(arquivo_json)
+                if "numeros" in dados:
+                    numeros = dados["numeros"]
+                    for numero in numeros:
+                        self.numeros_entry.insert(tk.END, f"{numero}\n")
+        except FileNotFoundError:
+            pass
 
         iniciar_envio_button = tk.Button(self, text="Iniciar Envio Padrão", command=lambda: iniciar_envio_numeros(self.numeros_entry))
         iniciar_envio_button.pack()

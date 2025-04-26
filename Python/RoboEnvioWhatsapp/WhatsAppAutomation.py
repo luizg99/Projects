@@ -387,6 +387,10 @@ def enviar_mensagens_planilha():
             telefone = row["Telefone"]
             data_vencimento = row["Data vencimento"]
             data_ultimo_envio = row["Data ultimo envio"]
+            ativo = row["Ativo"]
+
+            if ativo == "N":
+                continue
 
             # 1) Se telefone está vazio, pula
             if pd.isna(telefone) or telefone.strip() == "":
@@ -405,7 +409,7 @@ def enviar_mensagens_planilha():
 
             mensagem = (f"Caro cliente, estamos passando para informar que sua assinatura vence em {data_vencimento.strip()}. "
                         f"Para evitar interrupções no serviço 📺🎬📽, pedimos que realize a renovação dentro do prazo. Qualquer dúvida, estamos à disposição!"
-                        f"R$27,00"
+                        f" "
                         f" 😊\n\nObs: Caso não queira receber lembretes de vencimento digite 'Não receber'." )
 
             # ------------------------------------------------------------
@@ -438,10 +442,10 @@ def enviar_mensagens_planilha():
                     df.at[index, "Data ultimo envio"] = data_atual_str
 
             # ------------------------------------------------------------
-            # SITUAÇÃO 2: Cliente já está vencido (data_vencimento < hoje)
+            # SITUAÇÃO 2: Cliente já está vencido (data_vencimento < hoje) ou vence hoje...
             # => reenviar mensagem se passaram 7 dias desde a última cobrança
             # ------------------------------------------------------------
-            elif data_vencimento_date < data_atual_date:
+            elif data_vencimento_date <= data_atual_date:
 
                 if (pd.isna(data_ultimo_envio) or data_ultimo_envio.strip() == ""):
                     telefone_formatado = formatar_telefone(telefone)

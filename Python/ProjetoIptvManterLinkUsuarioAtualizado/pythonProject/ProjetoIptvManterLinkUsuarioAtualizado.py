@@ -49,6 +49,14 @@ def main():
         device_key: str = str(row['Device Key']).strip()
         servidor: str = str(row['Servidor']).strip()
         siteAtivacao: str = str(row['Site ativação']).strip()
+        datavalidadeApp: str = str(row['data validade APP']).strip()
+        Ativo: str = str(row['Ativo']).strip()
+
+        Atualizar: str = str(row['Atualizar']).strip()
+
+
+        if datavalidadeApp.strip() == "" or Ativo.strip() == "N" or Atualizar.strip() == "N":
+            continue
 
         # Pula servidores não marcados
         if servidor == 'TVS' and not opcoes['TVS']:
@@ -68,8 +76,9 @@ def main():
             sucesso = QuickPlayer.processar_cliente(mac_address, device_key, servidor, driver)
 
         if not sucesso:
-            clientes_falhados.append((mac_address, device_key, servidor, siteAtivacao))
+            clientes_falhados.append((index, mac_address, device_key, servidor, siteAtivacao))
             continue
+
         qtdeClientes = qtdeClientes + 1
 
     # Realiza até 4 novas tentativas para os clientes que falharam
@@ -77,10 +86,10 @@ def main():
     print(f"Fim-------------------------------------------------------")
     print(f"TENTANDO PARA OS CLIENTES QUE FALHARAM:")
     while clientes_falhados and tentativa < 3:
-        print(f"\nTentativa {tentativa} para clientes que falharam...")
+        print(f"\nTentativa {tentativa} para clientes que falharam... Site: {siteAtivacao}")
         novos_falhados = []
-        for mac_address, device_key, servidor, siteAtivacao in clientes_falhados:
-            print(f"Reprocessando MAC: {mac_address}, Servidor: {servidor}")
+        for index, mac_address, device_key, servidor, siteAtivacao in clientes_falhados:
+            print(f"Reprocessando MAC: {mac_address}, Servidor: {servidor}, Site: {siteAtivacao}")
             if siteAtivacao == 'iboplayer.com':
                 sucesso = IboPlayer.processar_cliente(mac_address, device_key, servidor, driver)
             elif siteAtivacao == 'iboplayer.pro':
@@ -89,18 +98,18 @@ def main():
                 sucesso = QuickPlayer.processar_cliente(mac_address, device_key, servidor, driver)
 
             if not sucesso:
-                novos_falhados.append((mac_address, device_key, servidor))
+                novos_falhados.append((index, mac_address, device_key, servidor, siteAtivacao))
         clientes_falhados = novos_falhados  # Atualiza a lista de falhados
         tentativa += 1
 
     # Exibe clientes que falharam após todas as tentativas
     if clientes_falhados:
         print("\nOs seguintes clientes falharam após 4 tentativas:")
-        for mac_address, device_key, servidor in clientes_falhados:
-            print(f"MAC: {mac_address}, Servidor: {servidor}")
+        for index, mac_address, device_key, servidor, siteAtivacao in clientes_falhados:
+            print(f"Linha: {index + 2} | MAC: {mac_address} | Servidor: {servidor} | Site: {siteAtivacao}")
     else:
         print("\nTodos os clientes foram processados com sucesso!")
-        print(f"Qunatidade de clientes atualizados: {qtdeClientes}")
+        print(f"Quantidade de clientes atualizados: {qtdeClientes}")
 
     driver.quit()
 

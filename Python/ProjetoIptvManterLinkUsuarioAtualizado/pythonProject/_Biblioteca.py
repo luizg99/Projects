@@ -91,10 +91,10 @@ def atualizarLinks():
         elif nome_painel == 'link_bit':
             links_atualizados['bit'] = link
 
-    # Atualiza as variáveis globais com os links extraídos da planilha
-    link_atualizado_tvs = links_atualizados.get('tvs', '')
-    link_atualizado_uniplay = links_atualizados.get('uniplay', '')
-    link_atualizado_bit = links_atualizados.get('bit', '')
+    # Atualiza as variáveis globais com os links extraídos da planilha e remove espaços
+    link_atualizado_tvs = links_atualizados.get('tvs', '').strip()
+    link_atualizado_uniplay = links_atualizados.get('uniplay', '').strip()
+    link_atualizado_bit = links_atualizados.get('bit', '').strip()
 
     print("Links atualizados com sucesso:")
     print(f"TVS: {link_atualizado_tvs}")

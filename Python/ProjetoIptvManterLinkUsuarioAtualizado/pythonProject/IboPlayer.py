@@ -94,8 +94,16 @@ def processar_cliente(mac_address, device_key, servidor, driver, tentativas=3):
             return True  # Sucesso
 
         except Exception as e:
-            #print(f"Ocorreu um erro com MAC {mac_address}: {e}")
             print(f"Ocorreu um erro com MAC {mac_address}.")
+
+            # Tentar clicar no botão de logout se existir
+            try:
+                logout_button = driver.find_element(By.XPATH, '//*[@id="root"]/main/aside/a[7]')
+                logout_button.click()
+            except Exception:
+                # Se não encontrar o botão, não faz nada
+                pass
+
             driver.refresh()
             tentativa_atual += 1
             continue

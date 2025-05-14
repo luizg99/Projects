@@ -680,7 +680,18 @@ class FTPBackupManager:
             if self.download_file(filename, dest_path):
                 if self.extract_file(dest_path, dest_folder):
                     caminho_dmp = self.last_extracted_file
+
+                    # Verificações de segurança antes de prosseguir
+                    if not caminho_dmp or not caminho_dmp.lower().endswith(".dmp") or not os.path.exists(caminho_dmp):
+                        messagebox.showerror("Erro", "Arquivo .dmp extraído não encontrado ou inválido.")
+                        self.status_var.set("Erro ao localizar o .dmp extraído")
+                        return
+
+                    # Normaliza o caminho para evitar problemas com barras invertidas
+                    caminho_dmp = os.path.normpath(caminho_dmp)
+
                     self.subir_base_oracle(caminho_dmp)
+
         threading.Thread(target=process).start()
 
     def select_folder(self):

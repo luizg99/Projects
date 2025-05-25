@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("missoes")//Definindo que será mapeada a API
 public class MissoesController {
 
-    
+
     @GetMapping("/listar")
     public String listarMissoes(){
         return "Lista de missoes";

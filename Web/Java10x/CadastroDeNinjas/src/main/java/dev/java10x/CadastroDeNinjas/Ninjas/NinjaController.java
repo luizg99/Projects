@@ -2,8 +2,9 @@ package dev.java10x.CadastroDeNinjas.Ninjas;
 
 import org.springframework.web.bind.annotation.*;
 
-@RestController
-@RequestMapping
+
+@RestController //Definindo que é uma camada de controller
+@RequestMapping//Definindo que será mapeada a API
 public class NinjaController {
 
     @GetMapping("/boasVindas")

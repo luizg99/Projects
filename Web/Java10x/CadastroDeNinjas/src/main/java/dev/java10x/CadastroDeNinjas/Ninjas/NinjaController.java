@@ -20,12 +20,6 @@ public class NinjaController {
         return "Boas Vindas";
     }
 
-    @GetMapping("/boaNoite")
-    public String boaNoite(){
-        return "Boa Noite Nunes e Pedro!";
-    }
-
-
     //Adicionar ninja (CREATE)
     @PostMapping("/criar")
     public String criarNinja(){
@@ -35,13 +29,13 @@ public class NinjaController {
     //Mostrar todos os ninjas (READ)
     @GetMapping("/todes")
     public List<NinjaModel> mostrarTodosNinjas(){
-        return ninjaService.mostrarTodosNinjas();
+        return ninjaService.getTodosNinjas();
     }
 
     //Mostrar ninja por id (READ)
-    @GetMapping("/todosID")
-    public List<NinjaModel> mostrarTodosOsNinjasPorId(){
-        return null;
+    @GetMapping(" ")
+    public NinjaModel mostrarTodosOsNinjasPorId(@PathVariable Long id){
+        return ninjaService.getNinjasPorId(id);
     }
 
     //Alterar dados dos ninjas (UPDATE)

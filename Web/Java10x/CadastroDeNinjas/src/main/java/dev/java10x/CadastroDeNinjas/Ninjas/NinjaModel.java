@@ -25,10 +25,18 @@ public class NinjaModel {
     @Column(name = "IMG_URL")
     private String imgUrl;
 
+    @Column(name = "RANK")
+    private String rank;
+
+    @Column(name = "CARACTERISTICAS")
+    private String caracteristicas;
+
     //Um ninja tem uma única missão
     @ManyToOne
     @JoinColumn(name = "missoes_id") //foreing key
     private MissoesModel missoes;
+
+
 
     public NinjaModel() {
     }
@@ -61,5 +69,37 @@ public class NinjaModel {
 
     public void setIdade(int idade) {
         this.idade = idade;
+    }
+
+    public String getImgUrl() {
+        return imgUrl;
+    }
+
+    public void setImgUrl(String imgUrl) {
+        this.imgUrl = imgUrl;
+    }
+
+    public String getRank() {
+        return rank;
+    }
+
+    public void setRank(String rank) {
+        this.rank = rank;
+    }
+
+    public String getCaracteristicas() {
+        return caracteristicas;
+    }
+
+    public void setCaracteristicas(String caracteristicas) {
+        this.caracteristicas = caracteristicas;
+    }
+
+    public MissoesModel getMissoes() {
+        return missoes;
+    }
+
+    public void setMissoes(MissoesModel missoes) {
+        this.missoes = missoes;
     }
 }

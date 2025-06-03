@@ -10,9 +10,11 @@ import java.util.Optional;
 public class NinjaService {
 
     private NinjaRepository ninjaRepository;
+    private NinjaMapper ninjaMapper;
 
-    public NinjaService(NinjaRepository ninjaRepository) {
+    public NinjaService(NinjaRepository ninjaRepository, NinjaMapper ninjaMapper) {
         this.ninjaRepository = ninjaRepository;
+        this.ninjaMapper = ninjaMapper;
     }
 
     //Listar os ninjas
@@ -28,8 +30,11 @@ public class NinjaService {
     }
 
     //Criar ninja
-    public NinjaModel criarNinja(NinjaModel ninja){
-        return ninjaRepository.save(ninja);
+    public NinjaDTO criarNinja(NinjaDTO ninjaDto){
+        NinjaModel ninja = ninjaMapper.map(ninjaDto);
+        ninjaRepository.save(ninja);
+
+        return ninjaMapper.map(ninja);
     }
 
     //Deletar ninja - tem que ser metodo void

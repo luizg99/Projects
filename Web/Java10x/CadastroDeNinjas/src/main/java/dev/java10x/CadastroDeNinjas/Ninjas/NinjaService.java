@@ -18,7 +18,10 @@ public class NinjaService {
     }
 
     //Listar os ninjas
-    public List<NinjaModel> getTodosNinjas(){
+    public List<NinjaDTO> getTodosNinjas(){
+        List<NinjaModel> ninjas = ninjaRepository.findAll();
+        return ninjas.stream()
+
         return ninjaRepository.findAll();
     }
 

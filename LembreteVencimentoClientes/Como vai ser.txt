@@ -1,0 +1,46 @@
+Cadastro de clientes:
+
+
+TABELA 1 CADASTRO_CLIENTES
+  CLIENTE_ID
+  NOME
+  DATA_VALIDADE
+  QTDE_DIAS_VENCIMENTO
+  DATA_VENCIMENTO
+  DATA_ULTIMO_ENVIO
+  ATIVO
+  OBSERVACAO
+  NUMERO_WHATSAPP
+  QTDE_DIAS_ANTES_VENCIMENTO
+  MENSAGEM_ID
+  VALOR_BRUTO_FATURADO_MENSAL
+  CUSTO_MENSAL
+  VALOR_LIQUIDO_FATURADO_MENSAL
+ 
+
+  //CAMPOS IPTV
+  MAC_ADDRESS
+  DEVICE_KEY
+  SERVIDOR
+  SITE_PLAYLIST
+  MAC_ANTIGO
+  DEVICE_ANTIGO
+  SERVIDOR_ANTIGO
+  DATA_VALIDADE_APP
+  CUSTO_CREDITO_MENSAL
+  CUSTO_ATIVACAO_APP_ANUAL
+  
+TABELA 2 CADASTRO_MENSAGENS
+  MENSAGEM_ID
+  MENSAGEM
+  ATIVO
+  PADRAO
+  
+1 - Criar o model
+2 - Criar o service
+3 - Criar o controller
+4 - Criar o end-point "getEnviarLembreteVencimento"
+	A ideia é enviar a mensagem parametrizada para o clientes
+  sempre que chegar a data do envio do vencimento conforme 
+  parametrizações.
+  

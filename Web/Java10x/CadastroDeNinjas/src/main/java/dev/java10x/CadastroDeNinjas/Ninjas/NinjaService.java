@@ -1,14 +1,21 @@
 package dev.java10x.CadastroDeNinjas.Ninjas;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static java.util.stream.Nodes.collect;
 
 @Service
 public class NinjaService {
 
+    private static final Logger log = LoggerFactory.getLogger(NinjaService.class);
     private NinjaRepository ninjaRepository;
     private NinjaMapper ninjaMapper;
 
@@ -18,18 +25,18 @@ public class NinjaService {
     }
 
     //Listar os ninjas
-    public List<NinjaDTO> getTodosNinjas(){
+    public List<NinjaDTO> getTodosNinjasq   (){
         List<NinjaModel> ninjas = ninjaRepository.findAll();
         return ninjas.stream()
-
-        return ninjaRepository.findAll();
+                .map(ninjaMapper::map)
+                .collect(Collectors.toList());
     }
 
 
     //Buscar Ninja por id
-    public NinjaModel getNinjasPorId(Long id){
+    public NinjaDTO getNinjasPorId(Long id){
         Optional<NinjaModel> ninjaPorId = ninjaRepository.findById(id);
-        return ninjaPorId.orElse(null);
+        return ninjaPorId.map(ninjaMapper::map).orElse(null);
     }
 
     //Criar ninja
@@ -46,9 +53,10 @@ public class NinjaService {
     }
 
     //Atualizando o ninja
-    public NinjaModel atualizarNinja(Long id, NinjaModel ninjaAtualizado){
+    public NinjaDTO atualizarNinja(Long id, NinjaDTO ninjaAtualizado){
         if (ninjaRepository.existsById(id)){
-            ninjaAtualizado.setId(id);
+            ninjaAtualizado.setId(id); //Sobrescrever o id
+
             return ninjaRepository.save(ninjaAtualizado);
         }
 

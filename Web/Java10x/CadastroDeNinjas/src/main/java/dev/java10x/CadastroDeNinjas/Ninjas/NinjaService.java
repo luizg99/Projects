@@ -4,13 +4,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import static java.util.stream.Nodes.collect;
 
 @Service
 public class NinjaService {
@@ -25,7 +22,7 @@ public class NinjaService {
     }
 
     //Listar os ninjas
-    public List<NinjaDTO> getTodosNinjasq   (){
+    public List<NinjaDTO> getTodosNinjas   (){
         List<NinjaModel> ninjas = ninjaRepository.findAll();
         return ninjas.stream()
                 .map(ninjaMapper::map)
@@ -53,11 +50,15 @@ public class NinjaService {
     }
 
     //Atualizando o ninja
-    public NinjaDTO atualizarNinja(Long id, NinjaDTO ninjaAtualizado){
-        if (ninjaRepository.existsById(id)){
-            ninjaAtualizado.setId(id); //Sobrescrever o id
+    public NinjaDTO atualizarNinja(Long id, NinjaDTO ninjaDTO){
+        Optional<NinjaModel> ninjaExistente = ninjaRepository.findById(id);
+        if (ninjaExistente.isPresent()){
+            NinjaModel ninjaAtualizado = ninjaMapper.map(ninjaDTO);
+            ninjaAtualizado.setId(id);
 
-            return ninjaRepository.save(ninjaAtualizado);
+            NinjaModel ninjaSalvo = ninjaRepository.save(ninjaAtualizado);
+
+            return ninjaMapper.map(ninjaSalvo);
         }
 
         return null;

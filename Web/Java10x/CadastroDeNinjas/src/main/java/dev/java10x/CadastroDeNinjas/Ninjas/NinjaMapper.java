@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class NinjaMapper {
 
+    //Mapeia do DTO para o Model
     public NinjaModel map(NinjaDTO ninjaDTO) {
         if (ninjaDTO == null) {
             return null;
@@ -23,6 +24,7 @@ public class NinjaMapper {
         return ninjaModel;
     }
 
+    //Mapeia do Model para o DTO
     public NinjaDTO map(NinjaModel ninjaModel) {
         if (ninjaModel == null) {
             return null;

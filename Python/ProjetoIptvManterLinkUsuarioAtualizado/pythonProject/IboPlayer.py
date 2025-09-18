@@ -66,12 +66,7 @@ def processar_cliente(mac_address, device_key, servidor, driver, tentativas=3):
 
             host_input.clear()
 
-            if servidor == 'TVS':
-                host_input.send_keys(lib.link_atualizado_tvs)
-            if servidor == 'UNIPLAY':
-                host_input.send_keys(lib.link_atualizado_uniplay)
-            if servidor == 'BIT':
-                host_input.send_keys(lib.link_atualizado_bit)
+            host_input.send_keys(lib.obterLinkAtualizado(servidor))
 
             # Salvar
             driver.find_element(By.XPATH, '//*[@id="root"]/main/div/section/form/div[2]/button').click()

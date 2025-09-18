@@ -14,6 +14,7 @@ class InterfaceAtualizacao:
         self.varTvs = tk.BooleanVar(value=True)
         self.varUniplay = tk.BooleanVar(value=True)
         self.varBit = tk.BooleanVar(value=True)
+        self.varFast = tk.BooleanVar(value=True)
 
         # Checkboxes
         chkTvs = tk.Checkbutton(self.root, text="TVS", variable=self.varTvs)
@@ -25,6 +26,9 @@ class InterfaceAtualizacao:
         chkBit = tk.Checkbutton(self.root, text="BIT", variable=self.varBit)
         chkBit.grid(row=1, column=2, padx=5, pady=5)
 
+        chkFast = tk.Checkbutton(self.root, text="FAST", variable=self.varFast)
+        chkFast.grid(row=1, column=3, padx=5, pady=5)
+
         # Botão para iniciar a atualização
         btnIniciar = tk.Button(self.root, text="Iniciar atualização links", command=self.onIniciar)
         btnIniciar.grid(row=2, column=0, columnspan=3, pady=10)
@@ -33,7 +37,7 @@ class InterfaceAtualizacao:
 
     def onIniciar(self):
         # Verifica se ao menos um checkbox está marcado
-        if not (self.varTvs.get() or self.varUniplay.get() or self.varBit.get()):
+        if not (self.varTvs.get() or self.varUniplay.get() or self.varBit.get() or self.varFast.get()):
             messagebox.showwarning("Atenção", "Pelo menos um servidor deve ser selecionado!")
         else:
             self.selecionado = True
@@ -45,5 +49,6 @@ class InterfaceAtualizacao:
             'TVS': self.varTvs.get(),
             'UNIPLAY': self.varUniplay.get(),
             'BIT': self.varBit.get(),
+            'FAST': self.varFast.get(),
             'selecionado': self.selecionado
         }

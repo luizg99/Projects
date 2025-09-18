@@ -1,12 +1,8 @@
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
-from PIL import Image
 import time
-import os
-from io import BytesIO
 import _Biblioteca as lib
-from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
 
 def processar_cliente(mac_address, device_key, servidor, driver, playlist_name='', tentativas=3):
@@ -84,16 +80,9 @@ def processar_cliente(mac_address, device_key, servidor, driver, playlist_name='
             campoUrl.send_keys(Keys.CONTROL, 'a')
             campoUrl.send_keys(Keys.DELETE)
 
-            if servidor == 'TVS':
-                hostAtualizado = lib.link_atualizado_tvs
-            if servidor == 'UNIPLAY':
-                hostAtualizado = lib.link_atualizado_uniplay
-            if servidor == 'BIT':
-                hostAtualizado = lib.link_atualizado_bit
-
             #Trata o link para pegar a url atualizada e reaproveitar os dados de usuário usuário e senha.
             partes = conteudo.split("/get.php")
-            nova_url = hostAtualizado + "/get.php" + partes[1]
+            nova_url = lib.obterLinkAtualizado(servidor) + "/get.php" + partes[1]
 
             #Preenche o campo com a nova URL
             campoUrl.send_keys(nova_url)

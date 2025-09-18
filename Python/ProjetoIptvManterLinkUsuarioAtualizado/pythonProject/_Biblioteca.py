@@ -7,6 +7,7 @@ import pandas as pd
 link_atualizado_tvs = ''
 link_atualizado_uniplay = ''
 link_atualizado_bit = ''
+link_atualizado_fast = ''
 
 sheet_url_links = "https://docs.google.com/spreadsheets/d/1lMIq91MwJcxuNDZsJaTLdYmj_M2bmLO5_R9Y5EWDEb8/export?format=csv"
 
@@ -70,7 +71,7 @@ def getGoogleSheetData(url):
 
 # Lê a planilha e atualiza os links de acordo com o "Nome painel"
 def atualizarLinks():
-    global link_atualizado_tvs, link_atualizado_uniplay, link_atualizado_bit  # Declara que as variáveis são globais
+    global link_atualizado_tvs, link_atualizado_uniplay, link_atualizado_bit, link_atualizado_fast  # Declara que as variáveis são globais
 
 
     df = getGoogleSheetData(sheet_url_links)
@@ -90,13 +91,29 @@ def atualizarLinks():
             links_atualizados['uniplay'] = link
         elif nome_painel == 'link_bit':
             links_atualizados['bit'] = link
+        elif nome_painel == 'link_fast':
+            links_atualizados['fast'] = link
 
     # Atualiza as variáveis globais com os links extraídos da planilha e remove espaços
     link_atualizado_tvs = links_atualizados.get('tvs', '').strip()
     link_atualizado_uniplay = links_atualizados.get('uniplay', '').strip()
     link_atualizado_bit = links_atualizados.get('bit', '').strip()
+    link_atualizado_fast = links_atualizados.get('fast', '').strip()
 
     print("Links atualizados com sucesso:")
     print(f"TVS: {link_atualizado_tvs}")
     print(f"Uniplay: {link_atualizado_uniplay}")
     print(f"Bit: {link_atualizado_bit}")
+    print(f"Fast: {link_atualizado_fast}")
+
+def obterLinkAtualizado(pServidor: str) -> str:
+    if pServidor == 'TVS':
+        return link_atualizado_tvs
+    elif pServidor == 'UNIPLAY':
+        return link_atualizado_uniplay
+    elif pServidor == 'BIT':
+        return link_atualizado_bit
+    elif pServidor == 'FAST':
+        return link_atualizado_fast
+    else:
+        return ""

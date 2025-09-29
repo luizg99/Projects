@@ -30,13 +30,13 @@ def processar_cliente(mac_address, device_key, servidor, driver, tentativas=3):
             time.sleep(2)
 
             # Localizar e resolver o CAPTCHA
-            captcha_element = driver.find_element(By.XPATH, '/html/body/div/main/div/form/div[4]')
+            captcha_element = driver.find_element(By.XPATH, '//*[@id="root"]/main/div/form/div[5]/div')
             captcha_png = captcha_element.screenshot_as_png
             captcha_image = Image.open(BytesIO(captcha_png))
 
             # Recortar apenas o CAPTCHA, eliminando a parte superior com o texto "Captcha"
             width, height = captcha_image.size
-            top_offset = int(height * 0.1)
+            top_offset = int(height * 0.2)
             captcha_cropped = captcha_image.crop((0, top_offset, width, height))
 
             #Salva a imagem do captcha em documentos para ter uma ideia de como está sendo enviado a imagem...

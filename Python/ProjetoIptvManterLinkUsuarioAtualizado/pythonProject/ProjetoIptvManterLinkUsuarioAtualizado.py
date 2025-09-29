@@ -10,10 +10,10 @@ import Interface
 
 
 #Grid 0 é a principal
-#vGridId = 0
+vGridId = 0
 
 #Grid de testes
-vGridId = 493313803
+#vGridId = 493313803
 
 sheet_url_clientes = f"https://docs.google.com/spreadsheets/d/1ifSYQKY2W-DA0D0wYY00tKag90Tp5FJP3mdZ0lConUs/export?format=csv&gid={vGridId}"
 

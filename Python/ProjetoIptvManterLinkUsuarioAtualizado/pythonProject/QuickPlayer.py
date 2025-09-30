@@ -12,10 +12,14 @@ def processar_cliente(mac_address, device_key, servidor, driver, playlist_name='
         try:
             driver.get('https://quickplayer.app/#/login')
 
+            time.sleep(2)
+
             # Esperar o campo "max-address" existir
             mac_address_field = WebDriverWait(driver, 15).until(
                 EC.presence_of_element_located((By.ID, "mac"))
             )
+
+            time.sleep(2)
 
             # Enviar o texto (MAC Address)
             mac_address_field.send_keys(mac_address)
@@ -88,7 +92,7 @@ def processar_cliente(mac_address, device_key, servidor, driver, playlist_name='
             campoUrl.send_keys(nova_url)
 
             #Finalização do processo
-            driver.find_element(By.XPATH, '/html/body/div[2]/div/div[2]/div/div[2]/div/div/form/div/div[6]/button').click()
+            driver.find_element(By.XPATH, '/html/body/div[2]/div/div[2]/div/div[2]/div/div/form/div/div[7]/button').click()
             time.sleep(1)
 
             driver.find_element(By.XPATH, '/html/body/div[1]/div/section/header/div[3]/button[2]').click()

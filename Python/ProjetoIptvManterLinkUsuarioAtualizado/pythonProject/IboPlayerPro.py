@@ -11,6 +11,8 @@ def processar_cliente(mac_address, device_key, servidor, driver, tentativas=3):
         try:
             driver.get('https://iboplayer.pro/manage-playlists/login/')
 
+            time.sleep(2)
+
             # Scrollar para baixo
             driver.execute_script("window.scrollBy(0, 200);")
             time.sleep(2)
@@ -75,7 +77,7 @@ def processar_cliente(mac_address, device_key, servidor, driver, tentativas=3):
 
         except Exception as e:
             #print(f"Ocorreu um erro com MAC {mac_address}: {e}")
-            print(f"Ocorreu um erro com MAC {mac_address}.")
+            print(f"IBO PRO PLAYER Ocorreu um erro com MAC {mac_address}")
             driver.refresh()
             tentativa_atual += 1
             continue

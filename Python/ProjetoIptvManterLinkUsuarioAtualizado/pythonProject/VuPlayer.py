@@ -12,6 +12,9 @@ def processar_cliente(mac_address, device_key, servidor, driver, playlist_name='
         try:
             driver.get('https://vuproplayer.org/login')
 
+            if tentativa_atual > 1:
+              time.sleep(2)
+
             # Esperar o campo "macAddress" existir
             mac_address_field = WebDriverWait(driver, 15).until(
                 EC.presence_of_element_located((By.ID, "macAddress"))
@@ -73,7 +76,7 @@ def processar_cliente(mac_address, device_key, servidor, driver, playlist_name='
 
         except Exception as e:
             #print(f"Ocorreu um erro com MAC {mac_address}: {e}")
-            print(f"Ocorreu um erro com MAC {mac_address}.")
+            print(f"VUPLAYER: Ocorreu um erro com MAC {mac_address}")
             driver.refresh()
             tentativa_atual += 1
             continue

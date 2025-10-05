@@ -12,6 +12,9 @@ def processar_cliente(mac_address, device_key, servidor, driver, playlist_name='
         try:
             driver.get('https://quickplayer.app/#/login')
 
+            if tentativa_atual > 1:
+              time.sleep(2)
+
             time.sleep(2)
 
             # Esperar o campo "max-address" existir
@@ -105,8 +108,7 @@ def processar_cliente(mac_address, device_key, servidor, driver, playlist_name='
 
 
         except Exception as e:
-            #print(f"Ocorreu um erro com MAC {mac_address}: {e}")
-            print(f"Ocorreu um erro com MAC {mac_address}.")
+            print(f"QUICK PLAYER: Ocorreu um erro com MAC {mac_address}")
             driver.refresh()
             tentativa_atual += 1
             continue

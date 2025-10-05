@@ -14,6 +14,9 @@ def processar_cliente(mac_address, device_key, servidor, driver, tentativas=3):
         try:
             driver.get('https://iboplayer.com/device/login')
 
+            if tentativa_atual > 1:
+              time.sleep(2)
+
             # Esperar o campo "max-address" existir
             mac_address_field = WebDriverWait(driver, 15).until(
                 EC.presence_of_element_located((By.ID, "max-address"))
@@ -89,7 +92,7 @@ def processar_cliente(mac_address, device_key, servidor, driver, tentativas=3):
             return True  # Sucesso
 
         except Exception as e:
-            print(f"Ocorreu um erro com MAC {mac_address}.")
+            print(f"IBO PLAYER: Ocorreu um erro com MAC {mac_address}")
 
             # Tentar clicar no botão de logout se existir
             try:

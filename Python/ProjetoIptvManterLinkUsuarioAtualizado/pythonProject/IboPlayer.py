@@ -14,6 +14,10 @@ def processar_cliente(mac_address, device_key, servidor, driver, tentativas=3):
         try:
             driver.get('https://iboplayer.com/device/login')
 
+            # Clicar no botão de termos
+            time.sleep(2)
+            driver.find_element(By.XPATH, '/html/body/div[1]/div/div/div/button').click()
+
             if tentativa_atual > 1:
               time.sleep(2)
 

@@ -9,30 +9,27 @@ import { Subject, takeUntil } from 'rxjs';
   imports: [],
   templateUrl: './home-page.component.html'
 })
-export class HomePageComponent implements OnInit, OnDestroy{
+export class HomePageComponent implements OnInit, OnDestroy {
   private readonly destroy$: Subject<void> = new Subject();
-
   weatherData!: Data;
 
   constructor(private weatherService: WeatherService) { }
 
   ngOnInit(): void {
-      this.getWeatherData('Go');
+    this.getWeatherData('Go');
   }
 
   getWeatherData(cityName: string): void {
     this.weatherService.getWeatherData(cityName)
-    .pipe(
-      takeUntil(this.destroy$)
-    )
-    .subscribe(data => {
-      this.weatherData = data;
-      console.log(this.weatherData);
-    });
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(data => {
+        this.weatherData = data;
+        console.log(this.weatherData);
+      });
   }
 
   ngOnDestroy(): void {
-    throw new Error('Method not implemented.');
+    // Libera os observables corretamente ao destruir o componente
     this.destroy$.next();
     this.destroy$.complete();
   }

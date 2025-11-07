@@ -67,7 +67,9 @@ def main():
             continue
         elif servidor == 'BIT' and not opcoes['BIT']:
             continue
-        elif servidor == 'FAST' and not opcoes['BIT']:
+        elif servidor == 'FAST' and not opcoes['FAST']:
+            continue
+        elif servidor == 'nan':
             continue
 
         print(f"Processando MAC: {mac_address}, servidor: {servidor}")
@@ -80,6 +82,8 @@ def main():
             sucesso = QuickPlayer.processar_cliente(mac_address, device_key, servidor, driver)
         elif siteAtivacao == 'vuplayer.pro':
             sucesso = VuPlayer.processar_cliente(mac_address, device_key, servidor, driver)
+        elif siteAtivacao == 'nan':
+            continue
         else: print("Erro: Nenhum servidor selecionado.")
 
         if not sucesso:

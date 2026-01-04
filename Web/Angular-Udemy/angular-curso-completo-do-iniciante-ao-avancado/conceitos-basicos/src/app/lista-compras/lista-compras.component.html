@@ -1,9 +1,7 @@
 <div class="container">
-    <h1>
-        Lista de compras
-    </h1>
+    <h1> Lista de compras</h1>
 
-    <form class="add-item-compras">
+    <form #frm="ngForm" class="add-item-compras">
         <input type="text" id="item" placeholder="Digite o nome do item" />
         <button type="submit">Adicionar</button>
     </form>
@@ -13,11 +11,12 @@
             <tr>
                 <th>#</th>
                 <th>Item</th>
+                <th></th>
             </tr>
 
         </thead>
 
-        <body>
+        <tbody>
             <tr>
                 <td>1</td>
                 <td>Arroz</td>
@@ -28,7 +27,7 @@
                 <td>Maça</td>
                 <td><input type="checkbox" /></td>
             </tr>
-        </body>
+        </tbody>
     </table>
 
 

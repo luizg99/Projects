@@ -84,11 +84,19 @@ def processar_cliente(mac_address, device_key, servidor, driver, tentativas=3):
 
             # Logout
             # Esperar até que o botão de logout exista e seja clicável
+
+            # print(f"Logout")
             logout_button = WebDriverWait(driver, 10).until(
-                EC.element_to_be_clickable((By.XPATH, '//*[@id="root"]/main/aside/a[7]'))
+                EC.element_to_be_clickable((By.XPATH, '//*[@id="root"]/main/aside/a[6]'))
             )
+
+
+            # print(f"Clicando Logout")
             # Clicar no botão de logout
             logout_button.click()
+
+            #print(f"Logout finalizado")
+
 
             time.sleep(3)
             print(f"Processamento concluído para MAC: {mac_address}" + f" com {tentativa_atual} tentativas")
@@ -97,6 +105,7 @@ def processar_cliente(mac_address, device_key, servidor, driver, tentativas=3):
 
         except Exception as e:
             print(f"IBO PLAYER: Ocorreu um erro com MAC {mac_address}")
+            print(str(e))
 
             # Tentar clicar no botão de logout se existir
             try:

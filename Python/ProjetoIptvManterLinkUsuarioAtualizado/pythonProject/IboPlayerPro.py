@@ -60,7 +60,7 @@ def processar_cliente(mac_address, device_key, servidor, driver, tentativas=3):
             driver.find_element(By.XPATH, '/html/body/div[3]/div/div/div[2]/form/button').click()
             time.sleep(2)
 
-            driver.refresh()
+            lib.safe_refresh(driver)
 
             # Logout
             # Esperar até que o botão de logout exista e seja clicável
@@ -78,12 +78,12 @@ def processar_cliente(mac_address, device_key, servidor, driver, tentativas=3):
         except Exception as e:
             #print(f"Ocorreu um erro com MAC {mac_address}: {e}")
             print(f"IBO PRO PLAYER Ocorreu um erro com MAC {mac_address}")
-            driver.refresh()
+            lib.safe_refresh(driver)
             tentativa_atual += 1
             continue
 
         finally:
-            driver.refresh()
+            lib.safe_refresh(driver)
 
     print(f"Todas as tentativas falharam para MAC: {mac_address}")
     return False  # Falha após todas as tentativas

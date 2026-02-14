@@ -109,9 +109,9 @@ def processar_cliente(mac_address, device_key, servidor, driver, playlist_name='
 
         except Exception as e:
             print(f"QUICK PLAYER: Ocorreu um erro com MAC {mac_address}")
-            driver.refresh()
+            lib.safe_refresh(driver)
             tentativa_atual += 1
             continue
 
         finally:
-            driver.refresh()
+            lib.safe_refresh(driver)

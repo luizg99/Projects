@@ -10,7 +10,7 @@ def processar_cliente(mac_address, device_key, servidor, driver, playlist_name='
 
     while tentativa_atual < tentativas:
         try:
-            driver.get('https://vuproplayer.org/login')
+            driver.get('https://vuplayer.pro/login')
 
             if tentativa_atual > 1:
               time.sleep(2)
@@ -69,7 +69,7 @@ def processar_cliente(mac_address, device_key, servidor, driver, playlist_name='
             save_button.click()
             time.sleep(2)
 
-            driver.get('https://vuproplayer.org/logout')
+            driver.get('https://vuplayer.pro/logout')
 
             return True  # Sucesso
 

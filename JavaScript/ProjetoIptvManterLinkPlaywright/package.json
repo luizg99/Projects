@@ -1,0 +1,20 @@
+{
+  "name": "projeto-iptv-manter-link-playwright",
+  "version": "1.0.0",
+  "description": "Automação de atualização de links IPTV com Playwright",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "install-browsers": "npx playwright install chromium"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "csv-parse": "^5.5.0",
+    "inquirer": "^8.2.6",
+    "playwright": "^1.40.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "nock": "^14.0.11"
+  }
+}

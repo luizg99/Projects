@@ -126,7 +126,7 @@ test('VuPlayer - processa cliente com sucesso', async ({ page }) => {
   );
 
   const sucesso = await vuPlayer.processarCliente(
-    'd6:f5:72:a3:0a:55', 'DEVICE_KEY', 'TVS', page
+    '00:11:22:33:44:55', 'DEVICE_KEY', 'TVS', page
   );
 
   expect(sucesso).toBe(true);
@@ -182,7 +182,7 @@ test('VuPlayer - retorna false quando elemento não existe', async ({ page }) =>
   );
 
   const sucesso = await vuPlayer.processarCliente(
-    'd6:f5:72:a3:0a:55', 'KEY', 'TVS', page, 2
+    '00:11:22:33:44:55', 'KEY', 'TVS', page, 2
   );
 
   expect(sucesso).toBe(false);

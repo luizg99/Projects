@@ -119,7 +119,7 @@ test('IboPlayer - processa cliente com sucesso', async ({ page }) => {
   await lib.atualizarLinks();
 
   const sucesso = await iboPlayer.processarCliente(
-    'd6:f5:72:a3:0a:55', 'DEVICE_KEY', 'TVS', page
+    '00:11:22:33:44:55', 'DEVICE_KEY', 'TVS', page
   );
 
   expect(sucesso).toBe(true);
@@ -182,7 +182,7 @@ test('IboPlayer - tenta novamente após falha e retorna true', async ({ page }) 
   await lib.atualizarLinks();
 
   const sucesso = await iboPlayer.processarCliente(
-    'd6:f5:72:a3:0a:55', 'KEY', 'TVS', page, 3 // permite até 3 tentativas
+    '00:11:22:33:44:55', 'KEY', 'TVS', page, 3 // permite até 3 tentativas
   );
 
   expect(sucesso).toBe(true);

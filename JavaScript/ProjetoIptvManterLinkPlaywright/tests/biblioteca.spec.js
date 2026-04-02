@@ -11,7 +11,7 @@ link_bit,http://bit.test.com
 link_fast,http://fast.test.com`;
 
 const CLIENTES_CSV = `MAC Address,Device Key,Servidor,Site ativação,data validade APP,Ativo,Atualizar
-d6:f5:72:a3:0a:55,KEYABC,TVS,iboplayer.com,2026-12-31,S,S
+00:11:22:33:44:55,KEYABC,TVS,iboplayer.com,2026-12-31,S,S
 66:77:88:99:AA:BB,KEYDEF,UNIPLAY,iboplayer.pro,2026-06-01,S,N`;
 
 const SHEET_ID_LINKS = '1lMIq91MwJcxuNDZsJaTLdYmj_M2bmLO5_R9Y5EWDEb8';

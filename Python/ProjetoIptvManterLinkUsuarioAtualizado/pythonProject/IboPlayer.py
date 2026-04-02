@@ -10,25 +10,37 @@ import _Biblioteca as lib
 def processar_cliente(mac_address, device_key, servidor, driver, tentativas=3):
     tentativa_atual = 1
 
+    driver.set_page_load_timeout(10)
+
     while tentativa_atual < tentativas:
         try:
             driver.get('https://iboplayer.com/device/login')
 
+            print("Clicando no botão dos termos.")
             # Clicar no botão de termos
-            time.sleep(2)
+            time.sleep(4)
             driver.find_element(By.XPATH, '/html/body/div[1]/div/div/div/button').click()
 
             if tentativa_atual > 1:
               time.sleep(2)
 
+            print("Clicou no botão dos termos.")
+
             # Esperar o campo "max-address" existir
             mac_address_field = WebDriverWait(driver, 15).until(
                 EC.presence_of_element_located((By.ID, "max-address"))
             )
+
+            print("Campo max-Address existe")
+
             # Enviar o texto (MAC Address)
             mac_address_field.send_keys(mac_address)
             # Enviar o texto (device key)
+
+            print("Enviou device")
+
             driver.find_element(By.ID, "device-key").send_keys(device_key)
+
 
             time.sleep(1)
 
@@ -115,12 +127,12 @@ def processar_cliente(mac_address, device_key, servidor, driver, tentativas=3):
                 # Se não encontrar o botão, não faz nada
                 pass
 
-            driver.refresh()
+            lib.safe_refresh(driver)
             tentativa_atual += 1
             continue
 
         finally:
-            driver.refresh()
+            lib.safe_refresh(driver)
 
     print(f"Todas as tentativas falharam para MAC: {mac_address}")
     return False  # Falha após todas as tentativas

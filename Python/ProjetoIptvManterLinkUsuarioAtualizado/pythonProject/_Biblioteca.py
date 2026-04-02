@@ -117,3 +117,39 @@ def obterLinkAtualizado(pServidor: str) -> str:
         return link_atualizado_fast
     else:
         return ""
+
+
+def safe_refresh(pDriver):
+    """Executa refresh com segurança, evitando NotAttachedToPage, timeouts e perda de janela."""
+    try:
+        # Caso não exista nenhuma janela
+        if len(pDriver.window_handles) == 0:
+            print("❗ Nenhuma janela aberta para atualizar.")
+            return False
+
+        # Se a janela atual sumiu, selecione a primeira disponível
+        if pDriver.current_window_handle not in pDriver.window_handles:
+            print("❗ Janela atual perdida, alternando para uma janela válida...")
+            pDriver.switch_to.window(pDriver.window_handles[0])
+
+        # Tentar refresh diretamente
+        try:
+            pDriver.execute_script("return document.readyState")
+            pDriver.refresh()
+            return True
+        except Exception as e1:
+            print(f"❗ Erro no refresh direto: {e1}")
+
+            # Tentar fallback
+            try:
+                pDriver.switch_to.window(pDriver.window_handles[0])
+                pDriver.refresh()
+                print("✔ Refresh alternativo executado com sucesso.")
+                return True
+            except Exception as e2:
+                print(f"❗ Falha também no refresh alternativo: {e2}")
+                return False
+
+    except Exception as fatal:
+        print(f"❗ Erro inesperado dentro do safe_refresh: {fatal}")
+        return False

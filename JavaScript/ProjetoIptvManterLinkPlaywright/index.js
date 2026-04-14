@@ -6,9 +6,12 @@ const iboPlayerPro = require('./src/sites/iboPlayerPro');
 const quickPlayer = require('./src/sites/quickPlayer');
 const vuPlayer = require('./src/sites/vuPlayer');
 
-// Grid 0 é a principal
-const GRID_ID = 0;
-const sheetUrlClientes = `https://docs.google.com/spreadsheets/d/1ifSYQKY2W-DA0D0wYY00tKag90Tp5FJP3mdZ0lConUs/export?format=csv&gid=${GRID_ID}`;
+// Grid 0 é a principal — para usar a planilha de testes, comente a linha abaixo e descomente a seguinte
+// const sheetUrlClientes = `https://docs.google.com/spreadsheets/d/1ifSYQKY2W-DA0D0wYY00tKag90Tp5FJP3mdZ0lConUs/export?format=csv&gid=0`;
+const sheetUrlClientes = `https://docs.google.com/spreadsheets/d/1ifSYQKY2W-DA0D0wYY00tKag90Tp5FJP3mdZ0lConUs/export?format=csv&gid=493313803`; // PLANILHA DE TESTES
+
+// Número de navegadores rodando em paralelo
+const CONCURRENCY = 5;
 
 // Configuração da API Key do 2Captcha
 lib.captchaApiKey = '0439b8069b74afca88f8062c8eb51716';
@@ -36,17 +39,34 @@ async function processarCliente(row, opcoes, page) {
   console.log(`Processando MAC: ${macAddress}, servidor: ${servidor}`);
 
   if (siteAtivacao === 'iboplayer.com') {
+    if (!opcoes.IBO_PLAYER) return null;
     return iboPlayer.processarCliente(macAddress, deviceKey, servidor, page);
   } else if (siteAtivacao === 'iboplayer.pro') {
+    if (!opcoes.IBO_PRO_PLAYER) return null;
     return iboPlayerPro.processarCliente(macAddress, deviceKey, servidor, page);
   } else if (siteAtivacao === 'quickplayer.app') {
+    if (!opcoes.QUICK_PLAYER) return null;
     return quickPlayer.processarCliente(macAddress, deviceKey, servidor, page);
   } else if (siteAtivacao === 'vuplayer.pro') {
+    if (!opcoes.VU_PLAYER_PRO) return null;
     return vuPlayer.processarCliente(macAddress, deviceKey, servidor, page);
   } else {
     console.log(`Aviso: site de ativação não reconhecido: ${siteAtivacao}`);
     return null;
   }
+}
+
+async function executarFila(fila, pages, processarFn) {
+  let index = 0;
+
+  async function worker(page) {
+    while (index < fila.length) {
+      const item = fila[index++];
+      await processarFn(item, page);
+    }
+  }
+
+  await Promise.all(pages.map((page) => worker(page)));
 }
 
 async function main() {
@@ -65,14 +85,24 @@ async function main() {
   const clientes = await lib.getGoogleSheetData(sheetUrlClientes);
 
   const browser = await chromium.launch({ headless: false });
-  const page = await browser.newPage();
-  await page.setViewportSize({ width: 1280, height: 800 });
+
+  // Criar N contextos isolados (cookies separados por worker)
+  const pages = await Promise.all(
+    Array.from({ length: CONCURRENCY }, async () => {
+      const context = await browser.newContext();
+      const page = await context.newPage();
+      await page.setViewportSize({ width: 1280, height: 800 });
+      return page;
+    })
+  );
+
+  console.log(`Iniciando processamento com ${CONCURRENCY} workers em paralelo...`);
 
   const clientesFalhados = [];
   let qtdeClientes = 0;
 
-  // Primeira passagem: todos os clientes
-  for (const row of clientes) {
+  // Primeira passagem: todos os clientes em paralelo
+  await executarFila(clientes, pages, async (row, page) => {
     const macAddress = (row['MAC Address'] || '').trim();
     const deviceKey = (row['Device Key'] || '').trim();
     const servidor = (row['Servidor'] || '').trim();
@@ -80,14 +110,14 @@ async function main() {
 
     const sucesso = await processarCliente(row, opcoes, page);
 
-    if (sucesso === null) continue; // pulado (filtrado)
+    if (sucesso === null) return; // pulado (filtrado)
 
     if (!sucesso) {
       clientesFalhados.push({ macAddress, deviceKey, servidor, siteAtivacao });
     } else {
       qtdeClientes++;
     }
-  }
+  });
 
   // Tentativas extras para clientes que falharam (até 2 tentativas adicionais)
   console.log('Fim-------------------------------------------------------');
@@ -100,13 +130,17 @@ async function main() {
     console.log(`\nTentativa ${tentativa} para clientes que falharam...`);
     const novosFalhados = [];
 
-    for (const { macAddress, deviceKey, servidor, siteAtivacao } of falhados) {
+    await executarFila(falhados, pages, async ({ macAddress, deviceKey, servidor, siteAtivacao }, page) => {
+      if (siteAtivacao === 'iboplayer.com') {
+        console.log(`Pulando retry para MAC: ${macAddress} (iboplayer.com não permite múltiplas tentativas)`);
+        novosFalhados.push({ macAddress, deviceKey, servidor, siteAtivacao });
+        return;
+      }
+
       console.log(`Reprocessando MAC: ${macAddress}, Servidor: ${servidor}, Site: ${siteAtivacao}`);
 
       let sucesso = false;
-      if (siteAtivacao === 'iboplayer.com') {
-        sucesso = await iboPlayer.processarCliente(macAddress, deviceKey, servidor, page);
-      } else if (siteAtivacao === 'iboplayer.pro') {
+      if (siteAtivacao === 'iboplayer.pro') {
         sucesso = await iboPlayerPro.processarCliente(macAddress, deviceKey, servidor, page);
       } else if (siteAtivacao === 'quickplayer.app') {
         sucesso = await quickPlayer.processarCliente(macAddress, deviceKey, servidor, page);
@@ -115,7 +149,7 @@ async function main() {
       }
 
       if (!sucesso) novosFalhados.push({ macAddress, deviceKey, servidor, siteAtivacao });
-    }
+    });
 
     falhados = novosFalhados;
     tentativa++;

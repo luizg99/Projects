@@ -2,7 +2,7 @@ const lib = require('../biblioteca');
 
 // Automação para iboplayer.com
 // Possui CAPTCHA resolvido via 2Captcha
-async function processarCliente(macAddress, deviceKey, servidor, page, tentativas = 3) {
+async function processarCliente(macAddress, deviceKey, servidor, page, tentativas = 2) {
   let tentativaAtual = 1;
 
   while (tentativaAtual < tentativas) {

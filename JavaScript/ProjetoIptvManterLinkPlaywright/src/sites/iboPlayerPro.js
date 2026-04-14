@@ -50,7 +50,7 @@ async function processarCliente(macAddress, deviceKey, servidor, page, tentativa
 
       // Logout
       const logoutButton = page.locator(
-        'xpath=/html/body/div[1]/div[3]/div/div[3]/div[1]/div[3]'
+        '//*[@id="logout-btn"]'
       );
       await logoutButton.waitFor({ timeout: 10000 });
       await logoutButton.click();
@@ -64,7 +64,7 @@ async function processarCliente(macAddress, deviceKey, servidor, page, tentativa
     } catch (e) {
       console.log(`IBO PRO PLAYER: Ocorreu um erro com MAC ${macAddress}`);
       console.log(e.message);
-      await page.reload();
+      await page.reload().catch(() => {});
       tentativaAtual++;
     } finally {
       await page.reload().catch(() => {});

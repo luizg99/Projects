@@ -77,7 +77,7 @@ async function processarCliente(macAddress, deviceKey, servidor, page, tentativa
     } catch (e) {
       console.log(`QUICK PLAYER: Ocorreu um erro com MAC ${macAddress}`);
       console.log(e.message);
-      await page.reload();
+      await page.reload().catch(() => {});
       tentativaAtual++;
     } finally {
       await page.reload().catch(() => {});

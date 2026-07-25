@@ -7,11 +7,11 @@ const quickPlayer = require('./src/sites/quickPlayer');
 const vuPlayer = require('./src/sites/vuPlayer');
 
 // Grid 0 é a principal — para usar a planilha de testes, comente a linha abaixo e descomente a seguinte
-// const sheetUrlClientes = `https://docs.google.com/spreadsheets/d/1ifSYQKY2W-DA0D0wYY00tKag90Tp5FJP3mdZ0lConUs/export?format=csv&gid=0`;
-const sheetUrlClientes = `https://docs.google.com/spreadsheets/d/1ifSYQKY2W-DA0D0wYY00tKag90Tp5FJP3mdZ0lConUs/export?format=csv&gid=493313803`; // PLANILHA DE TESTES
+ const sheetUrlClientes = `https://docs.google.com/spreadsheets/d/1ifSYQKY2W-DA0D0wYY00tKag90Tp5FJP3mdZ0lConUs/export?format=csv&gid=0`;
+//const sheetUrlClientes = `https://docs.google.com/spreadsheets/d/1ifSYQKY2W-DA0D0wYY00tKag90Tp5FJP3mdZ0lConUs/export?format=csv&gid=493313803`; // PLANILHA DE TESTES
 
 // Número de navegadores rodando em paralelo
-const CONCURRENCY = 5;
+const CONCURRENCY = 10;
 
 // Configuração da API Key do 2Captcha
 lib.captchaApiKey = '0439b8069b74afca88f8062c8eb51716';
@@ -26,7 +26,7 @@ async function processarCliente(row, opcoes, page) {
   const atualizar = (row['Atualizar'] || '').trim();
 
   // Pular clientes sem data de validade, inativos ou marcados para não atualizar
-  if (!dataValidadeApp || ativo === 'N' || atualizar === 'N') return null;
+  if (ativo === 'N' || atualizar === 'N') return null;
 
   // Pular servidores não selecionados
   if (servidor === 'TVS' && !opcoes.TVS) return null;

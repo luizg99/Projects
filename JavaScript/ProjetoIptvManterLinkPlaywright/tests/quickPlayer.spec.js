@@ -143,7 +143,7 @@ test.beforeEach(async () => {
   nock('https://docs.google.com')
     .get('/spreadsheets/d/1lMIq91MwJcxuNDZsJaTLdYmj_M2bmLO5_R9Y5EWDEb8/export')
     .query({ format: 'csv' })
-    .reply(200, 'Nome painel,Link\nlink_tvs,http://tvs.test.com\nlink_uniplay,http://uniplay.test.com\nlink_bit,http://bit.test.com\nlink_fast,http://fast.test.com');
+    .reply(200, 'Nome painel,Link\nlink_tvs,http://tvs.test.com\nlink_uniplay,http://uniplay.test.com\nlink_playon,http://playon.test.com\nlink_fast,http://fast.test.com');
 
   await lib.atualizarLinks();
 });

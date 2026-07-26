@@ -48,10 +48,8 @@ async function processarCliente(macAddress, deviceKey, servidor, page, tentativa
 
       await page.reload();
 
-      // Logout
-      const logoutButton = page.locator(
-        '//*[@id="logout-btn"]'
-      );
+      // Logout (site não usa mais id fixo — vira uma aba com o texto "Logout")
+      const logoutButton = page.getByText('Logout', { exact: true });
       await logoutButton.waitFor({ timeout: 10000 });
       await logoutButton.click();
 

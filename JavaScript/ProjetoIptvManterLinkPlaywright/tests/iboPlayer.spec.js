@@ -91,7 +91,7 @@ test.beforeEach(() => {
   nock('https://docs.google.com')
     .get('/spreadsheets/d/1lMIq91MwJcxuNDZsJaTLdYmj_M2bmLO5_R9Y5EWDEb8/export')
     .query({ format: 'csv' })
-    .reply(200, 'Nome painel,Link\nlink_tvs,http://tvs.test.com\nlink_uniplay,http://uniplay.test.com\nlink_bit,http://bit.test.com\nlink_fast,http://fast.test.com');
+    .reply(200, 'Nome painel,Link\nlink_tvs,http://tvs.test.com\nlink_uniplay,http://uniplay.test.com\nlink_playon,http://playon.test.com\nlink_fast,http://fast.test.com');
 });
 
 test.afterEach(() => {
@@ -138,7 +138,7 @@ test('IboPlayer - preenche MAC e DevKey corretamente', async ({ page }) => {
 
   await lib.atualizarLinks();
 
-  await iboPlayer.processarCliente('AA:BB:CC:DD:EE:FF', 'KEY-TEST', 'BIT', page);
+  await iboPlayer.processarCliente('AA:BB:CC:DD:EE:FF', 'KEY-TEST', 'PLAYON', page);
 
   // Verifica que os campos foram preenchidos com os valores corretos
   const mac = await page.locator('#max-address').inputValue();

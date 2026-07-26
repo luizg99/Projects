@@ -119,7 +119,7 @@ test.beforeEach(async () => {
   nock('https://docs.google.com')
     .get('/spreadsheets/d/1lMIq91MwJcxuNDZsJaTLdYmj_M2bmLO5_R9Y5EWDEb8/export')
     .query({ format: 'csv' })
-    .reply(200, 'Nome painel,Link\nlink_tvs,http://tvs.test.com\nlink_uniplay,http://uniplay.test.com\nlink_bit,http://bit.test.com\nlink_fast,http://fast.test.com');
+    .reply(200, 'Nome painel,Link\nlink_tvs,http://tvs.test.com\nlink_uniplay,http://uniplay.test.com\nlink_playon,http://playon.test.com\nlink_fast,http://fast.test.com');
 
   await lib.atualizarLinks();
 });
@@ -147,12 +147,26 @@ test('IboPlayerPro - preenche MAC e password corretamente', async ({ page }) => 
     route.fulfill({ status: 200, contentType: 'text/html', body: IBO_PRO_HTML })
   );
 
-  await iboPlayerPro.processarCliente('BB:CC:DD:EE:FF:00', 'MY_KEY_456', 'BIT', page);
+  // O finally() do código sempre dá reload() (mesmo em caso de sucesso), o que
+  // limpa os campos — captura os valores no momento em que são preenchidos.
+  let macCapturado = '';
+  let pwdCapturado = '';
+  await page.exposeFunction('__capturarLogin', (mac, pwd) => {
+    macCapturado = mac;
+    pwdCapturado = pwd;
+  });
+  await page.addInitScript(() => {
+    document.addEventListener('input', () => {
+      const mac = document.querySelector('#mac_address');
+      const pwd = document.querySelector('#password');
+      if (mac && pwd) window.__capturarLogin(mac.value, pwd.value);
+    });
+  });
 
-  const mac = await page.locator('#mac_address').inputValue();
-  const pwd = await page.locator('#password').inputValue();
-  expect(mac).toBe('BB:CC:DD:EE:FF:00');
-  expect(pwd).toBe('MY_KEY_456');
+  await iboPlayerPro.processarCliente('BB:CC:DD:EE:FF:00', 'MY_KEY_456', 'PLAYON', page);
+
+  expect(macCapturado).toBe('BB:CC:DD:EE:FF:00');
+  expect(pwdCapturado).toBe('MY_KEY_456');
 });
 
 test('IboPlayerPro - preenche o campo host com link do servidor', async ({ page }) => {
@@ -160,10 +174,18 @@ test('IboPlayerPro - preenche o campo host com link do servidor', async ({ page 
     route.fulfill({ status: 200, contentType: 'text/html', body: IBO_PRO_HTML })
   );
 
+  let hostCapturado = '';
+  await page.exposeFunction('__capturarHost', (valor) => { hostCapturado = valor; });
+  await page.addInitScript(() => {
+    document.addEventListener('input', () => {
+      const el = document.querySelector('[name="host"]');
+      if (el) window.__capturarHost(el.value);
+    });
+  });
+
   await iboPlayerPro.processarCliente('AA:BB:CC:DD:EE:FF', 'KEY', 'TVS', page);
 
-  const hostValue = await page.locator('[name="host"]').inputValue();
-  expect(hostValue).toBe('http://tvs.test.com');
+  expect(hostCapturado).toBe('http://tvs.test.com');
 });
 
 test('IboPlayerPro - retorna false quando elemento não existe', async ({ page }) => {

@@ -11,7 +11,7 @@ const vuPlayer = require('./src/sites/vuPlayer');
 //const sheetUrlClientes = `https://docs.google.com/spreadsheets/d/1ifSYQKY2W-DA0D0wYY00tKag90Tp5FJP3mdZ0lConUs/export?format=csv&gid=493313803`; // PLANILHA DE TESTES
 
 // Número de navegadores rodando em paralelo
-const CONCURRENCY = 10;
+const CONCURRENCY = 5;
 
 // Configuração da API Key do 2Captcha
 lib.captchaApiKey = '0439b8069b74afca88f8062c8eb51716';
@@ -31,7 +31,7 @@ async function processarCliente(row, opcoes, page) {
   // Pular servidores não selecionados
   if (servidor === 'TVS' && !opcoes.TVS) return null;
   if (servidor === 'UNIPLAY' && !opcoes.UNIPLAY) return null;
-  if (servidor === 'BIT' && !opcoes.BIT) return null;
+  if (servidor === 'PLAYON' && !opcoes.PLAYON) return null;
   if (servidor === 'FAST' && !opcoes.FAST) return null;
   if (!servidor || servidor === 'nan') return null;
   if (!siteAtivacao || siteAtivacao === 'nan') return null;

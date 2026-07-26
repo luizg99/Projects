@@ -9,7 +9,7 @@ async function mostrarInterface() {
       choices: [
         { name: 'TVS', value: 'TVS', checked: true },
         { name: 'UNIPLAY', value: 'UNIPLAY', checked: true },
-        { name: 'BIT', value: 'BIT', checked: true },
+        { name: 'PLAYON', value: 'PLAYON', checked: true },
         { name: 'FAST', value: 'FAST', checked: true },
       ],
       validate: (choices) =>
@@ -33,7 +33,7 @@ async function mostrarInterface() {
   return {
     TVS: answers.servidores.includes('TVS'),
     UNIPLAY: answers.servidores.includes('UNIPLAY'),
-    BIT: answers.servidores.includes('BIT'),
+    PLAYON: answers.servidores.includes('PLAYON'),
     FAST: answers.servidores.includes('FAST'),
     IBO_PLAYER: answers.aplicativos.includes('IBO_PLAYER'),
     IBO_PRO_PLAYER: answers.aplicativos.includes('IBO_PRO_PLAYER'),

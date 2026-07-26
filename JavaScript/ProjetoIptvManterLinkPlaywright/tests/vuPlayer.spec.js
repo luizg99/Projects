@@ -2,94 +2,56 @@ const { test, expect } = require('@playwright/test');
 const nock = require('nock');
 
 // ─── Mock HTML ────────────────────────────────────────────────────────────────
-// Seletores usados em vuPlayer.js:
+// Seletores usados em vuPlayer.js (site foi redesenhado em 2026, era baseado em
+// xpaths/ids fixos, agora usa componentes MUI com atributos `name` estáveis):
 //
-//  MAC        : #macAddress
-//  DevKey     : #key
-//  Login btn  : xpath=/html/body/div[2]/section[2]/div/div/div[2]/form/div/div[4]/button
-//  Edit btn   : xpath=/html/body/div[2]/section[2]/div/div[2]/div[1]/table/tbody/tr/td[3]/button[1]
-//  URL field  : #playlist-url
-//  Save btn   : xpath=/html/body/div[2]/section[2]/div/div[2]/div[2]/div/div/div[3]/button[2]
-//  Logout     : page.goto('https://vuplayer.pro/logout')  ← URL direta
-//
-// Estrutura body:
-//  div[1] ← placeholder
-//  div[2] ← app principal
-//    section[1] ← header/nav
-//    section[2] ← conteúdo
-//      div > div
-//        div[1] > form (login)
-//        div[2] > (tabela + edição)
+//  MAC        : input[name="macAddress"]
+//  DevKey     : input[name="deviceKey"]
+//  Login btn  : button[type="submit"]
+//  Lista      : goto https://vuplayer.pro/playlists?type=list
+//  Edit btn   : role=button "Editar"
+//  URL field  : input[name="playlistHost"]
+//  Save btn   : role=button "Enviar"
+//  Logout     : role=button "Sair"
 
 const VU_LOGIN_HTML = `<!DOCTYPE html>
 <html>
 <head><title>VuPlayer Mock - Login</title></head>
 <body>
-  <div></div>
-
-  <div id="main-app">
-    <section id="header"></section>
-
-    <section id="content">
-      <div>
-        <div>
-          <div>
-            <div></div>
-            <div>
-              <form id="login-form">
-                <div>
-                  <div>
-                    <div><input id="macAddress" type="text" /></div>
-                    <div><input id="key"        type="text" /></div>
-                    <div></div>
-                    <div>
-                      <button type="button" id="login-btn">Entrar</button>
-                    </div>
-                  </div>
-                </div>
-              </form>
-            </div>
-          </div>
-
-          <div id="dashboard-area">
-            <div id="table-container">
-              <table>
-                <tbody>
-                  <tr>
-                    <td>Playlist</td>
-                    <td>Status</td>
-                    <td>
-                      <button type="button" id="edit-btn">Editar</button>
-                      <button type="button">Deletar</button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div id="edit-panel">
-              <div>
-                <div>
-                  <div></div>
-                  <div></div>
-                  <div>
-                    <button type="button">Cancelar</button>
-                    <button type="button" id="save-btn">Salvar</button>
-                  </div>
-                </div>
-              </div>
-              <input id="playlist-url" type="text" value="" />
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  </div>
+  <form id="login-form">
+    <input name="macAddress" type="text" />
+    <input name="deviceKey" type="text" />
+    <button type="submit">Entrar</button>
+  </form>
 </body>
 </html>`;
 
-const VU_LOGOUT_HTML = `<!DOCTYPE html>
-<html><body><p>Você saiu com sucesso.</p></body></html>`;
+const VU_LIST_HTML = `<!DOCTYPE html>
+<html>
+<head><title>VuPlayer Mock - Lista</title></head>
+<body>
+  <table>
+    <tbody>
+      <tr>
+        <td>Playlist</td>
+        <td>Status</td>
+        <td>
+          <button type="button">Editar</button>
+          <button type="button">Deletar</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div id="edit-dialog">
+    <input name="playlistHost" type="text" value="" />
+    <button type="button">Cancelar</button>
+    <button type="submit">Enviar</button>
+  </div>
+
+  <button type="button">Sair</button>
+</body>
+</html>`;
 
 // ─── Setup e teardown ─────────────────────────────────────────────────────────
 
@@ -106,7 +68,7 @@ test.beforeEach(async () => {
   nock('https://docs.google.com')
     .get('/spreadsheets/d/1lMIq91MwJcxuNDZsJaTLdYmj_M2bmLO5_R9Y5EWDEb8/export')
     .query({ format: 'csv' })
-    .reply(200, 'Nome painel,Link\nlink_tvs,http://tvs.test.com\nlink_uniplay,http://uniplay.test.com\nlink_bit,http://bit.test.com\nlink_fast,http://fast.test.com');
+    .reply(200, 'Nome painel,Link\nlink_tvs,http://tvs.test.com\nlink_uniplay,http://uniplay.test.com\nlink_playon,http://playon.test.com\nlink_fast,http://fast.test.com');
 
   await lib.atualizarLinks();
 });
@@ -117,13 +79,19 @@ test.afterEach(() => {
 
 // ─── Testes ───────────────────────────────────────────────────────────────────
 
+function mockRoutes(page) {
+  return Promise.all([
+    page.route('https://vuplayer.pro/login', (route) =>
+      route.fulfill({ status: 200, contentType: 'text/html', body: VU_LOGIN_HTML })
+    ),
+    page.route('https://vuplayer.pro/playlists?type=list', (route) =>
+      route.fulfill({ status: 200, contentType: 'text/html', body: VU_LIST_HTML })
+    ),
+  ]);
+}
+
 test('VuPlayer - processa cliente com sucesso', async ({ page }) => {
-  await page.route('https://vuplayer.pro/login', (route) =>
-    route.fulfill({ status: 200, contentType: 'text/html', body: VU_LOGIN_HTML })
-  );
-  await page.route('https://vuplayer.pro/logout', (route) =>
-    route.fulfill({ status: 200, contentType: 'text/html', body: VU_LOGOUT_HTML })
-  );
+  await mockRoutes(page);
 
   const sucesso = await vuPlayer.processarCliente(
     '00:11:22:33:44:55', 'DEVICE_KEY', 'TVS', page
@@ -133,47 +101,62 @@ test('VuPlayer - processa cliente com sucesso', async ({ page }) => {
 });
 
 test('VuPlayer - preenche MAC e device key corretamente', async ({ page }) => {
-  await page.route('https://vuplayer.pro/login', (route) =>
-    route.fulfill({ status: 200, contentType: 'text/html', body: VU_LOGIN_HTML })
-  );
-  await page.route('https://vuplayer.pro/logout', (route) =>
-    route.fulfill({ status: 200, contentType: 'text/html', body: VU_LOGOUT_HTML })
-  );
+  await mockRoutes(page);
+
+  // O código navega para a lista de playlists logo após o login, então o
+  // formulário de login some do DOM — captura os valores no momento do preenchimento.
+  let macCapturado = '';
+  let keyCapturado = '';
+  await page.exposeFunction('__capturarLogin', (mac, key) => {
+    macCapturado = mac;
+    keyCapturado = key;
+  });
+  await page.addInitScript(() => {
+    document.addEventListener('input', () => {
+      const mac = document.querySelector('input[name="macAddress"]');
+      const key = document.querySelector('input[name="deviceKey"]');
+      if (mac && key) window.__capturarLogin(mac.value, key.value);
+    });
+  });
 
   await vuPlayer.processarCliente('CC:DD:EE:FF:00:11', 'KEY-VU-TEST', 'FAST', page);
 
-  const mac = await page.locator('#macAddress').inputValue();
-  const key = await page.locator('#key').inputValue();
-  expect(mac).toBe('CC:DD:EE:FF:00:11');
-  expect(key).toBe('KEY-VU-TEST');
+  expect(macCapturado).toBe('CC:DD:EE:FF:00:11');
+  expect(keyCapturado).toBe('KEY-VU-TEST');
 });
 
 test('VuPlayer - preenche playlist-url com link do servidor', async ({ page }) => {
-  await page.route('https://vuplayer.pro/login', (route) =>
-    route.fulfill({ status: 200, contentType: 'text/html', body: VU_LOGIN_HTML })
-  );
-  await page.route('https://vuplayer.pro/logout', (route) =>
-    route.fulfill({ status: 200, contentType: 'text/html', body: VU_LOGOUT_HTML })
-  );
+  await mockRoutes(page);
+
+  let urlCapturada = '';
+  await page.exposeFunction('__capturarUrl', (valor) => { urlCapturada = valor; });
+  await page.addInitScript(() => {
+    document.addEventListener('input', () => {
+      const el = document.querySelector('input[name="playlistHost"]');
+      if (el) window.__capturarUrl(el.value);
+    });
+  });
 
   await vuPlayer.processarCliente('AA:BB:CC:DD:EE:FF', 'KEY', 'UNIPLAY', page);
 
-  const urlValue = await page.locator('#playlist-url').inputValue();
-  expect(urlValue).toBe('http://uniplay.test.com');
+  expect(urlCapturada).toBe('http://uniplay.test.com');
 });
 
-test('VuPlayer - navega para URL de logout ao finalizar', async ({ page }) => {
-  await page.route('https://vuplayer.pro/login', (route) =>
-    route.fulfill({ status: 200, contentType: 'text/html', body: VU_LOGIN_HTML })
-  );
-  await page.route('https://vuplayer.pro/logout', (route) =>
-    route.fulfill({ status: 200, contentType: 'text/html', body: VU_LOGOUT_HTML })
-  );
+test('VuPlayer - clica em Sair ao finalizar', async ({ page }) => {
+  await mockRoutes(page);
+
+  let cliqueSair = false;
+  await page.exposeFunction('__marcarSair', () => { cliqueSair = true; });
+  await page.addInitScript(() => {
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('button');
+      if (btn && btn.textContent.trim() === 'Sair') window.__marcarSair();
+    });
+  });
 
   await vuPlayer.processarCliente('00:11:22:33:44:55', 'KEY', 'TVS', page);
 
-  // Verifica que a última URL acessada foi a de logout
-  expect(page.url()).toBe('https://vuplayer.pro/logout');
+  expect(cliqueSair).toBe(true);
 });
 
 test('VuPlayer - retorna false quando elemento não existe', async ({ page }) => {

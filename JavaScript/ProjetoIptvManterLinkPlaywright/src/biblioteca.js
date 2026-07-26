@@ -4,7 +4,7 @@ const { parse } = require('csv-parse/sync');
 // Variáveis globais dos links
 let linkAtualizadoTvs = '';
 let linkAtualizadoUniplay = '';
-let linkAtualizadoBit = '';
+let linkAtualizadoPlayon = '';
 let linkAtualizadoFast = '';
 
 let captchaApiKey = '';
@@ -31,14 +31,14 @@ async function atualizarLinks() {
 
     if (nomePainel === 'link_tvs') linkAtualizadoTvs = link;
     else if (nomePainel === 'link_uniplay') linkAtualizadoUniplay = link;
-    else if (nomePainel === 'link_bit') linkAtualizadoBit = link;
+    else if (nomePainel === 'link_playon') linkAtualizadoPlayon = link;
     else if (nomePainel === 'link_fast') linkAtualizadoFast = link;
   }
 
   console.log('Links atualizados com sucesso:');
   console.log(`TVS: ${linkAtualizadoTvs}`);
   console.log(`Uniplay: ${linkAtualizadoUniplay}`);
-  console.log(`Bit: ${linkAtualizadoBit}`);
+  console.log(`Playon: ${linkAtualizadoPlayon}`);
   console.log(`Fast: ${linkAtualizadoFast}`);
 }
 
@@ -46,7 +46,7 @@ function obterLinkAtualizado(servidor) {
   switch (servidor) {
     case 'TVS': return linkAtualizadoTvs;
     case 'UNIPLAY': return linkAtualizadoUniplay;
-    case 'BIT': return linkAtualizadoBit;
+    case 'PLAYON': return linkAtualizadoPlayon;
     case 'FAST': return linkAtualizadoFast;
     default: return '';
   }

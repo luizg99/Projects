@@ -7,7 +7,7 @@ let lib;
 const LINKS_CSV = `Nome painel,Link
 link_tvs,http://tvs.test.com
 link_uniplay,http://uniplay.test.com
-link_bit,http://bit.test.com
+link_playon,http://playon.test.com
 link_fast,http://fast.test.com`;
 
 const CLIENTES_CSV = `MAC Address,Device Key,Servidor,Site ativação,data validade APP,Ativo,Atualizar
@@ -68,7 +68,7 @@ test('atualizarLinks - preenche variáveis globais com links da planilha', async
 
   expect(lib.obterLinkAtualizado('TVS')).toBe('http://tvs.test.com');
   expect(lib.obterLinkAtualizado('UNIPLAY')).toBe('http://uniplay.test.com');
-  expect(lib.obterLinkAtualizado('BIT')).toBe('http://bit.test.com');
+  expect(lib.obterLinkAtualizado('PLAYON')).toBe('http://playon.test.com');
   expect(lib.obterLinkAtualizado('FAST')).toBe('http://fast.test.com');
 });
 
@@ -93,7 +93,7 @@ desconhecido,http://outro.com`;
 test('obterLinkAtualizado - retorna string vazia antes de atualizarLinks', () => {
   expect(lib.obterLinkAtualizado('TVS')).toBe('');
   expect(lib.obterLinkAtualizado('UNIPLAY')).toBe('');
-  expect(lib.obterLinkAtualizado('BIT')).toBe('');
+  expect(lib.obterLinkAtualizado('PLAYON')).toBe('');
   expect(lib.obterLinkAtualizado('FAST')).toBe('');
 });
 

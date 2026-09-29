@@ -29,11 +29,16 @@ async function processarCliente(macAddress, deviceKey, servidor, page, tentativa
       await page.fill('#login_code', deviceKey);
 
       // Login
-      await page
-        .locator(
-          'xpath=/html/body/div[2]/div/div[2]/div/div[2]/div/div[3]/div/div/div/div/div/button'
-        )
-        .click();
+      const loginButton = page.locator('#login-btn');
+      if (await loginButton.count()) {
+        await loginButton.click();
+      } else {
+        await page
+          .locator(
+            'xpath=/html/body/div[2]/div/div[2]/div/div[2]/div/div[3]/div/div/div/div/div/button'
+          )
+          .click();
+      }
 
       // Esperar e clicar no SVG de edição (width=29, height=29)
       const svgElement = page.locator("svg[width='29'][height='29']");
@@ -51,24 +56,39 @@ async function processarCliente(macAddress, deviceKey, servidor, page, tentativa
       await campoUrl.fill(novaUrl);
 
       // Salvar
-      await page
-        .locator(
-          'xpath=/html/body/div[2]/div/div[2]/div/div[2]/div/div/form/div/div[7]/button'
-        )
-        .click();
+      const saveButton = page.locator('#save-btn');
+      if (await saveButton.count()) {
+        await saveButton.click();
+      } else {
+        await page
+          .locator(
+            'xpath=/html/body/div[2]/div/div[2]/div/div[2]/div/div/form/div/div[7]/button'
+          )
+          .click();
+      }
       await page.waitForTimeout(1000);
 
       // Logout (2 cliques de confirmação)
-      await page
-        .locator('xpath=/html/body/div[1]/div/section/header/div[3]/button[2]')
-        .click();
+      const logoutButton = page.locator('#logout-btn');
+      if (await logoutButton.count()) {
+        await logoutButton.click();
+      } else {
+        await page
+          .locator('xpath=/html/body/div[1]/div/section/header/div[3]/button[2]')
+          .click();
+      }
       await page.waitForTimeout(1000);
 
-      await page
-        .locator(
-          'xpath=/html/body/div[3]/div/div[2]/div/div[2]/div/div/div[2]/button[2]'
-        )
-        .click();
+      const confirmButton = page.locator('#confirm-btn');
+      if (await confirmButton.count()) {
+        await confirmButton.click();
+      } else {
+        await page
+          .locator(
+            'xpath=/html/body/div[3]/div/div[2]/div/div[2]/div/div/div[2]/button[2]'
+          )
+          .click();
+      }
       await page.waitForTimeout(1000);
 
       console.log(`Processamento concluído para MAC: ${macAddress} com ${tentativaAtual} tentativas`);
@@ -79,8 +99,6 @@ async function processarCliente(macAddress, deviceKey, servidor, page, tentativa
       console.log(e.message);
       await page.reload().catch(() => {});
       tentativaAtual++;
-    } finally {
-      await page.reload().catch(() => {});
     }
   }
 

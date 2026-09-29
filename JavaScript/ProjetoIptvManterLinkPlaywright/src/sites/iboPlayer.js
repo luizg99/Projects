@@ -81,8 +81,6 @@ async function processarCliente(macAddress, deviceKey, servidor, page, tentativa
 
       await page.reload();
       tentativaAtual++;
-    } finally {
-      await page.reload().catch(() => {});
     }
   }
 

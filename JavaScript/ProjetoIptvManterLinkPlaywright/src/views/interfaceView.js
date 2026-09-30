@@ -19,6 +19,7 @@ async function mostrarInterface(nomesServidores = []) {
         { name: 'IBO_PRO_PLAYER (iboplayer.pro)', value: 'IBO_PRO_PLAYER', checked: true },
         { name: 'QUICK_PLAYER (quickplayer.app)', value: 'QUICK_PLAYER', checked: true },
         { name: 'VU_PLAYER_PRO (vuplayer.pro)', value: 'VU_PLAYER_PRO', checked: true },
+        { name: 'PLAYER APP (PlayBR API)', value: 'PLAYER_APP_API', checked: true },
       ],
       validate: (escolhas) => escolhas.length > 0 || 'Selecione ao menos um aplicativo!',
     },
@@ -30,6 +31,7 @@ async function mostrarInterface(nomesServidores = []) {
     IBO_PRO_PLAYER: respostas.aplicativos.includes('IBO_PRO_PLAYER'),
     QUICK_PLAYER: respostas.aplicativos.includes('QUICK_PLAYER'),
     VU_PLAYER_PRO: respostas.aplicativos.includes('VU_PLAYER_PRO'),
+    PLAYER_APP_API: respostas.aplicativos.includes('PLAYER_APP_API'),
     selecionado: respostas.servidores.length > 0,
   };
 }

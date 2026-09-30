@@ -31,6 +31,15 @@ são processados em rodadas: até um cliente por aplicativo em paralelo, com a
 pausa configurada antes da próxima rodada. Ao identificar HTTP 429 ou Cloudflare
 1015, o painel afetado é pausado pelo restante da execução e não recebe novas tentativas.
 
+## PlayerApp
+
+For playlists whose activation site is `playbr.app.br`, the automation calls
+the PlayerApp integration API and does not open a browser. Configure
+`PLAYBR_API_KEY` in the local `.env`; the endpoint defaults to
+`https://api.playbr.app.br/api/integracoes/v1/playlists/atualizar-link` and can
+be overridden with `PLAYERAPP_INTEGRATION_API_URL`. The request uses the MAC,
+Device Key, and current server link returned by the Lembretinho API.
+
 ## Testes
 
 ```bash

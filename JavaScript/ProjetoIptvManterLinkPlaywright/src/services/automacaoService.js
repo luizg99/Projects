@@ -3,15 +3,19 @@ const painelIbo = require('../sites/iboPlayer');
 const painelIboPro = require('../sites/iboPlayerPro');
 const painelQuick = require('../sites/quickPlayer');
 const painelVu = require('../sites/vuPlayer');
+const painelPlayerApp = require('../sites/playerApp');
 const { isSiteRateLimitError } = require('../errors/siteRateLimitError');
 const { INTERVALO_MS } = require('../utils/retryDelay');
+const INTERVALO_API_MS = 2100;
 
 const SITE_BLOQUEADO = Symbol('site bloqueado por limite de acesso');
+const FALHA_PERMANENTE = Symbol('falha permanente da API');
 const PAINEIS = {
-  'iboplayer.com': { modulo: painelIbo, opcao: 'IBO_PLAYER' },
-  'iboplayer.pro': { modulo: painelIboPro, opcao: 'IBO_PRO_PLAYER' },
-  'quickplayer.app': { modulo: painelQuick, opcao: 'QUICK_PLAYER' },
-  'vuplayer.pro': { modulo: painelVu, opcao: 'VU_PLAYER_PRO' },
+  'iboplayer.com': { modulo: painelIbo, opcao: 'IBO_PLAYER', navegador: true },
+  'iboplayer.pro': { modulo: painelIboPro, opcao: 'IBO_PRO_PLAYER', navegador: true },
+  'quickplayer.app': { modulo: painelQuick, opcao: 'QUICK_PLAYER', navegador: true },
+  'vuplayer.pro': { modulo: painelVu, opcao: 'VU_PLAYER_PRO', navegador: true },
+  'playbr.app.br': { modulo: painelPlayerApp, opcao: 'PLAYER_APP_API', navegador: false },
 };
 
 function agruparPorAplicativo(playlists, opcoes) {
@@ -29,6 +33,11 @@ async function aguardarIntervalo() {
   if (!INTERVALO_MS) return;
   console.log(`Aguardando ${Math.ceil(INTERVALO_MS / 1000)}s antes da próxima rodada.`);
   await new Promise((resolve) => setTimeout(resolve, INTERVALO_MS));
+}
+
+async function aguardarIntervaloApi() {
+  console.log('Aguardando 2.1s antes da próxima chamada à API.');
+  await new Promise((resolve) => setTimeout(resolve, INTERVALO_API_MS));
 }
 
 async function executarRodadas(filas, paginas, processar) {
@@ -52,25 +61,32 @@ async function executarRodadas(filas, paginas, processar) {
       }
       indices.set(resultado.site, fila.length);
     }
-    const haProximaRodada = [...filas].some(([site, fila]) => indices.get(site) < fila.length);
-    if (haProximaRodada) await aguardarIntervalo();
+    const filasPendentes = [...filas].filter(([site, fila]) => indices.get(site) < fila.length);
+    if (filasPendentes.length) {
+      const somenteApis = filasPendentes.every(([site]) => !PAINEIS[site].navegador);
+      if (somenteApis) await aguardarIntervaloApi();
+      else await aguardarIntervalo();
+    }
   }
 }
 
 async function processarPlaylist(playlist, opcoes, pagina) {
   const painel = PAINEIS[playlist.siteAtivacao];
   if (!painel || !opcoes.servidores.includes(playlist.servidor) || !opcoes[painel.opcao]) return null;
-  return painel.modulo.processarCliente(playlist.macAddress, playlist.deviceKey, playlist.servidor, pagina);
+  return painel.navegador
+    ? painel.modulo.processarCliente(playlist.macAddress, playlist.deviceKey, playlist.servidor, pagina)
+    : painel.modulo.processarCliente(playlist.macAddress, playlist.deviceKey, playlist.servidor);
 }
 
 async function executar(playlists, opcoes) {
   const filas = agruparPorAplicativo(playlists, opcoes);
   if (!filas.size) return { sucessos: 0, falhas: [], playlistsBloqueadas: [], sitesBloqueados: [] };
 
-  const browser = await chromium.launch({ headless: false });
+  const sitesComNavegador = [...filas.keys()].filter((site) => PAINEIS[site].navegador);
+  const browser = sitesComNavegador.length ? await chromium.launch({ headless: false }) : null;
   try {
     const paginas = new Map();
-    await Promise.all([...filas.keys()].map(async (site) => {
+    await Promise.all(sitesComNavegador.map(async (site) => {
       const contexto = await browser.newContext();
       const pagina = await contexto.newPage();
       await pagina.setViewportSize({ width: 1280, height: 800 });
@@ -78,6 +94,7 @@ async function executar(playlists, opcoes) {
     }));
 
     const falhas = [];
+    const falhasPermanentes = [];
     const playlistsBloqueadas = [];
     const sitesBloqueados = new Map();
     let sucessos = 0;
@@ -91,6 +108,11 @@ async function executar(playlists, opcoes) {
       try {
         return await processarPlaylist(playlist, opcoes, pagina);
       } catch (erro) {
+        if (erro?.code === 'PLAYERAPP_PLAYLIST_NOT_FOUND') {
+          console.error(`PlayerApp API: dispositivo ou playlist não encontrado para MAC ${playlist.macAddress} (HTTP 404).`);
+          falhasPermanentes.push(playlist);
+          return FALHA_PERMANENTE;
+        }
         if (!isSiteRateLimitError(erro)) throw erro;
         sitesBloqueados.set(site, erro);
         playlistsBloqueadas.push(playlist);
@@ -101,6 +123,7 @@ async function executar(playlists, opcoes) {
     await executarRodadas(filas, paginas, async (playlist, pagina) => {
       const sucesso = await processarComProtecao(playlist, pagina);
       if (sucesso === SITE_BLOQUEADO) return true;
+      if (sucesso === FALHA_PERMANENTE) return false;
       if (sucesso) sucessos++;
       else falhas.push(playlist);
       return false;
@@ -109,8 +132,10 @@ async function executar(playlists, opcoes) {
     let pendentes = falhas;
     for (let tentativa = 1; tentativa < 3 && pendentes.length; tentativa++) {
       const novasFalhas = [];
-      await aguardarIntervalo();
       const filasDeRetry = agruparPorAplicativo(pendentes, opcoes);
+      const somenteApis = [...filasDeRetry.keys()].every((site) => !PAINEIS[site].navegador);
+      if (somenteApis) await aguardarIntervaloApi();
+      else await aguardarIntervalo();
       await executarRodadas(filasDeRetry, paginas, async (playlist, pagina) => {
         if (sitesBloqueados.has(playlist.siteAtivacao)) {
           await processarComProtecao(playlist, pagina);
@@ -122,6 +147,7 @@ async function executar(playlists, opcoes) {
         }
         const sucesso = await processarComProtecao(playlist, pagina);
         if (sucesso === SITE_BLOQUEADO) return true;
+        if (sucesso === FALHA_PERMANENTE) return false;
         if (!sucesso) novasFalhas.push(playlist);
         else sucessos++;
         return false;
@@ -131,7 +157,7 @@ async function executar(playlists, opcoes) {
 
     return {
       sucessos,
-      falhas: pendentes,
+      falhas: [...pendentes, ...falhasPermanentes],
       playlistsBloqueadas,
       sitesBloqueados: [...sitesBloqueados.entries()].map(([site, erro]) => ({
         site,
@@ -140,7 +166,7 @@ async function executar(playlists, opcoes) {
       })),
     };
   } finally {
-    await browser.close();
+    if (browser) await browser.close();
   }
 }
 

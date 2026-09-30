@@ -5,6 +5,7 @@ const SITE_POR_HOST = new Map([
   ['iboplayer.pro', 'iboplayer.pro'],
   ['quickplayer.app', 'quickplayer.app'],
   ['vuplayer.pro', 'vuplayer.pro'],
+  ['playbr.app.br', 'playbr.app.br'],
 ]);
 let linksPorServidor = new Map();
 let captchaApiKey = process.env.CAPTCHA_API_KEY || '';

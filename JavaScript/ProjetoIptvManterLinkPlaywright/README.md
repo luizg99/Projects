@@ -1,118 +1,59 @@
-# Projeto IPTV — Manter Link (Playwright)
+# Automação Lembretinho Playwright
 
-Automação para atualizar o link/host da playlist de clientes IPTV em 4 painéis
-(`iboplayer.com`, `iboplayer.pro`, `quickplayer.app`, `vuplayer.pro`), lendo os
-dados de clientes e de servidores de planilhas do Google Sheets.
+Automação de renovação de playlists nos painéis IboPlayer, IboPlayerPro,
+QuickPlayer e VuPlayer. Os dados vêm da API de leitura do Lembretinho.
 
-## Pré-requisitos
+## Configuração
 
-- [Node.js](https://nodejs.org/) instalado (recomendado LTS mais recente).
-- Acesso à internet (o projeto lê planilhas reais do Google Sheets e acessa os
-  sites dos painéis).
-
-## Instalação
+Requer Node.js 20 ou superior.
 
 ```bash
 npm install
-npm run install-browsers   # baixa o Chromium usado pelo Playwright (só precisa uma vez)
+npm run install-browsers
 ```
 
-### Suíte de testes end-to-end reais (acessa sites e planilhas de produção)
+Copie `.env.example` para `.env` e configure `LEMBRETINHO_API_KEY` e
+`CAPTCHA_API_KEY`. `AUTOMACAO_INTERVALO_MS` define a pausa entre rodadas
+(30 segundos por padrão). A chave da API é gerada no Lembretinho em Playlists →
+Gerenciar Playlists → Integração da automação. O arquivo `.env` é local e não
+deve ser compartilhado ou commitado.
 
-```bash
-npm run test:e2e
-```
-
-## Rodando a aplicação
+## Execução
 
 ```bash
 npm start
 ```
 
-O que acontece:
-
-1. É exibido um menu interativo no terminal (setas + espaço para marcar, Enter
-   para confirmar):
-   - Quais **servidores** atualizar (`TVS`, `UNIPLAY`, `PLAYON`, `FAST`).
-   - Quais **aplicativos/painéis** processar (IboPlayer, IboPlayerPro,
-     QuickPlayer, VuPlayer).
-2. O script lê a planilha real de clientes (`index.js`, constante
-   `sheetUrlClientes`) e processa cada cliente elegível (`Ativo=S`,
-   `Atualizar=S`) no painel indicado na coluna `Site ativação`.
-3. Os navegadores abrem **visíveis** (`headless: false`) e processam clientes
-   em paralelo — o número de navegadores simultâneos é controlado pela
-   constante `CONCURRENCY` em `index.js`.
-4. Ao final, os clientes que falharem são reprocessados (até 2 tentativas
-   extras, exceto `iboplayer.com`, que não permite retry em lote).
-
-> ⚠️ **Atenção:** isso altera de verdade a playlist salva na conta de cada
-> cliente real e ativo da planilha. Não é um modo de demonstração.
+O menu permite escolher os servidores retornados pela API e os aplicativos.
+São processadas playlists com `ativo=S` e `atualizar=S`. O sistema consulta
+todas as páginas da API e usa `urlAtual` do servidor selecionado. Os clientes
+são processados em rodadas: até um cliente por aplicativo em paralelo, com a
+pausa configurada antes da próxima rodada. Ao identificar HTTP 429 ou Cloudflare
+1015, o painel afetado é pausado pelo restante da execução e não recebe novas tentativas.
 
 ## Testes
-
-O projeto usa o [Playwright Test](https://playwright.dev/docs/test-intro)
-(`@playwright/test`) como test runner, tanto para testes unitários (com
-`nock` mockando as chamadas HTTP) quanto para os testes de automação de
-navegador.
-
-### Suíte de testes com mocks (não acessa a internet nem sites reais)
 
 ```bash
 npm test
 ```
 
-Ou, para rodar um arquivo específico:
+O teste E2E consulta dados reais e grava alterações nas contas dos painéis:
 
 ```bash
-npx playwright test tests/biblioteca.spec.js
+npm run test:e2e
 ```
 
-Outras opções úteis:
+O E2E escolhe uma playlist por combinação de servidor e aplicativo e processa
+as combinações em sequência. Execute-o somente quando estiver preparado para
+alterar essas playlists.
 
-```bash
-npx playwright test --ui        # modo interativo
-npx playwright test --headed    # com navegador visível
-```
+## Organização
 
-Essa suíte fica em `tests/` (config: `playwright.config.js`) e usa:
-- `nock` para simular respostas HTTP (Google Sheets, API do 2Captcha).
-- `page.route()` do Playwright para simular o HTML dos sites dos painéis.
-
-Ela valida a **lógica de automação** (seletores, preenchimento de campos,
-tratamento de erro/retry), sem depender de credenciais reais nem alterar
-nada de verdade.
-
-
-Essa suíte (`tests-e2e/producao.spec.js`, config: `e2e.config.js`) roda
-**sem mocks**: lê a planilha real de clientes, pega o primeiro cliente
-elegível de cada um dos 4 painéis e executa a atualização de playlist de
-verdade.
-
-> ⚠️ **Atenção:** isso **altera de fato** a playlist salva na conta real de
-> até 4 clientes (um por painel). Use com cuidado — não é reversível
-> automaticamente.
-
-## Estrutura do projeto
-
-```
-index.js                 → ponto de entrada da aplicação (CLI interativa)
-src/
-  biblioteca.js           → leitura das planilhas, links atualizados, resolução de CAPTCHA
-  interface.js            → menu interativo (inquirer)
-  sites/
-    iboPlayer.js           → automação para iboplayer.com
-    iboPlayerPro.js         → automação para iboplayer.pro
-    quickPlayer.js          → automação para quickplayer.app
-    vuPlayer.js             → automação para vuplayer.pro
-tests/                    → testes unitários/mockados (nock + page.route)
-tests-e2e/                → testes reais, sem mocks, contra produção
-playwright.config.js      → config da suíte de testes com mocks
-e2e.config.js             → config da suíte de testes reais (e2e)
-```
-
-## Servidores e painéis suportados
-
-- **Servidores** (fonte do link/host da playlist): `TVS`, `UNIPLAY`,
-  `PLAYON`, `FAST`.
-- **Painéis/sites de ativação**: `iboplayer.com`, `iboplayer.pro`,
-  `quickplayer.app`, `vuplayer.pro`.
+- `src/models`: dados da playlist, normalização, elegibilidade e seleção.
+- `src/views`: entrada e saída do terminal.
+- `src/controllers`: recebe as escolhas da view e coordena a aplicação.
+- `src/services`: casos de uso e execução das automações.
+- `src/repositories`: acesso HTTP de leitura à API do Lembretinho.
+- `src/sites`: automação específica de cada painel.
+- `src/app.js`: inicialização e tratamento de erros da aplicação.
+- `index.js`: ponto de entrada mínimo.

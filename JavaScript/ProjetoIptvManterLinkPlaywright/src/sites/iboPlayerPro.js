@@ -1,4 +1,6 @@
 const lib = require('../biblioteca');
+const { verificarRateLimit, isSiteRateLimitError } = require('../errors/siteRateLimitError');
+const { aguardarAntesDeRetry } = require('../utils/retryDelay');
 
 // Automação para iboplayer.pro
 async function processarCliente(macAddress, deviceKey, servidor, page, tentativas = 3) {
@@ -6,7 +8,8 @@ async function processarCliente(macAddress, deviceKey, servidor, page, tentativa
 
   while (tentativaAtual < tentativas) {
     try {
-      await page.goto('https://iboplayer.pro/manage-playlists/login/');
+      const response = await page.goto('https://iboplayer.pro/manage-playlists/login/');
+      await verificarRateLimit(page, response, 'iboplayer.pro');
       await page.waitForTimeout(2000);
 
       await page.evaluate(() => window.scrollBy(0, 200));
@@ -60,12 +63,11 @@ async function processarCliente(macAddress, deviceKey, servidor, page, tentativa
       return true;
 
     } catch (e) {
+      if (isSiteRateLimitError(e)) throw e;
       console.log(`IBO PRO PLAYER: Ocorreu um erro com MAC ${macAddress}`);
       console.log(e.message);
-      await page.reload().catch(() => {});
+      await aguardarAntesDeRetry(page, tentativaAtual, tentativas);
       tentativaAtual++;
-    } finally {
-      await page.reload().catch(() => {});
     }
   }
 

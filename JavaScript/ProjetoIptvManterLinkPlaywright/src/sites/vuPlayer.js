@@ -1,4 +1,6 @@
 const lib = require('../biblioteca');
+const { verificarRateLimit, isSiteRateLimitError } = require('../errors/siteRateLimitError');
+const { aguardarAntesDeRetry } = require('../utils/retryDelay');
 
 // Automação para vuplayer.pro
 async function processarCliente(macAddress, deviceKey, servidor, page, tentativas = 3) {
@@ -6,7 +8,8 @@ async function processarCliente(macAddress, deviceKey, servidor, page, tentativa
 
   while (tentativaAtual < tentativas) {
     try {
-      await page.goto('https://vuplayer.pro/login');
+      let response = await page.goto('https://vuplayer.pro/login');
+      await verificarRateLimit(page, response, 'vuplayer.pro');
 
       // Preencher MAC Address
       await page.locator('input[name="macAddress"]').waitFor({ timeout: 15000 });
@@ -21,7 +24,8 @@ async function processarCliente(macAddress, deviceKey, servidor, page, tentativa
       await page.waitForTimeout(2000);
 
       // Ir para a lista de playlists gerenciadas
-      await page.goto('https://vuplayer.pro/playlists?type=list');
+      response = await page.goto('https://vuplayer.pro/playlists?type=list');
+      await verificarRateLimit(page, response, 'vuplayer.pro');
 
       // Esperar o botão editar
       const editButton = page.getByRole('button', { name: 'Editar' }).first();
@@ -48,12 +52,11 @@ async function processarCliente(macAddress, deviceKey, servidor, page, tentativa
       return true;
 
     } catch (e) {
+      if (isSiteRateLimitError(e)) throw e;
       console.log(`VUPLAYER: Ocorreu um erro com MAC ${macAddress}`);
       console.log(e.message);
-      await page.reload().catch(() => {});
+      await aguardarAntesDeRetry(page, tentativaAtual, tentativas);
       tentativaAtual++;
-    } finally {
-      await page.reload().catch(() => {});
     }
   }
 

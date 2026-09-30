@@ -1,4 +1,6 @@
 const lib = require('../biblioteca');
+const { verificarRateLimit, isSiteRateLimitError } = require('../errors/siteRateLimitError');
+const { aguardarAntesDeRetry } = require('../utils/retryDelay');
 
 // Automação para quickplayer.app
 // Particularidade: a URL é atualizada preservando usuário/senha da URL original (/get.php?username=...&password=...)
@@ -7,7 +9,8 @@ async function processarCliente(macAddress, deviceKey, servidor, page, tentativa
 
   while (tentativaAtual < tentativas) {
     try {
-      await page.goto('https://quickplayer.app/#/login');
+      const response = await page.goto('https://quickplayer.app/#/login');
+      await verificarRateLimit(page, response, 'quickplayer.app');
       await page.waitForTimeout(2000);
 
       // Preencher MAC Address
@@ -95,9 +98,10 @@ async function processarCliente(macAddress, deviceKey, servidor, page, tentativa
       return true;
 
     } catch (e) {
+      if (isSiteRateLimitError(e)) throw e;
       console.log(`QUICK PLAYER: Ocorreu um erro com MAC ${macAddress}`);
       console.log(e.message);
-      await page.reload().catch(() => {});
+      await aguardarAntesDeRetry(page, tentativaAtual, tentativas);
       tentativaAtual++;
     }
   }

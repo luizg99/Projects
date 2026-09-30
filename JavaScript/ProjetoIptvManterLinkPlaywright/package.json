@@ -4,14 +4,13 @@
   "description": "Automação de atualização de links IPTV com Playwright",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
+    "start": "node --env-file=.env index.js",
     "install-browsers": "npx playwright install chromium",
     "test": "playwright test",
-    "test:e2e": "playwright test --config=e2e.config.js"
+    "test:e2e": "node --env-file=.env ./node_modules/@playwright/test/cli.js test --config=e2e.config.js"
   },
   "dependencies": {
     "axios": "^1.6.0",
-    "csv-parse": "^5.5.0",
     "inquirer": "^8.2.6",
     "playwright": "^1.40.0"
   },

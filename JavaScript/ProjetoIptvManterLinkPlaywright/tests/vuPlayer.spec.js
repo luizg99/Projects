@@ -65,12 +65,12 @@ test.beforeEach(async () => {
   lib = require('../src/biblioteca');
   vuPlayer = require('../src/sites/vuPlayer');
 
-  nock('https://docs.google.com')
-    .get('/spreadsheets/d/1lMIq91MwJcxuNDZsJaTLdYmj_M2bmLO5_R9Y5EWDEb8/export')
-    .query({ format: 'csv' })
-    .reply(200, 'Nome painel,Link\nlink_tvs,http://tvs.test.com\nlink_uniplay,http://uniplay.test.com\nlink_playon,http://playon.test.com\nlink_fast,http://fast.test.com');
-
-  await lib.atualizarLinks();
+  lib.atualizarLinksDaApi([
+    { nomeServidor: 'TVS', urlAtual: 'http://tvs.test.com' },
+    { nomeServidor: 'UNIPLAY', urlAtual: 'http://uniplay.test.com' },
+    { nomeServidor: 'PLAYON', urlAtual: 'http://playon.test.com' },
+    { nomeServidor: 'FAST', urlAtual: 'http://fast.test.com' },
+  ]);
 });
 
 test.afterEach(() => {

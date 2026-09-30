@@ -1,4 +1,6 @@
 const lib = require('../biblioteca');
+const { verificarRateLimit, isSiteRateLimitError } = require('../errors/siteRateLimitError');
+const { aguardarAntesDeRetry } = require('../utils/retryDelay');
 
 // Automação para iboplayer.com
 // Possui CAPTCHA resolvido via 2Captcha
@@ -7,7 +9,8 @@ async function processarCliente(macAddress, deviceKey, servidor, page, tentativa
 
   while (tentativaAtual < tentativas) {
     try {
-      await page.goto('https://iboplayer.com/device/login');
+      const response = await page.goto('https://iboplayer.com/device/login');
+      await verificarRateLimit(page, response, 'iboplayer.com');
       await page.waitForTimeout(2000);
 
       // Aceitar termos
@@ -70,6 +73,7 @@ async function processarCliente(macAddress, deviceKey, servidor, page, tentativa
       return true;
 
     } catch (e) {
+      if (isSiteRateLimitError(e)) throw e;
       console.log(`IBO PLAYER: Ocorreu um erro com MAC ${macAddress}`);
       console.log(e.message);
 
@@ -79,7 +83,7 @@ async function processarCliente(macAddress, deviceKey, servidor, page, tentativa
           .click({ timeout: 3000 });
       } catch {}
 
-      await page.reload();
+      await aguardarAntesDeRetry(page, tentativaAtual, tentativas);
       tentativaAtual++;
     }
   }

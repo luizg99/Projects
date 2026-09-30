@@ -87,11 +87,12 @@ test.beforeEach(() => {
   iboPlayer = require('../src/sites/iboPlayer');
   lib.captchaApiKey = 'test-captcha-key';
 
-  // Define os links diretamente (sem chamar atualizarLinks)
-  nock('https://docs.google.com')
-    .get('/spreadsheets/d/1lMIq91MwJcxuNDZsJaTLdYmj_M2bmLO5_R9Y5EWDEb8/export')
-    .query({ format: 'csv' })
-    .reply(200, 'Nome painel,Link\nlink_tvs,http://tvs.test.com\nlink_uniplay,http://uniplay.test.com\nlink_playon,http://playon.test.com\nlink_fast,http://fast.test.com');
+  lib.atualizarLinksDaApi([
+    { nomeServidor: 'TVS', urlAtual: 'http://tvs.test.com' },
+    { nomeServidor: 'UNIPLAY', urlAtual: 'http://uniplay.test.com' },
+    { nomeServidor: 'PLAYON', urlAtual: 'http://playon.test.com' },
+    { nomeServidor: 'FAST', urlAtual: 'http://fast.test.com' },
+  ]);
 });
 
 test.afterEach(() => {
@@ -116,7 +117,6 @@ test('IboPlayer - processa cliente com sucesso', async ({ page }) => {
     .query({ key: 'test-captcha-key', action: 'get', id: 'captcha-id-001', json: '1' })
     .reply(200, { status: 1, request: 'ABC123' });
 
-  await lib.atualizarLinks();
 
   const sucesso = await iboPlayer.processarCliente(
     '00:11:22:33:44:55', 'DEVICE_KEY', 'TVS', page
@@ -136,7 +136,6 @@ test('IboPlayer - preenche MAC e DevKey corretamente', async ({ page }) => {
     .query({ key: 'test-captcha-key', action: 'get', id: 'id-002', json: '1' })
     .reply(200, { status: 1, request: 'XYZ999' });
 
-  await lib.atualizarLinks();
 
   await iboPlayer.processarCliente('AA:BB:CC:DD:EE:FF', 'KEY-TEST', 'PLAYON', page);
 
@@ -179,7 +178,6 @@ test('IboPlayer - tenta novamente após falha e retorna true', async ({ page }) 
     .query({ key: 'test-captcha-key', action: 'get', id: 'id-003', json: '1' })
     .reply(200, { status: 1, request: 'RETRY_OK' });
 
-  await lib.atualizarLinks();
 
   const sucesso = await iboPlayer.processarCliente(
     '00:11:22:33:44:55', 'KEY', 'TVS', page, 3 // permite até 3 tentativas

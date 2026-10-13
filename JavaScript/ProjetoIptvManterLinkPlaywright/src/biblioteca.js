@@ -8,6 +8,7 @@ const SITE_POR_HOST = new Map([
   ['playbr.app.br', 'playbr.app.br'],
 ]);
 let linksPorServidor = new Map();
+let linksM3UPorServidor = new Map();
 let captchaApiKey = process.env.CAPTCHA_API_KEY || '';
 
 function obterSiteAtivacao(urlSite) {
@@ -22,14 +23,30 @@ function obterSiteAtivacao(urlSite) {
 
 function atualizarLinksDaApi(playlists) {
   linksPorServidor = new Map();
+  linksM3UPorServidor = new Map();
   for (const playlist of playlists) {
     const servidor = playlist.nomeServidor || playlist.servidor;
     if (servidor && playlist.urlAtual) linksPorServidor.set(servidor, playlist.urlAtual);
+    if (servidor && playlist.m3u) linksM3UPorServidor.set(servidor, playlist.m3u);
   }
 }
 
 function obterLinkAtualizado(servidor) {
   return linksPorServidor.get(servidor) || '';
+}
+
+function obterLinkM3UAtualizado(servidor) {
+  return linksM3UPorServidor.get(servidor) || '';
+}
+
+function substituirBaseM3U(urlOriginal, novaBase) {
+  if (!urlOriginal || !novaBase) return '';
+  const marcadorOriginal = urlOriginal.toLowerCase().indexOf('.php?');
+  const marcadorBase = novaBase.toLowerCase().indexOf('.php?');
+  if (marcadorOriginal < 0 || marcadorBase < 0) return '';
+
+  const parametros = urlOriginal.slice(marcadorOriginal + '.php?'.length);
+  return `${novaBase.slice(0, marcadorBase + '.php?'.length)}${parametros}`;
 }
 
 async function solveCaptchaWith2Captcha(imageBuffer, apiKey = captchaApiKey) {
@@ -61,6 +78,8 @@ module.exports = {
   obterSiteAtivacao,
   atualizarLinksDaApi,
   obterLinkAtualizado,
+  obterLinkM3UAtualizado,
+  substituirBaseM3U,
   solveCaptchaWith2Captcha,
   get captchaApiKey() { return captchaApiKey; },
   set captchaApiKey(valor) { captchaApiKey = valor; },

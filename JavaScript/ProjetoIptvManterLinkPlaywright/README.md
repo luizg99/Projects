@@ -37,8 +37,33 @@ For playlists whose activation site is `playbr.app.br`, the automation calls
 the PlayerApp integration API and does not open a browser. Configure
 `PLAYBR_API_KEY` in the local `.env`; the endpoint defaults to
 `https://api.playbr.app.br/api/integracoes/v1/playlists/atualizar-link` and can
-be overridden with `PLAYERAPP_INTEGRATION_API_URL`. The request uses the MAC,
-Device Key, and current server link returned by the Lembretinho API.
+be overridden with `PLAYERAPP_INTEGRATION_API_URL`. The request keeps sending
+the current server link as `urlNova` and also sends the server's `m3u` base,
+alongside the MAC and Device Key, so the integration can apply the matching
+link for the stored playlist type. A successful response must include both a
+recognized `resultado` and `tipoPlaylist` (`m3u` or `xtream`) so the automation
+can confirm which format the PlayBR API updated.
+
+## IboPlayer, IboPlayer Pro and VU Player Pro
+
+The IboPlayer and VU Player Pro automations detect the edit form type. Xtream
+playlists update only the host from `urlAtual`, preserving the username and
+password. M3U playlists use the `m3u` field returned by the Lembretinho API (a
+base ending in `.php?`) and keep the existing query string. IboPlayer Pro also
+detects its Xtream and M3U edit forms and applies the matching update. If the
+API omits the M3U base or the playlist URL does not contain `.php?`, the
+automation skips the save.
+
+## QuickPlayer
+
+QuickPlayer stores only one playlist URL in its edit form. Its Xtream creation
+flow builds `get.php` URLs with `type=m3u_plus&output=ts`; the M3U example uses
+`type=m3u_plus&output=hls`. The automation uses `output` to distinguish them:
+Xtream updates the host, while M3U uses the API `m3u` base and preserves the
+existing query. A URL without a recognizable signature is skipped. Because
+QuickPlayer does not retain a separate playlist-type field, a direct M3U URL
+identical in structure to its generated Xtream URL cannot be distinguished by
+the panel.
 
 ## Testes
 

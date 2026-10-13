@@ -8,7 +8,8 @@ const nock = require('nock');
 //  Password: #password
 //  Login   : xpath=/html/body/div[1]/div[3]/div/form/button
 //  Edit    : xpath=/html/body/div[1]/div[3]/div/div[3]/div[2]/section/div/div[2]/table/tbody/tr/td[3]/button[1]
-//  Host    : [name="host"]
+//  M3U URL : [name="url"]
+//  Xtream  : [name="host"], [name="username"], [name="password"]
 //  Salvar  : xpath=/html/body/div[3]/div/div/div[2]/form/button
 //  Logout  : xpath=/html/body/div[1]/div[3]/div/div[3]/div[1]/div[3]
 //
@@ -94,7 +95,10 @@ const IBO_PRO_HTML = `<!DOCTYPE html>
         <div></div>
         <div>
           <form id="modal-form">
-            <input name="host" type="text" value="" />
+            <input name="url" type="text" value="http://old.test/get.php?username=user1&password=pass1&type=m3u&output=ts" />
+            <input name="host" type="text" value="http://old.test" />
+            <input name="username" type="text" value="user1" />
+            <input name="password" type="text" value="pass1" />
             <button type="button" id="modal-save-btn">Salvar</button>
           </form>
         </div>
@@ -104,23 +108,40 @@ const IBO_PRO_HTML = `<!DOCTYPE html>
 </body>
 </html>`;
 
+function htmlSomenteM3U() {
+  return IBO_PRO_HTML
+    .replace(/\s*<input name="host"[^>]*>/, '')
+    .replace(/\s*<input name="username"[^>]*>/, '')
+    .replace(/\s*<input name="password"[^>]*>/, '');
+}
+
 // ─── Setup e teardown ─────────────────────────────────────────────────────────
 
 let lib;
 let iboPlayerPro;
+let lastInputSnapshot = {};
 
-test.beforeEach(async () => {
+test.beforeEach(async ({ page }) => {
+  page.waitForTimeout = async () => {};
   nock.cleanAll();
   delete require.cache[require.resolve('../src/biblioteca')];
   delete require.cache[require.resolve('../src/sites/iboPlayerPro')];
   lib = require('../src/biblioteca');
   iboPlayerPro = require('../src/sites/iboPlayerPro');
+  lastInputSnapshot = {};
+  await page.exposeFunction('__capturePlaylistFields', (fields) => { lastInputSnapshot = fields; });
+  await page.addInitScript(() => {
+    document.addEventListener('input', () => {
+      const value = (name) => document.querySelector(`[name="${name}"]`)?.value;
+      window.__capturePlaylistFields({ url: value('url'), host: value('host'), username: value('username'), password: value('password') });
+    });
+  });
 
   lib.atualizarLinksDaApi([
-    { nomeServidor: 'TVS', urlAtual: 'http://tvs.test.com' },
-    { nomeServidor: 'UNIPLAY', urlAtual: 'http://uniplay.test.com' },
-    { nomeServidor: 'PLAYON', urlAtual: 'http://playon.test.com' },
-    { nomeServidor: 'FAST', urlAtual: 'http://fast.test.com' },
+    { nomeServidor: 'TVS', urlAtual: 'http://tvs.test.com', m3u: 'http://tvs-m3u.test/get.php?' },
+    { nomeServidor: 'UNIPLAY', urlAtual: 'http://uniplay.test.com', m3u: 'http://uniplay-m3u.test/get.php?' },
+    { nomeServidor: 'PLAYON', urlAtual: 'http://playon.test.com', m3u: 'http://playon-m3u.test/get.php?' },
+    { nomeServidor: 'FAST', urlAtual: 'http://fast.test.com', m3u: 'http://fast-m3u.test/get.php?' },
   ]);
 });
 
@@ -186,6 +207,47 @@ test('IboPlayerPro - preenche o campo host com link do servidor', async ({ page 
   await iboPlayerPro.processarCliente('AA:BB:CC:DD:EE:FF', 'KEY', 'TVS', page);
 
   expect(hostCapturado).toBe('http://tvs.test.com');
+  await expect(page.locator('[name="url"]')).toHaveValue(
+    'http://old.test/get.php?username=user1&password=pass1&type=m3u&output=ts'
+  );
+});
+
+test('IboPlayerPro - Xtream atualiza o host e preserva usuário e senha', async ({ page }) => {
+  await page.route('https://iboplayer.pro/**', (route) =>
+    route.fulfill({ status: 200, contentType: 'text/html', body: IBO_PRO_HTML })
+  );
+
+  await iboPlayerPro.processarCliente('AA:BB:CC:DD:EE:FF', 'KEY', 'TVS', page);
+
+  expect(lastInputSnapshot).toEqual({
+    url: 'http://old.test/get.php?username=user1&password=pass1&type=m3u&output=ts',
+    host: 'http://tvs.test.com', username: 'user1', password: 'pass1',
+  });
+});
+
+test('IboPlayerPro - não salva M3U se a API não enviar a nova base', async ({ page }) => {
+  lib.atualizarLinksDaApi([{ nomeServidor: 'TVS', urlAtual: 'http://tvs.test.com' }]);
+  await page.route('https://iboplayer.pro/**', (route) =>
+    route.fulfill({ status: 200, contentType: 'text/html', body: htmlSomenteM3U() })
+  );
+
+  const sucesso = await iboPlayerPro.processarCliente('AA:BB:CC:DD:EE:FF', 'KEY', 'TVS', page);
+
+  expect(sucesso).toBe(false);
+  await expect(page.locator('[name="url"]')).toHaveValue(
+    'http://old.test/get.php?username=user1&password=pass1&type=m3u&output=ts'
+  );
+});
+
+test('IboPlayerPro - M3U atualiza a base e preserva a query', async ({ page }) => {
+  const m3uHtml = htmlSomenteM3U();
+  await page.route('https://iboplayer.pro/**', (route) =>
+    route.fulfill({ status: 200, contentType: 'text/html', body: m3uHtml })
+  );
+
+  await iboPlayerPro.processarCliente('AA:BB:CC:DD:EE:FF', 'KEY', 'TVS', page);
+
+  expect(lastInputSnapshot.url).toBe('http://tvs-m3u.test/get.php?username=user1&password=pass1&type=m3u&output=ts');
 });
 
 test('IboPlayerPro - retorna false quando elemento não existe', async ({ page }) => {

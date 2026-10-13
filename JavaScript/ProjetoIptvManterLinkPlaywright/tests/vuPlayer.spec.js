@@ -10,7 +10,8 @@ const nock = require('nock');
 //  Login btn  : button[type="submit"]
 //  Lista      : goto https://vuplayer.pro/playlists?type=list
 //  Edit btn   : role=button "Editar"
-//  URL field  : input[name="playlistHost"]
+//  Xtream     : playlistHost + userName + password
+//  M3U        : input[name="playlistUrl"]
 //  Save btn   : role=button "Enviar"
 //  Logout     : role=button "Sair"
 
@@ -26,7 +27,7 @@ const VU_LOGIN_HTML = `<!DOCTYPE html>
 </body>
 </html>`;
 
-const VU_LIST_HTML = `<!DOCTYPE html>
+const VU_XTREAM_LIST_HTML = `<!DOCTYPE html>
 <html>
 <head><title>VuPlayer Mock - Lista</title></head>
 <body>
@@ -44,11 +45,26 @@ const VU_LIST_HTML = `<!DOCTYPE html>
   </table>
 
   <div id="edit-dialog">
-    <input name="playlistHost" type="text" value="" />
+    <input name="playlistHost" type="text" value="http://old.example:8080" />
+    <input name="userName" type="text" value="cliente-teste" />
+    <input name="password" type="text" value="senha-teste" />
     <button type="button">Cancelar</button>
     <button type="submit">Enviar</button>
   </div>
 
+  <button type="button">Sair</button>
+</body>
+</html>`;
+
+const VU_M3U_LIST_HTML = `<!DOCTYPE html>
+<html>
+<body>
+  <table><tbody><tr><td><button type="button">Editar</button></td></tr></tbody></table>
+  <div id="edit-dialog">
+    <input name="playlistUrl" type="text" value="http://old.example/get.php?username=cliente&password=senha&type=m3u_plus" />
+    <button type="button">Cancelar</button>
+    <button type="submit">Enviar</button>
+  </div>
   <button type="button">Sair</button>
 </body>
 </html>`;
@@ -70,6 +86,7 @@ test.beforeEach(async () => {
     { nomeServidor: 'UNIPLAY', urlAtual: 'http://uniplay.test.com' },
     { nomeServidor: 'PLAYON', urlAtual: 'http://playon.test.com' },
     { nomeServidor: 'FAST', urlAtual: 'http://fast.test.com' },
+    { nomeServidor: 'M3U-TEST', urlAtual: 'http://m3u-host.test.com', m3u: 'http://new.example/get.php?token=unused' },
   ]);
 });
 
@@ -79,13 +96,13 @@ test.afterEach(() => {
 
 // ─── Testes ───────────────────────────────────────────────────────────────────
 
-function mockRoutes(page) {
+function mockRoutes(page, type = 'xtream') {
   return Promise.all([
     page.route('https://vuplayer.pro/login', (route) =>
       route.fulfill({ status: 200, contentType: 'text/html', body: VU_LOGIN_HTML })
     ),
     page.route('https://vuplayer.pro/playlists?type=list', (route) =>
-      route.fulfill({ status: 200, contentType: 'text/html', body: VU_LIST_HTML })
+      route.fulfill({ status: 200, contentType: 'text/html', body: type === 'm3u' ? VU_M3U_LIST_HTML : VU_XTREAM_LIST_HTML })
     ),
   ]);
 }
@@ -125,7 +142,7 @@ test('VuPlayer - preenche MAC e device key corretamente', async ({ page }) => {
   expect(keyCapturado).toBe('KEY-VU-TEST');
 });
 
-test('VuPlayer - preenche playlist-url com link do servidor', async ({ page }) => {
+test('VuPlayer - Xtream atualiza somente o host', async ({ page }) => {
   await mockRoutes(page);
 
   let urlCapturada = '';
@@ -140,6 +157,41 @@ test('VuPlayer - preenche playlist-url com link do servidor', async ({ page }) =
   await vuPlayer.processarCliente('AA:BB:CC:DD:EE:FF', 'KEY', 'UNIPLAY', page);
 
   expect(urlCapturada).toBe('http://uniplay.test.com');
+});
+
+test('VuPlayer - M3U atualiza a base e preserva os parâmetros', async ({ page }) => {
+  await mockRoutes(page, 'm3u');
+
+  let urlCapturada = '';
+  await page.exposeFunction('__capturarUrlM3U', (valor) => { urlCapturada = valor; });
+  await page.addInitScript(() => {
+    document.addEventListener('input', () => {
+      const el = document.querySelector('input[name="playlistUrl"]');
+      if (el) window.__capturarUrlM3U(el.value);
+    });
+  });
+
+  await vuPlayer.processarCliente('AA:BB:CC:DD:EE:FF', 'KEY', 'M3U-TEST', page);
+
+  expect(urlCapturada).toBe('http://new.example/get.php?username=cliente&password=senha&type=m3u_plus');
+});
+
+test('VuPlayer - não salva M3U quando a API não fornece base M3U', async ({ page }) => {
+  await mockRoutes(page, 'm3u');
+  lib.atualizarLinksDaApi([{ nomeServidor: 'M3U-TEST', urlAtual: 'http://m3u-host.test.com' }]);
+
+  let clicouEnviar = false;
+  await page.exposeFunction('__marcarEnviar', () => { clicouEnviar = true; });
+  await page.addInitScript(() => {
+    document.addEventListener('click', (event) => {
+      if (event.target.closest('button')?.textContent.trim() === 'Enviar') window.__marcarEnviar();
+    });
+  });
+
+  const sucesso = await vuPlayer.processarCliente('AA:BB:CC:DD:EE:FF', 'KEY', 'M3U-TEST', page);
+
+  expect(sucesso).toBe(false);
+  expect(clicouEnviar).toBe(false);
 });
 
 test('VuPlayer - clica em Sair ao finalizar', async ({ page }) => {

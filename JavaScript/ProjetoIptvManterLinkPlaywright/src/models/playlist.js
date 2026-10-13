@@ -13,6 +13,7 @@ function normalizarPlaylist(registro) {
     ativo: registro.ativo,
     atualizar: registro.atualizar,
     urlAtual: registro.urlAtual || '',
+    m3u: registro.m3u || '',
   };
 }
 

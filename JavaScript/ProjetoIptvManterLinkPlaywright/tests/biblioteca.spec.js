@@ -50,9 +50,21 @@ test('modelo seleciona uma amostra elegível por servidor e aplicativo', () => {
 });
 
 test('biblioteca usa o link retornado para cada servidor', () => {
-  biblioteca.atualizarLinksDaApi([{ nomeServidor: 'Servidor A', urlAtual: 'https://host.test' }]);
+  biblioteca.atualizarLinksDaApi([{
+    nomeServidor: 'Servidor A', urlAtual: 'https://host.test', m3u: 'https://m3u.test/get.php?',
+  }]);
   expect(biblioteca.obterLinkAtualizado('Servidor A')).toBe('https://host.test');
+  expect(biblioteca.obterLinkM3UAtualizado('Servidor A')).toBe('https://m3u.test/get.php?');
   expect(biblioteca.obterLinkAtualizado('inexistente')).toBe('');
+  expect(biblioteca.obterLinkM3UAtualizado('inexistente')).toBe('');
+});
+
+test('biblioteca troca a base M3U e preserva a query completa', () => {
+  expect(biblioteca.substituirBaseM3U(
+    'http://antigo.test/get.php?username=cliente&password=segredo&type=m3u&output=ts',
+    'http://novo.test/get.php?'
+  )).toBe('http://novo.test/get.php?username=cliente&password=segredo&type=m3u&output=ts');
+  expect(biblioteca.substituirBaseM3U('http://antigo.test/playlist.m3u', 'http://novo.test/get.php?')).toBe('');
 });
 
 test('biblioteca resolve CAPTCHA usando a chave fornecida', async () => {

@@ -2,6 +2,12 @@ const lib = require('../biblioteca');
 const { verificarRateLimit, isSiteRateLimitError } = require('../errors/siteRateLimitError');
 const { aguardarAntesDeRetry } = require('../utils/retryDelay');
 
+function erroConfiguracaoPlaylist(mensagem) {
+  const erro = new Error(mensagem);
+  erro.code = 'IBO_PRO_PLAYLIST_CONFIGURATION';
+  return erro;
+}
+
 // Automação para iboplayer.pro
 async function processarCliente(macAddress, deviceKey, servidor, page, tentativas = 3) {
   let tentativaAtual = 1;
@@ -38,10 +44,30 @@ async function processarCliente(macAddress, deviceKey, servidor, page, tentativa
 
       await editButton.click();
 
-      // Preencher o campo Host
-      const hostInput = page.locator('[name="host"]');
-      await hostInput.waitFor({ timeout: 10000 });
-      await hostInput.fill(lib.obterLinkAtualizado(servidor));
+      // O campo URL pode continuar visível no modo XC; host + usuário + senha
+      // identificam Xtream e têm prioridade para evitar atualizar o campo errado.
+      const m3uInput = page.locator('input[name="url"]:visible, #playlist-url:visible').first();
+      const hostInput = page.locator('[name="host"]:visible, #host:visible').first();
+      const usernameInput = page.locator('input[name="username"]:visible, #username:visible');
+      const passwordInput = page.locator('input[name="password"]:visible, #password:visible');
+      const temCamposXtream = await hostInput.count()
+        && await usernameInput.count()
+        && await passwordInput.count();
+
+      if (temCamposXtream || await hostInput.count()) {
+        const novoHost = lib.obterLinkAtualizado(servidor);
+        if (!novoHost) throw erroConfiguracaoPlaylist('IBO PRO PLAYER: URL atual do servidor não informada.');
+        await hostInput.fill(novoHost);
+      } else if (await m3uInput.count()) {
+        const urlOriginal = await m3uInput.inputValue();
+        const novaUrl = lib.substituirBaseM3U(urlOriginal, lib.obterLinkM3UAtualizado(servidor));
+        if (!novaUrl) {
+          throw erroConfiguracaoPlaylist('IBO PRO PLAYER: URL M3U ou base m3u inválida; playlist não foi salva.');
+        }
+        await m3uInput.fill(novaUrl);
+      } else {
+        throw erroConfiguracaoPlaylist('IBO PRO PLAYER: tipo de playlist não identificado; nada foi alterado.');
+      }
 
       // Salvar
       await page
@@ -64,6 +90,10 @@ async function processarCliente(macAddress, deviceKey, servidor, page, tentativa
 
     } catch (e) {
       if (isSiteRateLimitError(e)) throw e;
+      if (e.code === 'IBO_PRO_PLAYLIST_CONFIGURATION') {
+        console.log(e.message);
+        return false;
+      }
       console.log(`IBO PRO PLAYER: Ocorreu um erro com MAC ${macAddress}`);
       console.log(e.message);
       await aguardarAntesDeRetry(page, tentativaAtual, tentativas);

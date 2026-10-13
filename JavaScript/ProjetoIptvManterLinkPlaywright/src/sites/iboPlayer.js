@@ -2,6 +2,12 @@ const lib = require('../biblioteca');
 const { verificarRateLimit, isSiteRateLimitError } = require('../errors/siteRateLimitError');
 const { aguardarAntesDeRetry } = require('../utils/retryDelay');
 
+function erroConfiguracaoPlaylist(mensagem) {
+  const erro = new Error(mensagem);
+  erro.code = 'IBO_PLAYLIST_CONFIGURATION';
+  return erro;
+}
+
 // Automação para iboplayer.com
 // Possui CAPTCHA resolvido via 2Captcha
 async function processarCliente(macAddress, deviceKey, servidor, page, tentativas = 2) {
@@ -47,10 +53,36 @@ async function processarCliente(macAddress, deviceKey, servidor, page, tentativa
       await svgElement.waitFor({ timeout: 15000 });
       await svgElement.click();
 
-      // Preencher o campo Host com o link atualizado
-      const hostInput = page.locator('#host');
-      await hostInput.waitFor({ timeout: 15000 });
-      await hostInput.fill(lib.obterLinkAtualizado(servidor));
+      // O painel usa formulários diferentes para M3U e Xtream.
+      const m3uInput = page.locator('#playlist-url:visible, input[name="playlist-url"]:visible, #url:visible').first();
+      const hostInput = page.locator('#host:visible, input[name="host"]:visible, #server:visible, input[name="server"]:visible').first();
+      const usernameInput = page.locator('#username:visible, input[name="username"]:visible');
+      const passwordInput = page.locator('#password:visible, input[name="password"]:visible');
+
+      const temCamposXtream = await hostInput.count()
+        && await usernameInput.count()
+        && await passwordInput.count();
+
+      if (temCamposXtream) {
+        const novoHost = lib.obterLinkAtualizado(servidor);
+        if (!novoHost) throw erroConfiguracaoPlaylist('IBO Player: URL atual do servidor não foi informada.');
+        await hostInput.fill(novoHost);
+      } else if (await m3uInput.count()) {
+        const urlOriginal = await m3uInput.inputValue();
+        const urlBaseM3U = lib.obterLinkM3UAtualizado(servidor);
+        const novaUrl = lib.substituirBaseM3U(urlOriginal, urlBaseM3U);
+        if (!novaUrl) {
+          throw erroConfiguracaoPlaylist('IBO Player: URL M3U ou base m3u inválida; playlist não foi salva.');
+        }
+        await m3uInput.fill(novaUrl);
+      } else if (await hostInput.count()) {
+        // Compatibilidade com o formulário antigo do IBO, que expõe somente o campo Host.
+        const novoHost = lib.obterLinkAtualizado(servidor);
+        if (!novoHost) throw erroConfiguracaoPlaylist('IBO Player: URL atual do servidor não foi informada.');
+        await hostInput.fill(novoHost);
+      } else {
+        throw erroConfiguracaoPlaylist('IBO Player: tipo de playlist não identificado; nada foi alterado.');
+      }
 
       // Salvar
       await page
@@ -74,6 +106,10 @@ async function processarCliente(macAddress, deviceKey, servidor, page, tentativa
 
     } catch (e) {
       if (isSiteRateLimitError(e)) throw e;
+      if (e.code === 'IBO_PLAYLIST_CONFIGURATION') {
+        console.log(e.message);
+        return false;
+      }
       console.log(`IBO PLAYER: Ocorreu um erro com MAC ${macAddress}`);
       console.log(e.message);
 

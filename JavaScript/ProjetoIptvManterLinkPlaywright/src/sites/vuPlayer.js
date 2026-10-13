@@ -34,9 +34,29 @@ async function processarCliente(macAddress, deviceKey, servidor, page, tentativa
       await editButton.click();
       await page.waitForTimeout(1000);
 
-      // Preencher o campo de URL da playlist com o link atualizado
-      const campoUrl = page.locator('input[name="playlistHost"]');
-      await campoUrl.fill(lib.obterLinkAtualizado(servidor));
+      // O VU Player Pro renderiza formulários diferentes para XC e M3U.
+      // XC usa host/usuário/senha; M3U usa uma URL completa.
+      const campoHost = page.locator('input[name="playlistHost"]');
+      const campoUsuario = page.locator('input[name="userName"]');
+      const campoSenha = page.locator('input[name="password"]');
+      const formularioXtream = await campoHost.isVisible()
+        && await campoUsuario.isVisible()
+        && await campoSenha.isVisible();
+
+      if (formularioXtream) {
+        const hostAtualizado = lib.obterLinkAtualizado(servidor);
+        if (!hostAtualizado) return false;
+        await campoHost.fill(hostAtualizado);
+      } else {
+        const campoM3U = page.locator('input[name="playlistUrl"]');
+        if (!await campoM3U.isVisible()) return false;
+
+        const urlOriginal = await campoM3U.inputValue();
+        const baseM3U = lib.obterLinkM3UAtualizado(servidor);
+        const urlAtualizada = lib.substituirBaseM3U(urlOriginal, baseM3U);
+        if (!urlAtualizada) return false;
+        await campoM3U.fill(urlAtualizada);
+      }
 
       // Salvar
       const saveButton = page.getByRole('button', { name: 'Enviar' });

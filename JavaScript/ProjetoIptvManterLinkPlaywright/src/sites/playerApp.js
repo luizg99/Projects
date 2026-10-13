@@ -15,6 +15,7 @@ function retryAfterEmSegundos(value) {
 async function processarCliente(macAddress, deviceKey, servidor) {
   const apiKey = process.env.PLAYBR_API_KEY;
   const urlNova = lib.obterLinkAtualizado(servidor);
+  const m3u = lib.obterLinkM3UAtualizado(servidor);
 
   if (!apiKey) throw new Error('Configure PLAYBR_API_KEY no arquivo .env.');
   if (!urlNova) {
@@ -32,15 +33,18 @@ async function processarCliente(macAddress, deviceKey, servidor) {
   }
 
   try {
-    const resposta = await axios.post(endpoint.toString(), { macAddress, deviceKey, urlNova }, {
+    const resposta = await axios.post(endpoint.toString(), { macAddress, deviceKey, urlNova, m3u }, {
       headers: { 'x-api-key': apiKey },
       timeout: 30000,
     });
-    if (['atualizado', 'inalterado'].includes(resposta.data?.resultado)) {
-      console.log(`Processamento concluído para MAC: ${macAddress} (${resposta.data.resultado}).`);
+    const resultado = resposta.data?.resultado;
+    const tipoPlaylist = String(resposta.data?.tipoPlaylist || '').toLowerCase();
+    if (['atualizado', 'inalterado'].includes(resultado)
+      && ['m3u', 'xtream'].includes(tipoPlaylist)) {
+      console.log(`Processamento concluído para MAC: ${macAddress} (${resultado}, ${tipoPlaylist}).`);
       return true;
     }
-    console.error('PlayerApp API: resposta sem resultado reconhecido.');
+    console.error('PlayerApp API: resposta sem resultado ou tipo de playlist reconhecido.');
     return false;
   } catch (erro) {
     const status = erro.response?.status;

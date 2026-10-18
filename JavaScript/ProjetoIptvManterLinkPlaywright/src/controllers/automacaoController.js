@@ -10,6 +10,8 @@ async function executar() {
   if (!opcoes.selecionado) return;
 
   const elegiveis = playlistService.listarElegiveis(playlists);
+  const filas = automacaoService.agruparPorAplicativo(elegiveis, opcoes);
+  interfaceView.mostrarPlaylistsSelecionadas(filas);
   const resultado = await automacaoService.executar(elegiveis, opcoes);
   interfaceView.mostrarResultado(resultado);
 }

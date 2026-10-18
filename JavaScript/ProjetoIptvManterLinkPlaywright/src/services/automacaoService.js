@@ -8,6 +8,9 @@ const { isSiteRateLimitError } = require('../errors/siteRateLimitError');
 const { INTERVALO_MS } = require('../utils/retryDelay');
 const INTERVALO_API_MS = 2100;
 
+// iboplayer.com exige CAPTCHA pago; falhas dele não são repetidas na reexecução.
+const SITES_SEM_RETRY = new Set(['iboplayer.com']);
+const RETRIES_FALHANTES = 2;
 const SITE_BLOQUEADO = Symbol('site bloqueado por limite de acesso');
 const FALHA_PERMANENTE = Symbol('falha permanente da API');
 const PAINEIS = {
@@ -129,21 +132,19 @@ async function executar(playlists, opcoes) {
       return false;
     });
 
-    let pendentes = falhas;
-    for (let tentativa = 1; tentativa < 3 && pendentes.length; tentativa++) {
+    const falhasSemRetry = falhas.filter((p) => SITES_SEM_RETRY.has(p.siteAtivacao));
+    let pendentes = falhas.filter((p) => !SITES_SEM_RETRY.has(p.siteAtivacao));
+    for (let tentativa = 1; tentativa <= RETRIES_FALHANTES && pendentes.length; tentativa++) {
       const novasFalhas = [];
       const filasDeRetry = agruparPorAplicativo(pendentes, opcoes);
       const somenteApis = [...filasDeRetry.keys()].every((site) => !PAINEIS[site].navegador);
+      console.log(`Reexecutando ${pendentes.length} playlist(s) com falha (${tentativa}/${RETRIES_FALHANTES}).`);
       if (somenteApis) await aguardarIntervaloApi();
       else await aguardarIntervalo();
       await executarRodadas(filasDeRetry, paginas, async (playlist, pagina) => {
         if (sitesBloqueados.has(playlist.siteAtivacao)) {
           await processarComProtecao(playlist, pagina);
           return true;
-        }
-        if (playlist.siteAtivacao === 'iboplayer.com') {
-          novasFalhas.push(playlist);
-          return false;
         }
         const sucesso = await processarComProtecao(playlist, pagina);
         if (sucesso === SITE_BLOQUEADO) return true;
@@ -157,7 +158,7 @@ async function executar(playlists, opcoes) {
 
     return {
       sucessos,
-      falhas: [...pendentes, ...falhasPermanentes],
+      falhas: [...pendentes, ...falhasSemRetry, ...falhasPermanentes],
       playlistsBloqueadas,
       sitesBloqueados: [...sitesBloqueados.entries()].map(([site, erro]) => ({
         site,

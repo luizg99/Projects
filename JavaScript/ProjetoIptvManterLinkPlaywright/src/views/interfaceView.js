@@ -40,10 +40,23 @@ function mostrarQuantidadePlaylists(quantidade) {
   console.log(`Playlists recebidas: ${quantidade}`);
 }
 
+function mostrarPlaylistsSelecionadas(filas) {
+  const total = [...filas.values()].reduce((soma, fila) => soma + fila.length, 0);
+  console.log(`Playlists a processar conforme a seleção: ${total}`);
+  for (const [site, fila] of filas) console.log(`  - ${site}: ${fila.length}`);
+}
+
 function mostrarResultado({ sucessos, falhas, playlistsBloqueadas = [], sitesBloqueados = [] }) {
   console.log(`Processamento concluído. Sucessos: ${sucessos}; falhas: ${falhas.length}.`);
+  const falhasPorGrupo = new Map();
   for (const playlist of falhas) {
-    console.error(`Falha no servidor ${playlist.servidor}, aplicativo ${playlist.siteAtivacao}, MAC ${playlist.macAddress}.`);
+    const grupo = `${playlist.siteAtivacao} (servidor ${playlist.servidor})`;
+    if (!falhasPorGrupo.has(grupo)) falhasPorGrupo.set(grupo, []);
+    falhasPorGrupo.get(grupo).push(playlist.macAddress);
+  }
+  for (const [grupo, macs] of falhasPorGrupo) {
+    console.error(`Falhas em ${grupo}: ${macs.length}`);
+    for (const mac of macs) console.error(`  - MAC ${mac}`);
   }
   for (const bloqueio of sitesBloqueados) {
     const espera = bloqueio.retryAfterSeconds == null
@@ -61,4 +74,4 @@ function mostrarErroFatal(erro) {
   console.error('Erro fatal na automação:', erro.message);
 }
 
-module.exports = { mostrarInterface, mostrarQuantidadePlaylists, mostrarResultado, mostrarErroFatal };
+module.exports = { mostrarInterface, mostrarQuantidadePlaylists, mostrarPlaylistsSelecionadas, mostrarResultado, mostrarErroFatal };

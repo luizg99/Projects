@@ -50,6 +50,8 @@ async function processarCliente(macAddress, deviceKey, servidor, page, tentativa
       const hostInput = page.locator('[name="host"]:visible, #host:visible').first();
       const usernameInput = page.locator('input[name="username"]:visible, #username:visible');
       const passwordInput = page.locator('input[name="password"]:visible, #password:visible');
+      // count() não espera: aguarda o formulário de edição renderizar antes de classificar a playlist.
+      await m3uInput.or(hostInput).waitFor({ state: 'visible', timeout: 10000 }).catch(() => {});
       const temCamposXtream = await hostInput.count()
         && await usernameInput.count()
         && await passwordInput.count();
@@ -66,7 +68,7 @@ async function processarCliente(macAddress, deviceKey, servidor, page, tentativa
         }
         await m3uInput.fill(novaUrl);
       } else {
-        throw erroConfiguracaoPlaylist('IBO PRO PLAYER: tipo de playlist não identificado; nada foi alterado.');
+        throw new Error(`IBO PRO PLAYER: tipo de playlist não identificado para MAC ${macAddress}; nada foi alterado.`);
       }
 
       // Salvar

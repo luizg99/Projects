@@ -13,7 +13,7 @@ function erroConfiguracaoPlaylist(mensagem) {
 async function processarCliente(macAddress, deviceKey, servidor, page, tentativas = 2) {
   let tentativaAtual = 1;
 
-  while (tentativaAtual < tentativas) {
+  while (tentativaAtual <= tentativas) {
     try {
       const response = await page.goto('https://iboplayer.com/device/login');
       await verificarRateLimit(page, response, 'iboplayer.com');
@@ -59,6 +59,9 @@ async function processarCliente(macAddress, deviceKey, servidor, page, tentativa
       const usernameInput = page.locator('#username:visible, input[name="username"]:visible');
       const passwordInput = page.locator('#password:visible, input[name="password"]:visible');
 
+      // count() não espera: aguarda o formulário de edição renderizar antes de classificar a playlist.
+      await m3uInput.or(hostInput).waitFor({ state: 'visible', timeout: 10000 }).catch(() => {});
+
       const temCamposXtream = await hostInput.count()
         && await usernameInput.count()
         && await passwordInput.count();
@@ -81,7 +84,7 @@ async function processarCliente(macAddress, deviceKey, servidor, page, tentativa
         if (!novoHost) throw erroConfiguracaoPlaylist('IBO Player: URL atual do servidor não foi informada.');
         await hostInput.fill(novoHost);
       } else {
-        throw erroConfiguracaoPlaylist('IBO Player: tipo de playlist não identificado; nada foi alterado.');
+        throw new Error(`IBO Player: tipo de playlist não identificado para MAC ${macAddress}; nada foi alterado.`);
       }
 
       // Salvar

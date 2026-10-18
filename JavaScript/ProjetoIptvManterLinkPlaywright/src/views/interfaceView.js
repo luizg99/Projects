@@ -43,7 +43,7 @@ function mostrarQuantidadePlaylists(quantidade) {
 function mostrarResultado({ sucessos, falhas, playlistsBloqueadas = [], sitesBloqueados = [] }) {
   console.log(`Processamento concluído. Sucessos: ${sucessos}; falhas: ${falhas.length}.`);
   for (const playlist of falhas) {
-    console.error(`Falha no servidor ${playlist.servidor}, aplicativo ${playlist.siteAtivacao}.`);
+    console.error(`Falha no servidor ${playlist.servidor}, aplicativo ${playlist.siteAtivacao}, MAC ${playlist.macAddress}.`);
   }
   for (const bloqueio of sitesBloqueados) {
     const espera = bloqueio.retryAfterSeconds == null

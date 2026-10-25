@@ -85,12 +85,14 @@ async function processarCliente(macAddress, deviceKey, servidor, page, tentativa
         urlAtualizada = lib.substituirBaseM3U(urlOriginal, lib.obterLinkM3UAtualizado(servidor));
       } else {
         console.log('QUICK PLAYER: formato da playlist ambíguo; alteração ignorada sem salvar.');
+        page.__automationFailureReason = 'Formato da URL da playlist não reconhecido.';
         await encerrarSessao(page);
         return false;
       }
 
       if (!urlAtualizada) {
         console.log(`QUICK PLAYER: link de atualização ausente ou inválido para ${tipoPlaylist}; alteração ignorada.`);
+        page.__automationFailureReason = `Link de atualização ausente ou inválido para ${tipoPlaylist}.`;
         await encerrarSessao(page);
         return false;
       }
@@ -104,6 +106,7 @@ async function processarCliente(macAddress, deviceKey, servidor, page, tentativa
       return true;
     } catch (e) {
       if (isSiteRateLimitError(e)) throw e;
+      page.__automationFailureReason = String(e.message || e).split('\n')[0].slice(0, 240);
       console.log(`QUICK PLAYER: falha ao processar MAC ${macAddress}.`);
       console.log(e.message);
       await aguardarAntesDeRetry(page, tentativaAtual, tentativas);

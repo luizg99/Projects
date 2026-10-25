@@ -6,6 +6,7 @@ const painelVu = require('../sites/vuPlayer');
 const painelPlayerApp = require('../sites/playerApp');
 const { isSiteRateLimitError } = require('../errors/siteRateLimitError');
 const { INTERVALO_MS } = require('../utils/retryDelay');
+const { normalizarMacAddress } = require('../utils/macAddress');
 const INTERVALO_API_MS = 2100;
 
 // iboplayer.com exige CAPTCHA pago; falhas dele não são repetidas na reexecução.
@@ -76,9 +77,21 @@ async function executarRodadas(filas, paginas, processar) {
 async function processarPlaylist(playlist, opcoes, pagina) {
   const painel = PAINEIS[playlist.siteAtivacao];
   if (!painel || !opcoes.servidores.includes(playlist.servidor) || !opcoes[painel.opcao]) return null;
-  return painel.navegador
-    ? painel.modulo.processarCliente(playlist.macAddress, playlist.deviceKey, playlist.servidor, pagina)
-    : painel.modulo.processarCliente(playlist.macAddress, playlist.deviceKey, playlist.servidor);
+  const macAddress = normalizarMacAddress(playlist.macAddress);
+  if (!macAddress) {
+    playlist.motivoFalha = 'MAC inválido: use 12 dígitos hexadecimais, com ou sem separadores.';
+    console.error(`MAC inválido para ${playlist.siteAtivacao}: ${playlist.macAddress || '(vazio)'}.`);
+    return false;
+  }
+  delete playlist.motivoFalha;
+  if (pagina) pagina.__automationFailureReason = '';
+  const sucesso = painel.navegador
+    ? await painel.modulo.processarCliente(macAddress, playlist.deviceKey, playlist.servidor, pagina)
+    : await painel.modulo.processarCliente(macAddress, playlist.deviceKey, playlist.servidor);
+  if (!sucesso && pagina?.__automationFailureReason) {
+    playlist.motivoFalha = pagina.__automationFailureReason;
+  }
+  return sucesso;
 }
 
 async function executar(playlists, opcoes) {
@@ -107,6 +120,12 @@ async function executar(playlists, opcoes) {
       if (sitesBloqueados.has(site)) {
         playlistsBloqueadas.push(playlist);
         return SITE_BLOQUEADO;
+      }
+      if (!normalizarMacAddress(playlist.macAddress)) {
+        playlist.motivoFalha = 'MAC inválido: use 12 dígitos hexadecimais, com ou sem separadores.';
+        console.error(`MAC inválido para ${site}: ${playlist.macAddress || '(vazio)'}.`);
+        falhasPermanentes.push(playlist);
+        return FALHA_PERMANENTE;
       }
       try {
         return await processarPlaylist(playlist, opcoes, pagina);

@@ -94,8 +94,10 @@ async function processarCliente(macAddress, deviceKey, servidor, page, tentativa
       if (isSiteRateLimitError(e)) throw e;
       if (e.code === 'IBO_PRO_PLAYLIST_CONFIGURATION') {
         console.log(e.message);
+        page.__automationFailureReason = e.message;
         return false;
       }
+      page.__automationFailureReason = String(e.message || e).split('\n')[0].slice(0, 240);
       console.log(`IBO PRO PLAYER: Ocorreu um erro com MAC ${macAddress}`);
       console.log(e.message);
       await aguardarAntesDeRetry(page, tentativaAtual, tentativas);

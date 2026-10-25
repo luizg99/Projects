@@ -52,11 +52,14 @@ function mostrarResultado({ sucessos, falhas, playlistsBloqueadas = [], sitesBlo
   for (const playlist of falhas) {
     const grupo = `${playlist.siteAtivacao} (servidor ${playlist.servidor})`;
     if (!falhasPorGrupo.has(grupo)) falhasPorGrupo.set(grupo, []);
-    falhasPorGrupo.get(grupo).push(playlist.macAddress);
+    falhasPorGrupo.get(grupo).push(playlist);
   }
-  for (const [grupo, macs] of falhasPorGrupo) {
-    console.error(`Falhas em ${grupo}: ${macs.length}`);
-    for (const mac of macs) console.error(`  - MAC ${mac}`);
+  for (const [grupo, playlists] of falhasPorGrupo) {
+    console.error(`Falhas em ${grupo}: ${playlists.length}`);
+    for (const playlist of playlists) {
+      const motivo = playlist.motivoFalha ? ` — ${playlist.motivoFalha}` : '';
+      console.error(`  - MAC ${playlist.macAddress}${motivo}`);
+    }
   }
   for (const bloqueio of sitesBloqueados) {
     const espera = bloqueio.retryAfterSeconds == null

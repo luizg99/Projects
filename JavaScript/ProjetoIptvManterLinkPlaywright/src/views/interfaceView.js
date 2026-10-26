@@ -18,7 +18,7 @@ function listarClientes(playlists) {
     }
   }
   return [...clientes.values()]
-    .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base' }) || a.id.localeCompare(b.id))
+    .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base', numeric: true }) || a.id.localeCompare(b.id))
     .map(({ id, nome }) => ({ id, nome }));
 }
 

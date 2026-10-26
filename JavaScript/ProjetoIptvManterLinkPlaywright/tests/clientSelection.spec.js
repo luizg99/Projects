@@ -20,10 +20,19 @@ test('lista clientes por nome e mantém IDs distintos', () => {
     { clienteId: '1', clienteNome: 'Álvaro' },
     { clienteId: '3', clienteNome: 'Álvaro' },
     { clienteId: '1', clienteNome: 'Álvaro' },
+    ...['cli289', 'cli290', 'cli291', 'cli292', 'Cli293', 'cli86', 'cli96']
+      .map((clienteNome, index) => ({ clienteId: `cli-${index}`, clienteNome })),
   ];
   expect(listarClientes(playlists)).toEqual([
     { id: '1', nome: 'Álvaro' },
     { id: '3', nome: 'Álvaro' },
+    { id: 'cli-5', nome: 'cli86' },
+    { id: 'cli-6', nome: 'cli96' },
+    { id: 'cli-0', nome: 'cli289' },
+    { id: 'cli-1', nome: 'cli290' },
+    { id: 'cli-2', nome: 'cli291' },
+    { id: 'cli-3', nome: 'cli292' },
+    { id: 'cli-4', nome: 'Cli293' },
     { id: '2', nome: 'Zélia' },
   ]);
   expect(normalizarPlaylist({ clienteId: '1', clienteNome: 'Álvaro', servidorId: '4' }).clienteNome)

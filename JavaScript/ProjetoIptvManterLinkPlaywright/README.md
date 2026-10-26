@@ -27,8 +27,8 @@ npm start
 O primeiro menu escolhe entre `Tradicional` e `Por Cliente`. No modo tradicional,
 o menu permite escolher os servidores retornados pela API e os aplicativos. No
 modo por cliente, a lista aparece em ordem alfabética; é possível pesquisar por
-nome ou ID e marcar um ou mais clientes. São processados todos os aplicativos
-e servidores com playlists elegíveis dos clientes escolhidos.
+nome ou ID e digitar os números de um ou mais clientes. São processados todos os
+aplicativos e servidores com playlists elegíveis dos clientes escolhidos.
 São processadas playlists com `ativo=S` e `atualizar=S`. O sistema consulta
 todas as páginas da API e usa `urlAtual` do servidor de cada playlist. Os clientes
 são processados em rodadas: até um cliente por aplicativo em paralelo, com a

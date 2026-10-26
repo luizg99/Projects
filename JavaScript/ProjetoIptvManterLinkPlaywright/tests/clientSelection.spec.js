@@ -44,12 +44,13 @@ test('modo por cliente seleciona vários nomes por busca, sem pedir servidores o
   const respostas = [
     { modos: ['cliente'] },
     { busca: 'alvaro' },
-    { clienteIds: ['1'] },
+    { numeros: '1' },
     { buscarMais: true },
     { busca: 'zé' },
-    { clienteIds: ['2'] },
+    { numeros: '1' },
     { buscarMais: false },
   ];
+  const linhas = [];
   const prompt = async (questoes) => {
     perguntas.push(questoes);
     return respostas.shift();
@@ -57,17 +58,31 @@ test('modo por cliente seleciona vários nomes por busca, sem pedir servidores o
   const opcoes = await mostrarInterface(['TVS'], [
     { clienteId: '2', clienteNome: 'Zélia' },
     { clienteId: '1', clienteNome: 'Álvaro' },
-  ], prompt);
+  ], prompt, (linha) => linhas.push(linha));
 
   expect(opcoes).toEqual({ modo: 'cliente', clientes: ['1', '2'], selecionado: true });
   expect(perguntas[0][0].type).toBe('exclusive-checkbox');
   expect(perguntas[0][0].hint).toMatch(/Espaço para escolher/);
   expect(perguntas[0][0].choices[0].checked).toBe(true);
-  expect(perguntas[2][0].choices.map((choice) => choice.value)).toEqual(['1']);
-  expect(perguntas[2][0].type).toBe('portuguese-checkbox');
-  expect(perguntas[2][0].hint).toMatch(/Espaço para marcar/);
-  expect(perguntas[5][0].choices.map((choice) => choice.value)).toEqual(['2']);
+  expect(perguntas[2][0].type).toBe('input');
+  expect(perguntas[2][0].validate('2')).toMatch(/Use números/);
+  expect(linhas.filter((linha) => linha.includes('Álvaro'))).toHaveLength(1);
+  expect(linhas.filter((linha) => linha.includes('Zélia'))).toHaveLength(1);
   expect(perguntas.every((grupo) => grupo.every((questao) => !['servidores', 'aplicativos'].includes(questao.name)))).toBe(true);
+});
+
+test('aceita vários clientes na mesma lista sem redesenhar o menu', async () => {
+  const respostas = [{ modos: ['cliente'] }, { busca: '' }, { numeros: '1, 2' }, { buscarMais: false }];
+  const linhas = [];
+  const prompt = async () => respostas.shift();
+
+  const opcoes = await mostrarInterface([], [
+    { clienteId: '2', clienteNome: 'Bruna' },
+    { clienteId: '1', clienteNome: 'Amigo' },
+  ], prompt, (linha) => linhas.push(linha));
+
+  expect(opcoes.clientes).toEqual(['1', '2']);
+  expect(linhas).toEqual(['Clientes encontrados: 2', '  1. [ ] Amigo', '  2. [ ] Bruna']);
 });
 
 test('modo tradicional mantém seleção de servidores e aplicativos', async () => {

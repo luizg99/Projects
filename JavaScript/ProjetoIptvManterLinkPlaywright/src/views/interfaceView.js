@@ -1,9 +1,7 @@
 const inquirer = require('inquirer');
 const ExclusiveCheckboxPrompt = require('./exclusiveCheckboxPrompt');
-const PortugueseCheckboxPrompt = require('./portugueseCheckboxPrompt');
 
 inquirer.registerPrompt('exclusive-checkbox', ExclusiveCheckboxPrompt);
-inquirer.registerPrompt('portuguese-checkbox', PortugueseCheckboxPrompt);
 
 function textoParaBusca(valor) {
   return String(valor).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pt-BR');
@@ -24,7 +22,15 @@ function listarClientes(playlists) {
     .map(({ id, nome }) => ({ id, nome }));
 }
 
-async function selecionarClientes(clientes, prompt) {
+function interpretarNumeros(valor, quantidade) {
+  const partes = String(valor).trim().split(/[\s,;]+/).filter(Boolean);
+  if (partes.some((parte) => !/^\d+$/.test(parte) || Number(parte) < 1 || Number(parte) > quantidade)) {
+    return null;
+  }
+  return [...new Set(partes.map(Number))];
+}
+
+async function selecionarClientes(clientes, prompt, escrever) {
   const selecionados = new Set();
   const nomesRepetidos = new Map();
   for (const cliente of clientes) {
@@ -42,41 +48,47 @@ async function selecionarClientes(clientes, prompt) {
     const encontrados = clientes.filter((cliente) =>
       textoParaBusca(cliente.nome).includes(filtro) || cliente.id.includes(filtro));
     if (!encontrados.length) {
-      console.log('Nenhum cliente encontrado. Tente outra busca.');
+      escrever('Nenhum cliente encontrado. Tente outra busca.');
       continue;
     }
 
-    const idsExibidos = new Set(encontrados.map((cliente) => cliente.id));
-    const selecionadosForaDaBusca = [...selecionados].filter((id) => !idsExibidos.has(id));
-    const { clienteIds } = await prompt([{
-      type: 'portuguese-checkbox',
-      name: 'clienteIds',
-      message: 'Selecione os clientes a atualizar:',
-      hint: 'Use ↑/↓ para navegar, Espaço para marcar ou desmarcar e Enter para continuar.',
-      pageSize: 15,
-      choices: encontrados.map((cliente) => ({
-        name: nomesRepetidos.get(textoParaBusca(cliente.nome)) > 1
-          ? `${cliente.nome} (ID ${cliente.id})` : cliente.nome,
-        value: cliente.id,
-        checked: selecionados.has(cliente.id),
-      })),
-      validate: (ids) => ids.length > 0 || selecionadosForaDaBusca.length > 0 || 'Selecione ao menos um cliente!',
-    }]);
-    for (const cliente of encontrados) selecionados.delete(cliente.id);
-    for (const id of clienteIds) selecionados.add(id);
+    escrever(`Clientes encontrados: ${encontrados.length}`);
+    encontrados.forEach((cliente, indice) => {
+      const nome = nomesRepetidos.get(textoParaBusca(cliente.nome)) > 1
+        ? `${cliente.nome} (ID ${cliente.id})` : cliente.nome;
+      escrever(`${String(indice + 1).padStart(3)}. ${selecionados.has(cliente.id) ? '[x]' : '[ ]'} ${nome}`);
+    });
 
-    if (!filtro) return [...selecionados];
+    const { numeros } = await prompt([{
+      type: 'input',
+      name: 'numeros',
+      message: 'Digite os números para marcar ou desmarcar (ex.: 1, 3, 5):',
+      validate: (valor) => {
+        const indices = interpretarNumeros(valor, encontrados.length);
+        if (indices === null) return `Use números de 1 a ${encontrados.length}, separados por vírgula.`;
+        return indices.length > 0 || selecionados.size > 0 || 'Selecione ao menos um cliente!';
+      },
+    }]);
+    const indices = interpretarNumeros(numeros, encontrados.length);
+    if (!indices.length) return [...selecionados];
+    for (const indice of indices) {
+      const id = encontrados[indice - 1].id;
+      if (selecionados.has(id)) selecionados.delete(id);
+      else selecionados.add(id);
+    }
+
     const { buscarMais } = await prompt([{
       type: 'confirm',
       name: 'buscarMais',
-      message: `${selecionados.size} cliente(s) selecionado(s). Buscar mais?`,
+      message: `${selecionados.size} cliente(s) marcado(s). Buscar mais ou ajustar a seleção?`,
       default: false,
     }]);
-    if (!buscarMais) return [...selecionados];
+    if (!buscarMais && selecionados.size) return [...selecionados];
+    if (!selecionados.size) escrever('Selecione ao menos um cliente para continuar.');
   }
 }
 
-async function mostrarInterface(nomesServidores = [], playlists = [], prompt = inquirer.prompt) {
+async function mostrarInterface(nomesServidores = [], playlists = [], prompt = inquirer.prompt, escrever = console.log) {
   const servidores = [...new Set(nomesServidores.filter(Boolean))];
   const { modos } = await prompt([{
     type: 'exclusive-checkbox',
@@ -97,7 +109,7 @@ async function mostrarInterface(nomesServidores = [], playlists = [], prompt = i
       console.log('Nenhum cliente com playlist elegível para atualização.');
       return { modo, clientes: [], selecionado: false };
     }
-    const selecionados = await selecionarClientes(clientes, prompt);
+    const selecionados = await selecionarClientes(clientes, prompt, escrever);
     return { modo, clientes: selecionados, selecionado: selecionados.length > 0 };
   }
 

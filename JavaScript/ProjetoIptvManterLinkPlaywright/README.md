@@ -24,9 +24,13 @@ deve ser compartilhado ou commitado.
 npm start
 ```
 
-O menu permite escolher os servidores retornados pela API e os aplicativos.
+O primeiro menu escolhe entre `Tradicional` e `Por Cliente`. No modo tradicional,
+o menu permite escolher os servidores retornados pela API e os aplicativos. No
+modo por cliente, a lista aparece em ordem alfabética; é possível pesquisar por
+nome ou ID e marcar um ou mais clientes. São processados todos os aplicativos
+e servidores com playlists elegíveis dos clientes escolhidos.
 São processadas playlists com `ativo=S` e `atualizar=S`. O sistema consulta
-todas as páginas da API e usa `urlAtual` do servidor selecionado. Os clientes
+todas as páginas da API e usa `urlAtual` do servidor de cada playlist. Os clientes
 são processados em rodadas: até um cliente por aplicativo em paralelo, com a
 pausa configurada antes da próxima rodada. Ao identificar HTTP 429 ou Cloudflare
 1015, o painel afetado é pausado pelo restante da execução e não recebe novas tentativas.

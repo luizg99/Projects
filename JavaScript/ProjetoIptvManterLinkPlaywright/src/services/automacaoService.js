@@ -21,11 +21,18 @@ const PAINEIS = {
   'playbr.app.br': { modulo: painelPlayerApp, opcao: 'PLAYER_APP_API', navegador: false },
 };
 
+function playlistSelecionada(playlist, opcoes, painel) {
+  if (opcoes.modo === 'cliente') {
+    return (opcoes.clientes || []).includes(String(playlist.clienteId));
+  }
+  return opcoes.servidores.includes(playlist.servidor) && opcoes[painel.opcao];
+}
+
 function agruparPorAplicativo(playlists, opcoes) {
   const filas = new Map();
   for (const playlist of playlists) {
     const painel = PAINEIS[playlist.siteAtivacao];
-    if (!painel || !opcoes.servidores.includes(playlist.servidor) || !opcoes[painel.opcao]) continue;
+    if (!painel || !playlistSelecionada(playlist, opcoes, painel)) continue;
     if (!filas.has(playlist.siteAtivacao)) filas.set(playlist.siteAtivacao, []);
     filas.get(playlist.siteAtivacao).push(playlist);
   }
@@ -75,7 +82,7 @@ async function executarRodadas(filas, paginas, processar) {
 
 async function processarPlaylist(playlist, opcoes, pagina) {
   const painel = PAINEIS[playlist.siteAtivacao];
-  if (!painel || !opcoes.servidores.includes(playlist.servidor) || !opcoes[painel.opcao]) return null;
+  if (!painel || !playlistSelecionada(playlist, opcoes, painel)) return null;
   return painel.navegador
     ? painel.modulo.processarCliente(playlist.macAddress, playlist.deviceKey, playlist.servidor, pagina)
     : painel.modulo.processarCliente(playlist.macAddress, playlist.deviceKey, playlist.servidor);

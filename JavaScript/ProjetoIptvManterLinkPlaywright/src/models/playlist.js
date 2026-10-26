@@ -1,9 +1,15 @@
 const { obterSiteAtivacao } = require('../biblioteca');
 
 function normalizarPlaylist(registro) {
-  if (registro.siteAtivacao !== undefined) return { ...registro, servidorId: String(registro.servidorId) };
+  if (registro.siteAtivacao !== undefined) return {
+    ...registro,
+    clienteId: String(registro.clienteId),
+    servidorId: String(registro.servidorId),
+    clienteNome: registro.clienteNome || '',
+  };
   return {
     clienteId: String(registro.clienteId),
+    clienteNome: registro.clienteNome || '',
     servidorId: String(registro.servidorId),
     servidor: registro.nomeServidor || '',
     macAddress: registro.macAddress || '',

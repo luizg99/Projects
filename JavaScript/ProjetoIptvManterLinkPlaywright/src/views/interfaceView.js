@@ -1,8 +1,99 @@
 const inquirer = require('inquirer');
 
-async function mostrarInterface(nomesServidores = []) {
+function textoParaBusca(valor) {
+  return String(valor).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pt-BR');
+}
+
+function listarClientes(playlists) {
+  const clientes = new Map();
+  for (const playlist of playlists) {
+    const id = playlist.clienteId == null ? '' : String(playlist.clienteId);
+    if (!id) continue;
+    const nomeInformado = String(playlist.clienteNome || '').trim();
+    if (!clientes.has(id) || (clientes.get(id).semNome && nomeInformado)) {
+      clientes.set(id, { id, nome: nomeInformado || `Cliente ${id}`, semNome: !nomeInformado });
+    }
+  }
+  return [...clientes.values()]
+    .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base' }) || a.id.localeCompare(b.id))
+    .map(({ id, nome }) => ({ id, nome }));
+}
+
+async function selecionarClientes(clientes, prompt) {
+  const selecionados = new Set();
+  const nomesRepetidos = new Map();
+  for (const cliente of clientes) {
+    const nome = textoParaBusca(cliente.nome);
+    nomesRepetidos.set(nome, (nomesRepetidos.get(nome) || 0) + 1);
+  }
+
+  while (true) {
+    const { busca } = await prompt([{
+      type: 'input',
+      name: 'busca',
+      message: 'Pesquisar cliente pelo nome ou ID (Enter para listar todos):',
+    }]);
+    const filtro = textoParaBusca(busca.trim());
+    const encontrados = clientes.filter((cliente) =>
+      textoParaBusca(cliente.nome).includes(filtro) || cliente.id.includes(filtro));
+    if (!encontrados.length) {
+      console.log('Nenhum cliente encontrado. Tente outra busca.');
+      continue;
+    }
+
+    const idsExibidos = new Set(encontrados.map((cliente) => cliente.id));
+    const selecionadosForaDaBusca = [...selecionados].filter((id) => !idsExibidos.has(id));
+    const { clienteIds } = await prompt([{
+      type: 'checkbox',
+      name: 'clienteIds',
+      message: 'Selecione os clientes a atualizar:',
+      pageSize: 15,
+      choices: encontrados.map((cliente) => ({
+        name: nomesRepetidos.get(textoParaBusca(cliente.nome)) > 1
+          ? `${cliente.nome} (ID ${cliente.id})` : cliente.nome,
+        value: cliente.id,
+        checked: selecionados.has(cliente.id),
+      })),
+      validate: (ids) => ids.length > 0 || selecionadosForaDaBusca.length > 0 || 'Selecione ao menos um cliente!',
+    }]);
+    for (const cliente of encontrados) selecionados.delete(cliente.id);
+    for (const id of clienteIds) selecionados.add(id);
+
+    if (!filtro) return [...selecionados];
+    const { buscarMais } = await prompt([{
+      type: 'confirm',
+      name: 'buscarMais',
+      message: `${selecionados.size} cliente(s) selecionado(s). Buscar mais?`,
+      default: false,
+    }]);
+    if (!buscarMais) return [...selecionados];
+  }
+}
+
+async function mostrarInterface(nomesServidores = [], playlists = [], prompt = inquirer.prompt) {
   const servidores = [...new Set(nomesServidores.filter(Boolean))];
-  const respostas = await inquirer.prompt([
+  const { modo } = await prompt([{
+    type: 'list',
+    name: 'modo',
+    message: 'Selecione os servidores a atualizar:',
+    choices: [
+      { name: 'Tradicional', value: 'tradicional' },
+      { name: 'Por Cliente', value: 'cliente' },
+    ],
+    default: 'tradicional',
+  }]);
+
+  if (modo === 'cliente') {
+    const clientes = listarClientes(playlists);
+    if (!clientes.length) {
+      console.log('Nenhum cliente com playlist elegível para atualização.');
+      return { modo, clientes: [], selecionado: false };
+    }
+    const selecionados = await selecionarClientes(clientes, prompt);
+    return { modo, clientes: selecionados, selecionado: selecionados.length > 0 };
+  }
+
+  const respostas = await prompt([
     {
       type: 'checkbox',
       name: 'servidores',
@@ -26,6 +117,7 @@ async function mostrarInterface(nomesServidores = []) {
   ]);
 
   return {
+    modo,
     servidores: respostas.servidores,
     IBO_PLAYER: respostas.aplicativos.includes('IBO_PLAYER'),
     IBO_PRO_PLAYER: respostas.aplicativos.includes('IBO_PRO_PLAYER'),
@@ -74,4 +166,4 @@ function mostrarErroFatal(erro) {
   console.error('Erro fatal na automação:', erro.message);
 }
 
-module.exports = { mostrarInterface, mostrarQuantidadePlaylists, mostrarPlaylistsSelecionadas, mostrarResultado, mostrarErroFatal };
+module.exports = { mostrarInterface, listarClientes, mostrarQuantidadePlaylists, mostrarPlaylistsSelecionadas, mostrarResultado, mostrarErroFatal };

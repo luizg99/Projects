@@ -1,0 +1,83 @@
+const { test, expect } = require('@playwright/test');
+const { normalizarPlaylist } = require('../src/models/playlist');
+const { agruparPorAplicativo } = require('../src/services/automacaoService');
+const { listarClientes, mostrarInterface } = require('../src/views/interfaceView');
+
+test('lista clientes por nome e mantém IDs distintos', () => {
+  const playlists = [
+    { clienteId: '2', clienteNome: 'Zélia' },
+    { clienteId: '1', clienteNome: 'Álvaro' },
+    { clienteId: '3', clienteNome: 'Álvaro' },
+    { clienteId: '1', clienteNome: 'Álvaro' },
+  ];
+  expect(listarClientes(playlists)).toEqual([
+    { id: '1', nome: 'Álvaro' },
+    { id: '3', nome: 'Álvaro' },
+    { id: '2', nome: 'Zélia' },
+  ]);
+  expect(normalizarPlaylist({ clienteId: '1', clienteNome: 'Álvaro', servidorId: '4' }).clienteNome)
+    .toBe('Álvaro');
+});
+
+test('modo por cliente seleciona vários nomes por busca, sem pedir servidores ou aplicativos', async () => {
+  const perguntas = [];
+  const respostas = [
+    { modo: 'cliente' },
+    { busca: 'alvaro' },
+    { clienteIds: ['1'] },
+    { buscarMais: true },
+    { busca: 'zé' },
+    { clienteIds: ['2'] },
+    { buscarMais: false },
+  ];
+  const prompt = async (questoes) => {
+    perguntas.push(questoes);
+    return respostas.shift();
+  };
+  const opcoes = await mostrarInterface(['TVS'], [
+    { clienteId: '2', clienteNome: 'Zélia' },
+    { clienteId: '1', clienteNome: 'Álvaro' },
+  ], prompt);
+
+  expect(opcoes).toEqual({ modo: 'cliente', clientes: ['1', '2'], selecionado: true });
+  expect(perguntas[0][0].type).toBe('list');
+  expect(perguntas[2][0].choices.map((choice) => choice.value)).toEqual(['1']);
+  expect(perguntas[5][0].choices.map((choice) => choice.value)).toEqual(['2']);
+  expect(perguntas.every((grupo) => grupo.every((questao) => !['servidores', 'aplicativos'].includes(questao.name)))).toBe(true);
+});
+
+test('modo tradicional mantém seleção de servidores e aplicativos', async () => {
+  const perguntas = [];
+  const respostas = [
+    { modo: 'tradicional' },
+    { servidores: ['TVS'], aplicativos: ['IBO_PLAYER', 'PLAYER_APP_API'] },
+  ];
+  const prompt = async (questoes) => {
+    perguntas.push(questoes);
+    return respostas.shift();
+  };
+
+  const opcoes = await mostrarInterface(['TVS', 'UNIPLAY'], [], prompt);
+
+  expect(opcoes).toMatchObject({
+    modo: 'tradicional', servidores: ['TVS'], IBO_PLAYER: true,
+    PLAYER_APP_API: true, QUICK_PLAYER: false, selecionado: true,
+  });
+  expect(perguntas[1].map((questao) => questao.name)).toEqual(['servidores', 'aplicativos']);
+  expect(perguntas[1][0].choices.map((choice) => choice.value)).toEqual(['TVS', 'UNIPLAY']);
+});
+
+test('filtra pelo ID do cliente e inclui os aplicativos dele em servidores diferentes', () => {
+  const playlists = [
+    { clienteId: '1', servidor: 'TVS', siteAtivacao: 'iboplayer.pro', macAddress: 'A' },
+    { clienteId: '1', servidor: 'UNIPLAY', siteAtivacao: 'quickplayer.app', macAddress: 'B' },
+    { clienteId: '2', servidor: 'TVS', siteAtivacao: 'iboplayer.pro', macAddress: 'C' },
+  ];
+  const porCliente = agruparPorAplicativo(playlists, { modo: 'cliente', clientes: ['1'] });
+  expect([...porCliente.values()].flat().map((playlist) => playlist.macAddress)).toEqual(['A', 'B']);
+
+  const tradicional = agruparPorAplicativo(playlists, {
+    modo: 'tradicional', servidores: ['TVS'], IBO_PRO_PLAYER: true, QUICK_PLAYER: false,
+  });
+  expect([...tradicional.values()].flat().map((playlist) => playlist.macAddress)).toEqual(['A', 'C']);
+});

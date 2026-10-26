@@ -6,10 +6,10 @@ async function executar() {
   const playlists = await playlistService.listar();
   interfaceView.mostrarQuantidadePlaylists(playlists.length);
   const servidores = [...new Set(playlists.map((playlist) => playlist.servidor).filter(Boolean))];
-  const opcoes = await interfaceView.mostrarInterface(servidores);
+  const elegiveis = playlistService.listarElegiveis(playlists);
+  const opcoes = await interfaceView.mostrarInterface(servidores, elegiveis);
   if (!opcoes.selecionado) return;
 
-  const elegiveis = playlistService.listarElegiveis(playlists);
   const filas = automacaoService.agruparPorAplicativo(elegiveis, opcoes);
   interfaceView.mostrarPlaylistsSelecionadas(filas);
   const resultado = await automacaoService.executar(elegiveis, opcoes);

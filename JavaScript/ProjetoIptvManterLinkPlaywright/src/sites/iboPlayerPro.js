@@ -98,7 +98,7 @@ async function processarCliente(macAddress, deviceKey, servidor, page, tentativa
       }
       console.log(`IBO PRO PLAYER: Ocorreu um erro com MAC ${macAddress}`);
       console.log(e.message);
-      await aguardarAntesDeRetry(page, tentativaAtual, tentativas);
+      await aguardarAntesDeRetry(page, tentativaAtual, tentativas, macAddress);
       tentativaAtual++;
     }
   }

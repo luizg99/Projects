@@ -5,7 +5,7 @@ const painelQuick = require('../sites/quickPlayer');
 const painelVu = require('../sites/vuPlayer');
 const painelPlayerApp = require('../sites/playerApp');
 const { isSiteRateLimitError } = require('../errors/siteRateLimitError');
-const { INTERVALO_MS } = require('../utils/retryDelay');
+const { INTERVALO_MS, aguardarComContagemRegressiva } = require('../utils/retryDelay');
 const INTERVALO_API_MS = 2100;
 
 // iboplayer.com exige CAPTCHA pago; falhas dele não são repetidas na reexecução.
@@ -41,8 +41,7 @@ function agruparPorAplicativo(playlists, opcoes) {
 
 async function aguardarIntervalo() {
   if (!INTERVALO_MS) return;
-  console.log(`Aguardando ${Math.ceil(INTERVALO_MS / 1000)}s antes da próxima rodada.`);
-  await new Promise((resolve) => setTimeout(resolve, INTERVALO_MS));
+  await aguardarComContagemRegressiva(INTERVALO_MS, 'antes da próxima rodada');
 }
 
 async function aguardarIntervaloApi() {

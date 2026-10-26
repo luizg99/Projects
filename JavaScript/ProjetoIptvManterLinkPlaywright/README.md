@@ -34,6 +34,9 @@ todas as páginas da API e usa `urlAtual` do servidor de cada playlist. Os clien
 são processados em rodadas: até um cliente por aplicativo em paralelo, com a
 pausa configurada antes da próxima rodada. Ao identificar HTTP 429 ou Cloudflare
 1015, o painel afetado é pausado pelo restante da execução e não recebe novas tentativas.
+Cada passagem começa com `Nova Sessão iniciada`. Após cada MAC, o console mostra
+o total original por aplicativo e quantos ainda aguardam conclusão, inclusive
+os que terão nova tentativa.
 
 ## PlayerApp
 

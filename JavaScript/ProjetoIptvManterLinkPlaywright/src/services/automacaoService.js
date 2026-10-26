@@ -5,7 +5,7 @@ const painelQuick = require('../sites/quickPlayer');
 const painelVu = require('../sites/vuPlayer');
 const painelPlayerApp = require('../sites/playerApp');
 const { isSiteRateLimitError } = require('../errors/siteRateLimitError');
-const { INTERVALO_MS, aguardarComContagemRegressiva } = require('../utils/retryDelay');
+const { INTERVALO_MS } = require('../utils/retryDelay');
 const INTERVALO_API_MS = 2100;
 
 // iboplayer.com exige CAPTCHA pago; falhas dele não são repetidas na reexecução.
@@ -41,12 +41,39 @@ function agruparPorAplicativo(playlists, opcoes) {
 
 async function aguardarIntervalo() {
   if (!INTERVALO_MS) return;
-  await aguardarComContagemRegressiva(INTERVALO_MS, 'antes da próxima rodada');
+  console.log(`Aguardando ${Math.ceil(INTERVALO_MS / 1000)}s antes da próxima rodada.`);
+  await new Promise((resolve) => setTimeout(resolve, INTERVALO_MS));
 }
 
 async function aguardarIntervaloApi() {
   console.log('Aguardando 2.1s antes da próxima chamada à API.');
   await new Promise((resolve) => setTimeout(resolve, INTERVALO_API_MS));
+}
+
+function criarProgresso(filas, escrever = console.log) {
+  const totais = new Map([...filas].map(([site, fila]) => [site, fila.length]));
+  const faltantes = new Map(totais);
+  let faltamTotal = [...totais.values()].reduce((soma, total) => soma + total, 0);
+  const pendentes = new Set([...filas.values()].flat());
+  const ordemSites = ['vuplayer.pro', 'iboplayer.com', 'iboplayer.pro', 'playbr.app.br', 'quickplayer.app'];
+  for (const site of filas.keys()) if (!ordemSites.includes(site)) ordemSites.push(site);
+  return {
+    iniciarSessao() {
+      escrever('Nova Sessão iniciada');
+    },
+    registrar(playlist, finalizado) {
+      if (finalizado && pendentes.delete(playlist)) {
+        faltantes.set(playlist.siteAtivacao, faltantes.get(playlist.siteAtivacao) - 1);
+        faltamTotal--;
+      }
+      escrever(`${faltamTotal === 1 ? 'Falta' : 'Faltam'} ${faltamTotal} ${faltamTotal === 1 ? 'MAC' : 'MACs'} no total`);
+      for (const painel of ordemSites) {
+        if (totais.has(painel)) {
+          escrever(`  - ${painel}: ${totais.get(painel)} ---- falta ${faltantes.get(painel)}`);
+        }
+      }
+    },
+  };
 }
 
 async function executarRodadas(filas, paginas, processar) {
@@ -106,6 +133,7 @@ async function executar(playlists, opcoes) {
     const falhasPermanentes = [];
     const playlistsBloqueadas = [];
     const sitesBloqueados = new Map();
+    const progresso = criarProgresso(filas);
     let sucessos = 0;
 
     async function processarComProtecao(playlist, pagina) {
@@ -129,12 +157,20 @@ async function executar(playlists, opcoes) {
       }
     }
 
+    progresso.iniciarSessao();
     await executarRodadas(filas, paginas, async (playlist, pagina) => {
       const sucesso = await processarComProtecao(playlist, pagina);
-      if (sucesso === SITE_BLOQUEADO) return true;
-      if (sucesso === FALHA_PERMANENTE) return false;
+      if (sucesso === SITE_BLOQUEADO) {
+        progresso.registrar(playlist, true);
+        return true;
+      }
+      if (sucesso === FALHA_PERMANENTE) {
+        progresso.registrar(playlist, true);
+        return false;
+      }
       if (sucesso) sucessos++;
       else falhas.push(playlist);
+      progresso.registrar(playlist, Boolean(sucesso) || SITES_SEM_RETRY.has(playlist.siteAtivacao));
       return false;
     });
 
@@ -147,16 +183,25 @@ async function executar(playlists, opcoes) {
       console.log(`Reexecutando ${pendentes.length} playlist(s) com falha (${tentativa}/${RETRIES_FALHANTES}).`);
       if (somenteApis) await aguardarIntervaloApi();
       else await aguardarIntervalo();
+      progresso.iniciarSessao();
       await executarRodadas(filasDeRetry, paginas, async (playlist, pagina) => {
         if (sitesBloqueados.has(playlist.siteAtivacao)) {
           await processarComProtecao(playlist, pagina);
+          progresso.registrar(playlist, true);
           return true;
         }
         const sucesso = await processarComProtecao(playlist, pagina);
-        if (sucesso === SITE_BLOQUEADO) return true;
-        if (sucesso === FALHA_PERMANENTE) return false;
+        if (sucesso === SITE_BLOQUEADO) {
+          progresso.registrar(playlist, true);
+          return true;
+        }
+        if (sucesso === FALHA_PERMANENTE) {
+          progresso.registrar(playlist, true);
+          return false;
+        }
         if (!sucesso) novasFalhas.push(playlist);
         else sucessos++;
+        progresso.registrar(playlist, Boolean(sucesso) || tentativa === RETRIES_FALHANTES);
         return false;
       });
       pendentes = novasFalhas;
@@ -177,4 +222,4 @@ async function executar(playlists, opcoes) {
   }
 }
 
-module.exports = { executar, processarPlaylist, agruparPorAplicativo, executarRodadas };
+module.exports = { executar, processarPlaylist, agruparPorAplicativo, executarRodadas, criarProgresso };

@@ -75,7 +75,7 @@ async function processarCliente(macAddress, deviceKey, servidor, page, tentativa
       if (isSiteRateLimitError(e)) throw e;
       console.log(`VUPLAYER: Ocorreu um erro com MAC ${macAddress}`);
       console.log(e.message);
-      await aguardarAntesDeRetry(page, tentativaAtual, tentativas, macAddress);
+      await aguardarAntesDeRetry(page, tentativaAtual, tentativas);
       tentativaAtual++;
     }
   }

@@ -122,7 +122,7 @@ async function processarCliente(macAddress, deviceKey, servidor, page, tentativa
           .click({ timeout: 3000 });
       } catch {}
 
-      await aguardarAntesDeRetry(page, tentativaAtual, tentativas, macAddress);
+      await aguardarAntesDeRetry(page, tentativaAtual, tentativas);
       tentativaAtual++;
     }
   }

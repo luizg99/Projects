@@ -1,6 +1,6 @@
-const CheckboxPrompt = require('inquirer/lib/prompts/checkbox');
+const PortugueseCheckboxPrompt = require('./portugueseCheckboxPrompt');
 
-class ExclusiveCheckboxPrompt extends CheckboxPrompt {
+class ExclusiveCheckboxPrompt extends PortugueseCheckboxPrompt {
   toggleChoice(index) {
     const escolha = this.opt.choices.getChoice(index);
     if (!escolha || escolha.disabled) return;

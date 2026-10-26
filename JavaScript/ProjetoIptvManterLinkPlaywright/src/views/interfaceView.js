@@ -1,7 +1,9 @@
 const inquirer = require('inquirer');
 const ExclusiveCheckboxPrompt = require('./exclusiveCheckboxPrompt');
+const PortugueseCheckboxPrompt = require('./portugueseCheckboxPrompt');
 
 inquirer.registerPrompt('exclusive-checkbox', ExclusiveCheckboxPrompt);
+inquirer.registerPrompt('portuguese-checkbox', PortugueseCheckboxPrompt);
 
 function textoParaBusca(valor) {
   return String(valor).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pt-BR');
@@ -47,9 +49,10 @@ async function selecionarClientes(clientes, prompt) {
     const idsExibidos = new Set(encontrados.map((cliente) => cliente.id));
     const selecionadosForaDaBusca = [...selecionados].filter((id) => !idsExibidos.has(id));
     const { clienteIds } = await prompt([{
-      type: 'checkbox',
+      type: 'portuguese-checkbox',
       name: 'clienteIds',
       message: 'Selecione os clientes a atualizar:',
+      hint: 'Use ↑/↓ para navegar, Espaço para marcar ou desmarcar e Enter para continuar.',
       pageSize: 15,
       choices: encontrados.map((cliente) => ({
         name: nomesRepetidos.get(textoParaBusca(cliente.nome)) > 1
@@ -79,6 +82,7 @@ async function mostrarInterface(nomesServidores = [], playlists = [], prompt = i
     type: 'exclusive-checkbox',
     name: 'modos',
     message: 'Selecione os servidores a atualizar:',
+    hint: 'Use ↑/↓ para navegar, Espaço para escolher um modo e Enter para continuar.',
     choices: [
       { name: 'Tradicional', value: 'tradicional', checked: true },
       { name: 'Por Cliente', value: 'cliente' },

@@ -61,8 +61,11 @@ test('modo por cliente seleciona vários nomes por busca, sem pedir servidores o
 
   expect(opcoes).toEqual({ modo: 'cliente', clientes: ['1', '2'], selecionado: true });
   expect(perguntas[0][0].type).toBe('exclusive-checkbox');
+  expect(perguntas[0][0].hint).toMatch(/Espaço para escolher/);
   expect(perguntas[0][0].choices[0].checked).toBe(true);
   expect(perguntas[2][0].choices.map((choice) => choice.value)).toEqual(['1']);
+  expect(perguntas[2][0].type).toBe('portuguese-checkbox');
+  expect(perguntas[2][0].hint).toMatch(/Espaço para marcar/);
   expect(perguntas[5][0].choices.map((choice) => choice.value)).toEqual(['2']);
   expect(perguntas.every((grupo) => grupo.every((questao) => !['servidores', 'aplicativos'].includes(questao.name)))).toBe(true);
 });

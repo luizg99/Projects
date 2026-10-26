@@ -1,4 +1,7 @@
 const inquirer = require('inquirer');
+const ExclusiveCheckboxPrompt = require('./exclusiveCheckboxPrompt');
+
+inquirer.registerPrompt('exclusive-checkbox', ExclusiveCheckboxPrompt);
 
 function textoParaBusca(valor) {
   return String(valor).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pt-BR');
@@ -72,16 +75,17 @@ async function selecionarClientes(clientes, prompt) {
 
 async function mostrarInterface(nomesServidores = [], playlists = [], prompt = inquirer.prompt) {
   const servidores = [...new Set(nomesServidores.filter(Boolean))];
-  const { modo } = await prompt([{
-    type: 'list',
-    name: 'modo',
+  const { modos } = await prompt([{
+    type: 'exclusive-checkbox',
+    name: 'modos',
     message: 'Selecione os servidores a atualizar:',
     choices: [
-      { name: 'Tradicional', value: 'tradicional' },
+      { name: 'Tradicional', value: 'tradicional', checked: true },
       { name: 'Por Cliente', value: 'cliente' },
     ],
-    default: 'tradicional',
+    validate: (selecionados) => selecionados.length === 1 || 'Selecione um modo!',
   }]);
+  const modo = modos[0];
 
   if (modo === 'cliente') {
     const clientes = listarClientes(playlists);

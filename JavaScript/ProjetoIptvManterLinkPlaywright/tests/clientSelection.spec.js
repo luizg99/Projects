@@ -2,6 +2,17 @@ const { test, expect } = require('@playwright/test');
 const { normalizarPlaylist } = require('../src/models/playlist');
 const { agruparPorAplicativo } = require('../src/services/automacaoService');
 const { listarClientes, mostrarInterface } = require('../src/views/interfaceView');
+const ExclusiveCheckboxPrompt = require('../src/views/exclusiveCheckboxPrompt');
+
+test('marcar o outro modo desmarca o anterior', () => {
+  const escolhas = [{ checked: true }, { checked: false }];
+  const choices = {
+    getChoice: (index) => escolhas[index],
+    forEach: (callback) => escolhas.forEach(callback),
+  };
+  ExclusiveCheckboxPrompt.prototype.toggleChoice.call({ opt: { choices } }, 1);
+  expect(escolhas.map((escolha) => escolha.checked)).toEqual([false, true]);
+});
 
 test('lista clientes por nome e mantém IDs distintos', () => {
   const playlists = [
@@ -22,7 +33,7 @@ test('lista clientes por nome e mantém IDs distintos', () => {
 test('modo por cliente seleciona vários nomes por busca, sem pedir servidores ou aplicativos', async () => {
   const perguntas = [];
   const respostas = [
-    { modo: 'cliente' },
+    { modos: ['cliente'] },
     { busca: 'alvaro' },
     { clienteIds: ['1'] },
     { buscarMais: true },
@@ -40,7 +51,8 @@ test('modo por cliente seleciona vários nomes por busca, sem pedir servidores o
   ], prompt);
 
   expect(opcoes).toEqual({ modo: 'cliente', clientes: ['1', '2'], selecionado: true });
-  expect(perguntas[0][0].type).toBe('list');
+  expect(perguntas[0][0].type).toBe('exclusive-checkbox');
+  expect(perguntas[0][0].choices[0].checked).toBe(true);
   expect(perguntas[2][0].choices.map((choice) => choice.value)).toEqual(['1']);
   expect(perguntas[5][0].choices.map((choice) => choice.value)).toEqual(['2']);
   expect(perguntas.every((grupo) => grupo.every((questao) => !['servidores', 'aplicativos'].includes(questao.name)))).toBe(true);
@@ -49,7 +61,7 @@ test('modo por cliente seleciona vários nomes por busca, sem pedir servidores o
 test('modo tradicional mantém seleção de servidores e aplicativos', async () => {
   const perguntas = [];
   const respostas = [
-    { modo: 'tradicional' },
+    { modos: ['tradicional'] },
     { servidores: ['TVS'], aplicativos: ['IBO_PLAYER', 'PLAYER_APP_API'] },
   ];
   const prompt = async (questoes) => {

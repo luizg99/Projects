@@ -9,10 +9,10 @@ function erroConfiguracaoPlaylist(mensagem) {
 }
 
 // Automação para iboplayer.pro
-async function processarCliente(macAddress, deviceKey, servidor, page, tentativas = 3) {
+async function processarCliente(macAddress, deviceKey, servidor, page, tentativas = 1) {
   let tentativaAtual = 1;
 
-  while (tentativaAtual < tentativas) {
+  while (tentativaAtual <= tentativas) {
     try {
       const response = await page.goto('https://iboplayer.pro/manage-playlists/login/');
       await verificarRateLimit(page, response, 'iboplayer.pro');

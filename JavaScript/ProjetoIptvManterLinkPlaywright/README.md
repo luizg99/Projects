@@ -37,6 +37,7 @@ pausa configurada antes da próxima rodada. Ao identificar HTTP 429 ou Cloudflar
 Cada passagem começa com `Nova Sessão iniciada`. Após cada MAC, o console mostra
 o total original por aplicativo e quantos ainda aguardam conclusão, inclusive
 os que terão nova tentativa.
+Cada MAC recebe no máximo duas tentativas nesta execução.
 
 ## PlayerApp
 

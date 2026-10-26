@@ -10,7 +10,7 @@ const INTERVALO_API_MS = 2100;
 
 // iboplayer.com exige CAPTCHA pago; falhas dele não são repetidas na reexecução.
 const SITES_SEM_RETRY = new Set(['iboplayer.com']);
-const RETRIES_FALHANTES = 2;
+const RETRIES_FALHANTES = 1;
 const SITE_BLOQUEADO = Symbol('site bloqueado por limite de acesso');
 const FALHA_PERMANENTE = Symbol('falha permanente da API');
 const PAINEIS = {

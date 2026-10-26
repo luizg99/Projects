@@ -3,10 +3,10 @@ const { verificarRateLimit, isSiteRateLimitError } = require('../errors/siteRate
 const { aguardarAntesDeRetry } = require('../utils/retryDelay');
 
 // Automação para vuplayer.pro
-async function processarCliente(macAddress, deviceKey, servidor, page, tentativas = 3) {
+async function processarCliente(macAddress, deviceKey, servidor, page, tentativas = 1) {
   let tentativaAtual = 1;
 
-  while (tentativaAtual < tentativas) {
+  while (tentativaAtual <= tentativas) {
     try {
       let response = await page.goto('https://vuplayer.pro/login');
       await verificarRateLimit(page, response, 'vuplayer.pro');

@@ -68,7 +68,7 @@ async function processarCliente(macAddress, deviceKey, servidor, page, tentativa
       await page.getByRole('button', { name: 'Sair' }).click();
       await page.waitForTimeout(2000);
 
-      console.log(`Processamento concluído para MAC: ${macAddress} com ${tentativaAtual} tentativa${tentativaAtual === 1 ? '' : 's'} - Servidor: ${servidor}`);
+      console.log(`Processamento concluído para MAC: ${macAddress} com ${tentativaAtual} tentativa${tentativaAtual === 1 ? '' : 's'} - Servidor: ${servidor} - Aplicativo: VU_PLAYER_PRO`);
       return true;
 
     } catch (e) {

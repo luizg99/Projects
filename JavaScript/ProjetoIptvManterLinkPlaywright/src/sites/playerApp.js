@@ -41,7 +41,7 @@ async function processarCliente(macAddress, deviceKey, servidor) {
     const tipoPlaylist = String(resposta.data?.tipoPlaylist || '').toLowerCase();
     if (['atualizado', 'inalterado'].includes(resultado)
       && ['m3u', 'xtream'].includes(tipoPlaylist)) {
-      console.log(`Processamento concluído para MAC: ${macAddress} (${resultado}, ${tipoPlaylist}) - Servidor: ${servidor}.`);
+      console.log(`Processamento concluído para MAC: ${macAddress} (${resultado}, ${tipoPlaylist}) - Servidor: ${servidor} - Aplicativo: PLAYER APP.`);
       return true;
     }
     console.error('PlayerApp API: resposta sem resultado ou tipo de playlist reconhecido.');

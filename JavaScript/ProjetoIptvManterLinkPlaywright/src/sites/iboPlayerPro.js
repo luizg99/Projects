@@ -86,7 +86,7 @@ async function processarCliente(macAddress, deviceKey, servidor, page, tentativa
 
       await page.waitForTimeout(3000);
       console.log(
-        `Processamento concluído para MAC: ${macAddress} com ${tentativaAtual} tentativa${tentativaAtual === 1 ? '' : 's'} - Servidor: ${servidor}`
+        `Processamento concluído para MAC: ${macAddress} com ${tentativaAtual} tentativa${tentativaAtual === 1 ? '' : 's'} - Servidor: ${servidor} - Aplicativo: IBO_PRO_PLAYER`
       );
       return true;
 

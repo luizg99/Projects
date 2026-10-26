@@ -68,7 +68,7 @@ async function processarCliente(macAddress, deviceKey, servidor, page, tentativa
       await page.getByRole('button', { name: 'Sair' }).click();
       await page.waitForTimeout(2000);
 
-      console.log(`Processamento concluído para MAC: ${macAddress} com ${tentativaAtual} tentativas`);
+      console.log(`Processamento concluído para MAC: ${macAddress} com ${tentativaAtual} tentativa${tentativaAtual === 1 ? '' : 's'} - Servidor: ${servidor}`);
       return true;
 
     } catch (e) {

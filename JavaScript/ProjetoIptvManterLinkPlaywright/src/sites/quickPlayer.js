@@ -100,7 +100,7 @@ async function processarCliente(macAddress, deviceKey, servidor, page, tentativa
       await modalEdicao.waitFor({ state: 'hidden', timeout: 15000 });
       await encerrarSessao(page);
 
-      console.log(`Processamento QuickPlayer concluído para MAC ${macAddress}.`);
+      console.log(`Processamento QuickPlayer concluído para MAC ${macAddress} - Servidor: ${servidor}.`);
       return true;
     } catch (e) {
       if (isSiteRateLimitError(e)) throw e;

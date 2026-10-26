@@ -1,6 +1,7 @@
 const { test, expect } = require('@playwright/test');
+const nock = require('nock');
 const { criarProgresso, executarRodadas, executar } = require('../src/services/automacaoService');
-const painelPlayerApp = require('../src/sites/playerApp');
+const lib = require('../src/biblioteca');
 
 test('mantém os totais originais e os MACs pendentes entre sessões', () => {
   const v1 = { siteAtivacao: 'vuplayer.pro' };
@@ -56,9 +57,13 @@ test('contabiliza todos os MACs quando um painel bloqueia a fila', async () => {
 
 test('execução informa sessão e restante após processar um MAC', async () => {
   const mensagens = [];
-  const processarOriginal = painelPlayerApp.processarCliente;
   const logOriginal = console.log;
-  painelPlayerApp.processarCliente = async () => true;
+  const apiKeyOriginal = process.env.PLAYBR_API_KEY;
+  process.env.PLAYBR_API_KEY = 'api-key-test';
+  lib.atualizarLinksDaApi([{ nomeServidor: 'TVS', urlAtual: 'https://servidor.test' }]);
+  const requisicao = nock('https://api.playbr.app.br')
+    .post('/api/integracoes/v1/playlists/atualizar-link')
+    .reply(200, { resultado: 'atualizado', tipoPlaylist: 'xtream' });
   console.log = (mensagem) => mensagens.push(mensagem);
 
   try {
@@ -66,9 +71,12 @@ test('execução informa sessão e restante após processar um MAC', async () =>
       siteAtivacao: 'playbr.app.br', servidor: 'TVS', macAddress: 'MAC', deviceKey: 'KEY',
     }], { servidores: ['TVS'], PLAYER_APP_API: true });
     expect(resultado.sucessos).toBe(1);
+    requisicao.done();
   } finally {
-    painelPlayerApp.processarCliente = processarOriginal;
     console.log = logOriginal;
+    nock.cleanAll();
+    if (apiKeyOriginal === undefined) delete process.env.PLAYBR_API_KEY;
+    else process.env.PLAYBR_API_KEY = apiKeyOriginal;
   }
 
   expect(mensagens).toContain('Nova Sessão iniciada');

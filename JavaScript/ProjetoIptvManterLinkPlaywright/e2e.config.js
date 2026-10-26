@@ -5,7 +5,7 @@ const { defineConfig } = require('@playwright/test');
 // (que usa playwright.config.js, testDir: './tests').
 module.exports = defineConfig({
   testDir: './tests-e2e',
-  timeout: 180000,      // captcha via 2Captcha pode demorar
+  timeout: 900000,      // percorre uma amostra real por aplicativo e servidor
   workers: 1,
   use: {
     headless: true,

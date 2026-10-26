@@ -110,11 +110,11 @@ test('IboPlayer - processa cliente com sucesso', async ({ page }) => {
   );
 
   // Mock da API 2Captcha
-  nock('http://2captcha.com')
+  nock('https://2captcha.com')
     .post('/in.php')
     .reply(200, { status: 1, request: 'captcha-id-001' });
 
-  nock('http://2captcha.com')
+  nock('https://2captcha.com')
     .get('/res.php')
     .query({ key: 'test-captcha-key', action: 'get', id: 'captcha-id-001', json: '1' })
     .reply(200, { status: 1, request: 'ABC123' });
@@ -132,8 +132,8 @@ test('IboPlayer - preenche MAC e DevKey corretamente', async ({ page }) => {
     route.fulfill({ status: 200, contentType: 'text/html', body: IBO_PLAYER_HTML })
   );
 
-  nock('http://2captcha.com').post('/in.php').reply(200, { status: 1, request: 'id-002' });
-  nock('http://2captcha.com')
+  nock('https://2captcha.com').post('/in.php').reply(200, { status: 1, request: 'id-002' });
+  nock('https://2captcha.com')
     .get('/res.php')
     .query({ key: 'test-captcha-key', action: 'get', id: 'id-002', json: '1' })
     .reply(200, { status: 1, request: 'XYZ999' });
@@ -152,8 +152,8 @@ test('IboPlayer - atualiza apenas a base da URL M3U e preserva os parâmetros', 
   await page.route('https://iboplayer.com/**', (route) =>
     route.fulfill({ status: 200, contentType: 'text/html', body: IBO_PLAYER_HTML })
   );
-  nock('http://2captcha.com').post('/in.php').reply(200, { status: 1, request: 'id-m3u' });
-  nock('http://2captcha.com').get('/res.php')
+  nock('https://2captcha.com').post('/in.php').reply(200, { status: 1, request: 'id-m3u' });
+  nock('https://2captcha.com').get('/res.php')
     .query({ key: 'test-captcha-key', action: 'get', id: 'id-m3u', json: '1' })
     .reply(200, { status: 1, request: 'M3U_OK' });
 
@@ -172,8 +172,8 @@ test('IboPlayer - Xtream atualiza o host sem alterar usuário e senha', async ({
   await page.route('https://iboplayer.com/**', (route) =>
     route.fulfill({ status: 200, contentType: 'text/html', body: xtreamHtml })
   );
-  nock('http://2captcha.com').post('/in.php').reply(200, { status: 1, request: 'id-xtream' });
-  nock('http://2captcha.com').get('/res.php')
+  nock('https://2captcha.com').post('/in.php').reply(200, { status: 1, request: 'id-xtream' });
+  nock('https://2captcha.com').get('/res.php')
     .query({ key: 'test-captcha-key', action: 'get', id: 'id-xtream', json: '1' })
     .reply(200, { status: 1, request: 'XTREAM_OK' });
 
@@ -227,8 +227,8 @@ test('IboPlayer - tenta novamente após falha e retorna true', async ({ page }) 
     }
   });
 
-  nock('http://2captcha.com').post('/in.php').reply(200, { status: 1, request: 'id-003' });
-  nock('http://2captcha.com')
+  nock('https://2captcha.com').post('/in.php').reply(200, { status: 1, request: 'id-003' });
+  nock('https://2captcha.com')
     .get('/res.php')
     .query({ key: 'test-captcha-key', action: 'get', id: 'id-003', json: '1' })
     .reply(200, { status: 1, request: 'RETRY_OK' });

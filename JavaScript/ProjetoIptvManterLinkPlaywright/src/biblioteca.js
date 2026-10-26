@@ -57,13 +57,13 @@ async function solveCaptchaWith2Captcha(imageBuffer, apiKey = captchaApiKey) {
     body: imageBuffer.toString('base64'),
     json: '1',
   });
-  const respostaEnvio = await axios.post('http://2captcha.com/in.php', params);
+  const respostaEnvio = await axios.post('https://2captcha.com/in.php', params);
   if (respostaEnvio.data.status !== 1) {
     throw new Error(`Erro ao enviar CAPTCHA para 2Captcha: ${respostaEnvio.data.request}`);
   }
 
   const captchaId = respostaEnvio.data.request;
-  const resultadoUrl = `http://2captcha.com/res.php?key=${apiKey}&action=get&id=${captchaId}&json=1`;
+  const resultadoUrl = `https://2captcha.com/res.php?key=${apiKey}&action=get&id=${captchaId}&json=1`;
   while (true) {
     await new Promise((resolve) => setTimeout(resolve, 5000));
     const resposta = await axios.get(resultadoUrl);

@@ -87,6 +87,62 @@ async function mockQuickPlayer(page, url) {
   );
 }
 
+test('QuickPlayer - login direto e formulário Xtream atualizam somente o host', async ({ page }) => {
+  await page.route('https://quickplayer.app/**', (route) => route.fulfill({
+    status: 200,
+    contentType: 'text/html',
+    body: `<meta charset="utf-8">
+      <form id="login-form">
+        <input id="device-mac" aria-label="Endereço MAC" />
+        <input id="device-key" />
+        <button id="login" type="submit">Enter my space</button>
+      </form>
+      <div id="playlists" style="display:none">
+        <button aria-label="Editar playlist">Editar</button>
+        <button id="logout">SAIR</button>
+      </div>
+      <div class="ant-modal" id="edit-modal" style="display:none">
+        <form>
+          <input class="modal-input" value="Teste" />
+          <input id="edit-host" class="modal-input" value="http://old.example" />
+          <input id="edit-user" value="cliente" />
+          <input id="edit-password" value="senha" />
+          <button type="submit">Salvar</button>
+        </form>
+      </div>
+      <script>
+        document.querySelector('#login-form').onsubmit = (event) => {
+          event.preventDefault();
+          window.__loginCaptured = [document.querySelector('#device-mac').value, document.querySelector('#device-key').value];
+          document.querySelector('#playlists').style.display = 'block';
+        };
+        document.querySelector('[aria-label="Editar playlist"]').onclick = () => {
+          document.querySelector('#edit-modal').style.display = 'block';
+        };
+        document.querySelector('#edit-modal form').onsubmit = (event) => {
+          event.preventDefault();
+          window.__saved = {
+            host: document.querySelector('#edit-host').value,
+            user: document.querySelector('#edit-user').value,
+            password: document.querySelector('#edit-password').value,
+          };
+          document.querySelector('#edit-modal').style.display = 'none';
+        };
+        document.querySelector('#logout').onclick = () => {
+          document.querySelector('#playlists').style.display = 'none';
+        };
+      </script>`,
+  }));
+
+  const sucesso = await quickPlayer.processarCliente('00:11:22:33:44:55', '123456', 'UNIPLAY', page);
+
+  expect(sucesso).toBe(true);
+  expect(await page.evaluate(() => window.__loginCaptured)).toEqual(['00:11:22:33:44:55', '123456']);
+  expect(await page.evaluate(() => window.__saved)).toEqual({
+    host: 'http://uniplay.test.com', user: 'cliente', password: 'senha',
+  });
+});
+
 test('QuickPlayer - atualiza host Xtream preservando caminho e credenciais', async ({ page }) => {
   await mockQuickPlayer(page, 'http://old.example:8080/get.php?username=cliente&password=senha&type=m3u_plus&output=ts');
 

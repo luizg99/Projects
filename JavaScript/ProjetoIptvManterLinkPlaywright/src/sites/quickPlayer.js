@@ -59,43 +59,58 @@ async function processarCliente(macAddress, deviceKey, servidor, page, tentativa
       await campoMac.waitFor({ timeout: 15000 });
       await campoMac.fill(macAddress);
 
-      const entrarComMac = page.getByRole('button', { name: /entrar com o mac|login by mac/i });
-      await entrarComMac.click();
+      const campoChaveDireto = page.locator('#device-key');
+      if (await campoChaveDireto.isVisible()) {
+        await campoChaveDireto.fill(deviceKey);
+        await page.getByRole('button', { name: /entrar no meu espaço|enter my space/i }).click();
+      } else {
+        const entrarComMac = page.getByRole('button', { name: /entrar com o mac|login by mac/i });
+        await entrarComMac.click();
 
-      const modalLogin = page.locator('.ant-modal:visible').last();
-      const campoDeviceKey = modalLogin.locator('input.modal-input').first();
-      await campoDeviceKey.waitFor({ timeout: 15000 });
-      await campoDeviceKey.fill(deviceKey);
-      await modalLogin.locator('button[type="submit"]').click();
+        const modalLogin = page.locator('.ant-modal:visible').last();
+        const campoDeviceKey = modalLogin.locator('input.modal-input').first();
+        await campoDeviceKey.waitFor({ timeout: 15000 });
+        await campoDeviceKey.fill(deviceKey);
+        await modalLogin.locator('button[type="submit"]').click();
+      }
 
       const botaoEditar = page.getByRole('button', { name: /editar playlist|edit playlist/i }).first();
       await botaoEditar.waitFor({ timeout: 20000 });
       await botaoEditar.click();
 
       const modalEdicao = page.locator('.ant-modal:visible').last();
-      const campoUrl = modalEdicao.locator('form input.modal-input').nth(1);
-      await campoUrl.waitFor({ timeout: 10000 });
-      const urlOriginal = await campoUrl.inputValue();
-      const tipoPlaylist = classificarPlaylist(urlOriginal);
-
-      let urlAtualizada;
-      if (tipoPlaylist === 'xtream') {
-        urlAtualizada = substituirHostXtream(urlOriginal, lib.obterLinkAtualizado(servidor));
-      } else if (tipoPlaylist === 'm3u') {
-        urlAtualizada = lib.substituirBaseM3U(urlOriginal, lib.obterLinkM3UAtualizado(servidor));
+      const campoHost = modalEdicao.locator('#edit-host');
+      if (await campoHost.isVisible()) {
+        const novoHost = lib.obterLinkAtualizado(servidor);
+        if (!novoHost) {
+          console.log('QUICK PLAYER: host de atualização ausente; alteração ignorada.');
+          return false;
+        }
+        await campoHost.fill(novoHost);
       } else {
-        console.log('QUICK PLAYER: formato da playlist ambíguo; alteração ignorada sem salvar.');
-        await encerrarSessao(page);
-        return false;
-      }
+        const campoUrl = modalEdicao.locator('form input.modal-input').nth(1);
+        await campoUrl.waitFor({ timeout: 10000 });
+        const urlOriginal = await campoUrl.inputValue();
+        const tipoPlaylist = classificarPlaylist(urlOriginal);
 
-      if (!urlAtualizada) {
-        console.log(`QUICK PLAYER: link de atualização ausente ou inválido para ${tipoPlaylist}; alteração ignorada.`);
-        await encerrarSessao(page);
-        return false;
-      }
+        let urlAtualizada;
+        if (tipoPlaylist === 'xtream') {
+          urlAtualizada = substituirHostXtream(urlOriginal, lib.obterLinkAtualizado(servidor));
+        } else if (tipoPlaylist === 'm3u') {
+          urlAtualizada = lib.substituirBaseM3U(urlOriginal, lib.obterLinkM3UAtualizado(servidor));
+        } else {
+          console.log('QUICK PLAYER: formato da playlist ambíguo; alteração ignorada sem salvar.');
+          await encerrarSessao(page);
+          return false;
+        }
 
-      await campoUrl.fill(urlAtualizada);
+        if (!urlAtualizada) {
+          console.log(`QUICK PLAYER: link de atualização ausente ou inválido para ${tipoPlaylist}; alteração ignorada.`);
+          await encerrarSessao(page);
+          return false;
+        }
+        await campoUrl.fill(urlAtualizada);
+      }
       await modalEdicao.getByRole('button', { name: /^(salvar|save)$/i }).click();
       await modalEdicao.waitFor({ state: 'hidden', timeout: 15000 });
       await encerrarSessao(page);

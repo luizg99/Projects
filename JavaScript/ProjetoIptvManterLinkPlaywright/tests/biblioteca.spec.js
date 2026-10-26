@@ -69,8 +69,8 @@ test('biblioteca troca a base M3U e preserva a query completa', () => {
 
 test('biblioteca resolve CAPTCHA usando a chave fornecida', async () => {
   biblioteca.captchaApiKey = 'teste';
-  nock('http://2captcha.com').post('/in.php').reply(200, { status: 1, request: 'captcha-id' });
-  nock('http://2captcha.com').get('/res.php')
+  nock('https://2captcha.com').post('/in.php').reply(200, { status: 1, request: 'captcha-id' });
+  nock('https://2captcha.com').get('/res.php')
     .query({ key: 'teste', action: 'get', id: 'captcha-id', json: '1' })
     .reply(200, { status: 1, request: 'RESOLVIDO' });
 

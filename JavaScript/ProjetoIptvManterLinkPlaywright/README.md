@@ -20,6 +20,19 @@ deve ser compartilhado ou commitado.
 
 ## Execução
 
+### Interface visual
+
+No Windows, abra **`Abrir interface.vbs`** com duplo clique. A interface abre no
+navegador e roda somente neste computador. Use **Encerrar interface** no topo
+da tela para fechá-la. Também é possível iniciar com `npm run gui`; nesse caso,
+feche com Ctrl+C ou pelo botão da interface.
+
+Na tela, clique em **Atualizar dados**, escolha servidores e aplicativos ou
+clientes, e clique em **Iniciar atualização**. O andamento e as falhas aparecem
+na própria tela. O arquivo `.env` precisa estar configurado como na seção acima.
+
+### Terminal
+
 ```bash
 npm start
 ```

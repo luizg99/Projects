@@ -1,5 +1,8 @@
 const { test, expect } = require('@playwright/test');
 const nock = require('nock');
+// Outros testes recarregam estes módulos; mantenha serviço e biblioteca na mesma instância.
+delete require.cache[require.resolve('../src/sites/playerApp')];
+delete require.cache[require.resolve('../src/services/automacaoService')];
 const { criarProgresso, executarRodadas, executar } = require('../src/services/automacaoService');
 const lib = require('../src/biblioteca');
 

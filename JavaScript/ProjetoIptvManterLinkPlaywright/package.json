@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node --env-file=.env index.js",
+    "gui": "node --env-file=.env interface.js",
     "install-browsers": "npx playwright install chromium",
     "test": "playwright test",
     "test:e2e": "node --env-file=.env ./node_modules/@playwright/test/cli.js test --config=e2e.config.js"

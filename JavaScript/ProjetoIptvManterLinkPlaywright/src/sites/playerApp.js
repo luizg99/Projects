@@ -60,6 +60,13 @@ async function processarCliente(macAddress, deviceKey, servidor) {
       });
     }
     console.error(`PlayerApp API: falha na atualização (HTTP ${status || 'sem resposta'}).`);
+    const corpo = erro.response?.data;
+    if (corpo) {
+      const texto = typeof corpo === 'string' ? corpo : JSON.stringify(corpo);
+      console.error(`PlayerApp API: resposta do servidor: ${texto.slice(0, 500)}`);
+    } else if (erro.code || erro.message) {
+      console.error(`PlayerApp API: ${erro.code || ''} ${erro.message}`.trim());
+    }
     return false;
   }
 }

@@ -2,6 +2,14 @@ const lib = require('../biblioteca');
 const { verificarRateLimit, isSiteRateLimitError } = require('../errors/siteRateLimitError');
 const { aguardarAntesDeRetry } = require('../utils/retryDelay');
 
+// Encerra a sessão quando a edição é abandonada, para não afetar o próximo MAC.
+async function sairSemSalvar(page) {
+  try {
+    await page.getByRole('button', { name: 'Sair' }).click({ timeout: 3000 });
+    await page.waitForTimeout(1000);
+  } catch {}
+}
+
 // Automação para vuplayer.pro
 async function processarCliente(macAddress, deviceKey, servidor, page, tentativas = 1) {
   let tentativaAtual = 1;
@@ -45,16 +53,28 @@ async function processarCliente(macAddress, deviceKey, servidor, page, tentativa
 
       if (formularioXtream) {
         const hostAtualizado = lib.obterLinkAtualizado(servidor);
-        if (!hostAtualizado) return false;
+        if (!hostAtualizado) {
+          console.log(`VUPLAYER: nenhum link de destino configurado para o servidor ${servidor} (MAC ${macAddress}).`);
+          await sairSemSalvar(page);
+          return false;
+        }
         await campoHost.fill(hostAtualizado);
       } else {
         const campoM3U = page.locator('input[name="playlistUrl"]');
-        if (!await campoM3U.isVisible()) return false;
+        if (!await campoM3U.isVisible()) {
+          console.log(`VUPLAYER: formulário de edição não reconhecido (nem Xtream nem M3U) para MAC ${macAddress}.`);
+          await sairSemSalvar(page);
+          return false;
+        }
 
         const urlOriginal = await campoM3U.inputValue();
         const baseM3U = lib.obterLinkM3UAtualizado(servidor);
         const urlAtualizada = lib.substituirBaseM3U(urlOriginal, baseM3U);
-        if (!urlAtualizada) return false;
+        if (!urlAtualizada) {
+          console.log(`VUPLAYER: não foi possível gerar o novo link M3U para MAC ${macAddress}. Servidor: ${servidor}; base de destino ${baseM3U ? 'configurada' : 'NÃO configurada'}; link atual ${urlOriginal ? 'preenchido' : 'vazio'}.`);
+          await sairSemSalvar(page);
+          return false;
+        }
         await campoM3U.fill(urlAtualizada);
       }
 

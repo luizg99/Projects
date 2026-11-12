@@ -73,3 +73,48 @@ test('tela permite escolher clientes e iniciar a atualização', async ({ page }
     await new Promise((resolve) => servidor.close(resolve));
   }
 });
+
+test('tela mostra motivo e prints das falhas e permite copiar', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  const falha = playlists[0];
+  const interfaceApp = criarInterface({
+    listar: async () => playlists,
+    listarElegiveis: (items) => items,
+    agrupar: (items, opcoes) => new Map(items
+      .filter((p) => opcoes.modo === 'cliente' && opcoes.clientes.includes(p.clienteId))
+      .map((p) => [p.siteAtivacao, [p]])),
+    executar: async () => ({
+      sucessos: 0,
+      falhas: [falha],
+      detalhesFalhas: new Map([[falha, ['PlayerApp API: falha (HTTP 400).', 'PlayerApp API: falha (HTTP 400).']]]),
+      printsFalhas: new Map([[falha, ['C:/x/Downloads/prints-erro-iptv/run/a.png']]]),
+      pastaPrints: 'C:/x/Downloads/prints-erro-iptv/run',
+      playlistsBloqueadas: [],
+      sitesBloqueados: [],
+    }),
+  });
+  const { servidor, url } = await iniciarServidor({ interfaceApp });
+  try {
+    await page.goto(url);
+    await page.getByRole('button', { name: 'Por cliente' }).click();
+    await page.getByPlaceholder('Digite para encontrar um cliente...').fill('Ana');
+    await page.locator('#clientes input').check();
+    await page.getByRole('button', { name: 'Iniciar atualização' }).click();
+    await expect(page.locator('#resultado')).toContainText('1 falha(s)');
+    await page.locator('#resultado summary').click();
+    await page.waitForTimeout(3500); // o polling não pode fechar o item aberto
+    await expect(page.locator('#resultado details')).toHaveAttribute('open', '');
+    await expect(page.locator('#resultado pre').first()).toContainText('HTTP 400');
+    await page.getByRole('button', { name: 'Copiar motivo de falhas' }).click();
+    const motivos = await page.evaluate(() => navigator.clipboard.readText());
+    expect(motivos).toContain('MAC: AA');
+    expect(motivos).toContain('HTTP 400');
+    expect(motivos).toContain('a.png');
+    await page.getByRole('button', { name: 'Copiar caminho dos prints' }).click();
+    const caminhos = await page.evaluate(() => navigator.clipboard.readText());
+    expect(caminhos).toContain('Pasta: C:/x/Downloads/prints-erro-iptv/run');
+    expect(caminhos).toContain('a.png');
+  } finally {
+    await new Promise((resolve) => servidor.close(resolve));
+  }
+});

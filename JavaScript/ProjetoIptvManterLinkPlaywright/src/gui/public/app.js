@@ -3,6 +3,7 @@ let dados = { total: 0, elegiveis: 0, servidores: [], clientes: [], aplicativos:
 let modo = 'tradicional';
 const clientesSelecionados = new Set();
 let ultimoLog = -1;
+let ultimoResultado = null;
 
 async function api(caminho, corpo) {
   const resposta = await fetch(caminho, corpo === undefined ? {} : {
@@ -118,6 +119,7 @@ async function iniciar() {
     await api('/api/iniciar', entrada);
     $('resultado').classList.add('hidden');
     ultimoLog = -1;
+    ultimoResultado = null;
     await atualizarStatus();
   } catch (erro) { mostrarErro(erro.message); }
 }
@@ -141,12 +143,63 @@ function renderResultado(resultado) {
   }
   if (resultado.falhas.length) {
     const lista = document.createElement('ul');
+    lista.className = 'falhas';
     for (const falha of resultado.falhas) {
       const item = document.createElement('li');
-      item.textContent = `${falha.mac} · ${falha.site} · ${falha.servidor}`;
+      const detalhes = document.createElement('details');
+      const resumo = document.createElement('summary');
+      resumo.textContent = `${falha.mac} · ${falha.site} · ${falha.servidor}`;
+      const erro = document.createElement('pre');
+      erro.textContent = falha.detalhes || 'Nenhuma mensagem de erro foi registrada para esta playlist.';
+      detalhes.append(resumo, erro);
+      if (falha.prints?.length) {
+        const caminhos = document.createElement('pre');
+        caminhos.textContent = `Print(s):\n${falha.prints.join('\n')}`;
+        detalhes.append(caminhos);
+      }
+      item.append(detalhes);
       lista.append(item);
     }
-    caixa.append(lista);
+    const botao = document.createElement('button');
+    botao.type = 'button';
+    botao.className = 'ghost copiar-falhas';
+    botao.textContent = 'Copiar motivo de falhas';
+    botao.addEventListener('click', async () => {
+      const separador = '\n\n----------------------------------------\n\n';
+      const texto = resultado.falhas.map((f) => [
+        `MAC: ${f.mac}`, `Aplicativo: ${f.site}`, `Servidor: ${f.servidor}`,
+        'Motivo:', (f.detalhes || 'Nenhuma mensagem de erro registrada.').split('\n').map((l) => `  ${l}`).join('\n'),
+        ...(f.prints?.length ? ['Print(s):', ...f.prints.map((c) => `  ${c}`)] : []),
+      ].join('\n')).join(separador);
+      const cabecalho = `FALHAS (${resultado.falhas.length})` + '\n========================================\n\n';
+      try {
+        await navigator.clipboard.writeText(cabecalho + texto + '\n');
+        botao.textContent = 'Copiado!';
+      } catch {
+        botao.textContent = 'N\u00e3o foi poss\u00edvel copiar';
+      }
+      setTimeout(() => { botao.textContent = 'Copiar motivo de falhas'; }, 2000);
+    });
+    const botaoPrints = document.createElement('button');
+    botaoPrints.type = 'button';
+    botaoPrints.className = 'ghost copiar-falhas';
+    botaoPrints.textContent = 'Copiar caminho dos prints';
+    botaoPrints.disabled = !resultado.pastaPrints || !resultado.falhas.some((f) => f.prints?.length);
+    botaoPrints.addEventListener('click', async () => {
+      const arquivos = resultado.falhas.flatMap((f) => f.prints || []);
+      const texto = [`Pasta: ${resultado.pastaPrints}`, '', ...arquivos].join('\n') + '\n';
+      try {
+        await navigator.clipboard.writeText(texto);
+        botaoPrints.textContent = 'Copiado!';
+      } catch {
+        botaoPrints.textContent = 'Não foi possível copiar';
+      }
+      setTimeout(() => { botaoPrints.textContent = 'Copiar caminho dos prints'; }, 2000);
+    });
+    const acoes = document.createElement('div');
+    acoes.className = 'acoes-falhas';
+    acoes.append(botao, botaoPrints);
+    caixa.append(acoes, lista);
   }
 }
 
@@ -188,7 +241,10 @@ async function atualizarStatus() {
       $('logs').scrollTop = $('logs').scrollHeight;
       ultimoLog = estado.logs.length;
     }
-    if (estado.resultado) renderResultado(estado.resultado);
+    if (estado.resultado) {
+      const assinatura = JSON.stringify(estado.resultado);
+      if (assinatura !== ultimoResultado) { ultimoResultado = assinatura; renderResultado(estado.resultado); }
+    }
     else if (estado.fase === 'erro' && estado.erro) mostrarErro(estado.erro);
   } catch (erro) { $('status-curto').textContent = 'Desconectado'; }
 }

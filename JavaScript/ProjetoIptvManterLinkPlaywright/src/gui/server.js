@@ -113,7 +113,10 @@ function criarInterface({ listar = playlistService.listar, listarElegiveis = pla
       .then((resultado) => {
         estado.resultado = {
           sucessos: resultado.sucessos,
-          falhas: resultado.falhas.map((p) => ({ mac: p.macAddress, site: p.siteAtivacao, servidor: p.servidor })),
+          falhas: resultado.falhas.map((p) => ({ mac: p.macAddress, site: p.siteAtivacao, servidor: p.servidor,
+            detalhes: (resultado.detalhesFalhas?.get(p) || []).join('\n--- nova tentativa ---\n'),
+            prints: resultado.printsFalhas?.get(p) || [] })),
+          pastaPrints: resultado.pastaPrints || null,
           bloqueadas: resultado.playlistsBloqueadas.length,
           sitesBloqueados: resultado.sitesBloqueados,
         };

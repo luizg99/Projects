@@ -6,6 +6,8 @@ const painelVu = require('../sites/vuPlayer');
 const painelPlayerApp = require('../sites/playerApp');
 const { isSiteRateLimitError } = require('../errors/siteRateLimitError');
 const { INTERVALO_MS } = require('../utils/retryDelay');
+const { instalarCaptura, capturar } = require('../utils/contextoPlaylist');
+const { criarPastaDaExecucao, salvarPrint } = require('../utils/printsErro');
 const INTERVALO_API_MS = 2100;
 
 // iboplayer.com exige CAPTCHA pago; falhas dele não são repetidas na reexecução.
@@ -106,6 +108,16 @@ async function executarRodadas(filas, paginas, processar) {
   }
 }
 
+// Uma falha pode deixar o painel logado (ex.: link M3U inválido). Sem limpar a sessão,
+// todos os MACs seguintes do mesmo site cairiam na conta anterior e falhariam em cascata.
+async function limparSessao(pagina) {
+  if (!pagina) return;
+  try {
+    await pagina.context().clearCookies();
+    await pagina.evaluate(() => { localStorage.clear(); sessionStorage.clear(); });
+  } catch {}
+}
+
 async function processarPlaylist(playlist, opcoes, pagina) {
   const painel = PAINEIS[playlist.siteAtivacao];
   if (!painel || !playlistSelecionada(playlist, opcoes, painel)) return null;
@@ -116,10 +128,11 @@ async function processarPlaylist(playlist, opcoes, pagina) {
 
 async function executar(playlists, opcoes) {
   const filas = agruparPorAplicativo(playlists, opcoes);
-  if (!filas.size) return { sucessos: 0, falhas: [], playlistsBloqueadas: [], sitesBloqueados: [] };
+  if (!filas.size) return { sucessos: 0, falhas: [], detalhesFalhas: new Map(), printsFalhas: new Map(), pastaPrints: null, playlistsBloqueadas: [], sitesBloqueados: [] };
 
   const sitesComNavegador = [...filas.keys()].filter((site) => PAINEIS[site].navegador);
   const browser = sitesComNavegador.length ? await chromium.launch({ headless: false }) : null;
+  const restaurarConsole = instalarCaptura();
   try {
     const paginas = new Map();
     await Promise.all(sitesComNavegador.map(async (site) => {
@@ -134,7 +147,24 @@ async function executar(playlists, opcoes) {
     const playlistsBloqueadas = [];
     const sitesBloqueados = new Map();
     const progresso = criarProgresso(filas);
+    const detalhesFalhas = new Map();
+    const printsFalhas = new Map();
+    const pastaPrints = criarPastaDaExecucao();
     let sucessos = 0;
+
+    function registrarDetalhes(playlist, linhas) {
+      const tentativas = detalhesFalhas.get(playlist) || [];
+      if (linhas.length) tentativas.push(linhas.join('\n'));
+      detalhesFalhas.set(playlist, tentativas);
+    }
+
+    async function registrarPrint(playlist, pagina) {
+      const lista = printsFalhas.get(playlist) || [];
+      const arquivo = await salvarPrint(pagina, pastaPrints, playlist, lista.length + 1);
+      if (arquivo) lista.push(arquivo);
+      printsFalhas.set(playlist, lista);
+      await limparSessao(pagina);
+    }
 
     async function processarComProtecao(playlist, pagina) {
       const site = playlist.siteAtivacao;
@@ -143,8 +173,15 @@ async function executar(playlists, opcoes) {
         return SITE_BLOQUEADO;
       }
       try {
-        return await processarPlaylist(playlist, opcoes, pagina);
+        const { resultado, linhas } = await capturar(() => processarPlaylist(playlist, opcoes, pagina));
+        if (!resultado) {
+          registrarDetalhes(playlist, linhas);
+          await registrarPrint(playlist, pagina);
+        }
+        return resultado;
       } catch (erro) {
+        registrarDetalhes(playlist, [...(erro.linhasCapturadas || []), erro?.message].filter(Boolean));
+        await registrarPrint(playlist, pagina);
         if (erro?.code === 'PLAYERAPP_PLAYLIST_NOT_FOUND') {
           console.error(`PlayerApp API: dispositivo ou playlist não encontrado para MAC ${playlist.macAddress} (HTTP 404).`);
           falhasPermanentes.push(playlist);
@@ -210,6 +247,9 @@ async function executar(playlists, opcoes) {
     return {
       sucessos,
       falhas: [...pendentes, ...falhasSemRetry, ...falhasPermanentes],
+      detalhesFalhas,
+      printsFalhas,
+      pastaPrints,
       playlistsBloqueadas,
       sitesBloqueados: [...sitesBloqueados.entries()].map(([site, erro]) => ({
         site,
@@ -218,6 +258,7 @@ async function executar(playlists, opcoes) {
       })),
     };
   } finally {
+    restaurarConsole();
     if (browser) await browser.close();
   }
 }

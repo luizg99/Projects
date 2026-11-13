@@ -118,3 +118,23 @@ test('tela mostra motivo e prints das falhas e permite copiar', async ({ page, c
     await new Promise((resolve) => servidor.close(resolve));
   }
 });
+
+test('encerrar mostra aviso visível no topo e desabilita a tela', async ({ page }) => {
+  let encerrou = false;
+  const interfaceApp = criarInterface({
+    listar: async () => playlists,
+    listarElegiveis: (items) => items,
+    encerrar: () => { encerrou = true; },
+  });
+  const { servidor, url } = await iniciarServidor({ interfaceApp });
+  try {
+    await page.goto(url);
+    await expect(page.locator('#elegiveis')).toHaveText('2');
+    await page.locator('#encerrar').click();
+    await expect(page.locator('.aviso-encerrada')).toContainText('Interface encerrada');
+    await expect(page.locator('#encerrar')).toBeDisabled();
+    await expect.poll(() => encerrou).toBe(true);
+  } finally {
+    await new Promise((resolve) => servidor.close(resolve));
+  }
+});

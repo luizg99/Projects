@@ -76,9 +76,19 @@ async function processarCliente(macAddress, deviceKey, servidor, page, tentativa
 
       const botaoEditar = page.getByRole('button', { name: /editar playlist|edit playlist/i }).first();
       await botaoEditar.waitFor({ timeout: 20000 });
+      // O aviso de cookies pode cobrir botões da página.
+      const avisoCookies = page.getByRole('button', { name: /^(entendi|got it)$/i });
+      if (await avisoCookies.isVisible().catch(() => false)) await avisoCookies.click().catch(() => {});
       await botaoEditar.click();
 
-      const modalEdicao = page.locator('.ant-modal:visible').last();
+      // Layout atual: a edição abre num painel da própria página (#edit-host na aba
+      // "Conta Xtream", #edit-url na aba "URL completa"). O layout antigo usava um modal.
+      const camposEdicao = page.locator(
+        '#edit-host:visible, #edit-url:visible, .ant-modal:visible form input.modal-input',
+      ).first();
+      await camposEdicao.waitFor({ state: 'visible', timeout: 15000 });
+      const emModal = await page.locator('.ant-modal:visible').count() > 0;
+      const modalEdicao = emModal ? page.locator('.ant-modal:visible').last() : page;
       const campoHost = modalEdicao.locator('#edit-host');
       if (await campoHost.isVisible()) {
         const novoHost = lib.obterLinkAtualizado(servidor);
@@ -88,7 +98,10 @@ async function processarCliente(macAddress, deviceKey, servidor, page, tentativa
         }
         await campoHost.fill(novoHost);
       } else {
-        const campoUrl = modalEdicao.locator('form input.modal-input').nth(1);
+        const campoUrlPainel = modalEdicao.locator('#edit-url');
+        const campoUrl = await campoUrlPainel.count()
+          ? campoUrlPainel
+          : modalEdicao.locator('form input.modal-input').nth(1);
         await campoUrl.waitFor({ timeout: 10000 });
         const urlOriginal = await campoUrl.inputValue();
         const tipoPlaylist = classificarPlaylist(urlOriginal);
@@ -112,7 +125,7 @@ async function processarCliente(macAddress, deviceKey, servidor, page, tentativa
         await campoUrl.fill(urlAtualizada);
       }
       await modalEdicao.getByRole('button', { name: /^(salvar|save)$/i }).click();
-      await modalEdicao.waitFor({ state: 'hidden', timeout: 15000 });
+      await (emModal ? modalEdicao : page.locator('#edit-name')).waitFor({ state: 'hidden', timeout: 15000 });
       await encerrarSessao(page);
 
       console.log(`Processamento QuickPlayer concluído para MAC ${macAddress} - Servidor: ${servidor} - Aplicativo: QUICK_PLAYER.`);

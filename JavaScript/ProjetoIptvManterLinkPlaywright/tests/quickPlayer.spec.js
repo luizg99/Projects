@@ -182,3 +182,79 @@ test('QuickPlayer - identifica a assinatura Xtream gerada pelo app', async () =>
     'https://host.example/get.php?username=u&password=p&type=m3u_plus&output=hls',
   )).toBe('m3u');
 });
+
+// Layout atual do QuickPlayer: a edição abre num painel da página (sem .ant-modal).
+const QUICK_PAINEL_HTML = (aba, urlOriginal) => `<meta charset="utf-8">
+  <form id="login-form">
+    <input aria-label="Endereço MAC" />
+    <input id="device-key" />
+    <button type="submit">Enter my space</button>
+  </form>
+  <div id="playlists" style="display:none">
+    <button aria-label="Editar playlist">Editar</button>
+    <button id="logout">SAIR</button>
+  </div>
+  <button id="cookies" type="button">Entendi</button>
+  <section id="painel" style="display:none">
+    <input id="edit-name" class="modal-input" value="Teste" />
+    <button type="button" class="tab" id="tab-xtream">Conta Xtream</button>
+    <button type="button" class="tab" id="tab-url">URL completa</button>
+    <div id="aba-xtream">
+      <input id="edit-host" class="modal-input" value="http://old.example" />
+      <input id="edit-user" class="modal-input" value="cliente" />
+      <input id="edit-password" class="modal-input" value="senha" />
+    </div>
+    <div id="aba-url" style="display:none">
+      <input id="edit-url" class="modal-input" value="${urlOriginal}" />
+    </div>
+    <button type="button" id="salvar">Salvar</button>
+  </section>
+  <script>
+    const abaInicial = '${aba}';
+    const mostrar = (aba) => {
+      document.querySelector('#aba-xtream').style.display = aba === 'xtream' ? 'block' : 'none';
+      document.querySelector('#aba-url').style.display = aba === 'url' ? 'block' : 'none';
+    };
+    document.querySelector('#login-form').onsubmit = (e) => {
+      e.preventDefault();
+      document.querySelector('#playlists').style.display = 'block';
+    };
+    document.querySelector('[aria-label="Editar playlist"]').onclick = () => {
+      document.querySelector('#painel').style.display = 'block';
+      mostrar(abaInicial);
+    };
+    document.querySelector('#salvar').onclick = () => {
+      window.__saved = {
+        host: document.querySelector('#edit-host').value,
+        url: document.querySelector('#edit-url').value,
+      };
+      document.querySelector('#painel').style.display = 'none';
+    };
+    document.querySelector('#logout').onclick = () => {
+      document.querySelector('#playlists').style.display = 'none';
+    };
+  </script>`;
+
+test('QuickPlayer - painel atual na aba Conta Xtream atualiza o host', async ({ page }) => {
+  await page.route('https://quickplayer.app/**', (route) => route.fulfill({
+    status: 200, contentType: 'text/html', body: QUICK_PAINEL_HTML('xtream', 'http://ignorado.example/get.php?x=1'),
+  }));
+
+  const sucesso = await quickPlayer.processarCliente('00:11:22:33:44:55', '123456', 'UNIPLAY', page);
+
+  expect(sucesso).toBe(true);
+  expect((await page.evaluate(() => window.__saved)).host).toBe('http://uniplay.test.com');
+});
+
+test('QuickPlayer - painel atual na aba URL completa troca a base M3U e preserva parâmetros', async ({ page }) => {
+  await page.route('https://quickplayer.app/**', (route) => route.fulfill({
+    status: 200, contentType: 'text/html',
+    body: QUICK_PAINEL_HTML('url', 'http://old.example/get.php?username=cliente&password=senha&type=m3u_plus&output=hls'),
+  }));
+
+  const sucesso = await quickPlayer.processarCliente('AA:BB:CC:DD:EE:FF', '654321', 'M3U-TEST', page);
+
+  expect(sucesso).toBe(true);
+  expect((await page.evaluate(() => window.__saved)).url)
+    .toBe('http://new.example/get.php?username=cliente&password=senha&type=m3u_plus&output=hls');
+});

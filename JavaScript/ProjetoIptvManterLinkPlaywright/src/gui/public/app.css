@@ -5,3 +5,4 @@
 .falhas{list-style:none;padding-left:0!important}.falhas summary{cursor:pointer;padding:4px 0}.falhas summary:hover{color:#c85265}.falhas pre{margin:4px 0 8px;padding:10px 12px;background:#fff;border:1px solid #f0d5da;border-radius:6px;white-space:pre-wrap;word-break:break-word;font:11px/1.5 Consolas,monospace;color:#8b3a48}
 .copiar-falhas{margin-top:10px}
 .acoes-falhas{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.acoes-falhas .copiar-falhas{margin-top:0}.ghost:disabled{opacity:.5;cursor:not-allowed}
+.aviso-encerrada{position:sticky;top:0;z-index:50;background:#fff7e6;border-bottom:2px solid #f0b429;color:#7a4b00;padding:14px 20px;font:700 13px Manrope,sans-serif;text-align:center}

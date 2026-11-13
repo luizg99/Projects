@@ -260,7 +260,15 @@ $('encerrar').addEventListener('click', async () => {
     $('progress-title').textContent = 'Interface encerrada';
     $('progress-subtitle').textContent = 'Você pode fechar esta aba. Abra o atalho para usar novamente.';
     $('encerrar').disabled = true;
+    $('encerrar').textContent = 'Interface encerrada';
     clearInterval(atualizacaoAutomatica);
+    const aviso = document.createElement('div');
+    aviso.className = 'aviso-encerrada';
+    aviso.setAttribute('role', 'status');
+    aviso.textContent = 'Interface encerrada. O servidor foi desligado. Pode fechar esta aba e abrir o atalho para usar novamente.';
+    document.body.prepend(aviso);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.querySelectorAll('button').forEach((b) => { b.disabled = true; });
   } catch (erro) { mostrarErro(erro.message); }
 });
 $('todos-servidores').addEventListener('click', () => { document.querySelectorAll('#servidores input').forEach((e) => { e.checked = true; }); atualizarPrevisao(); });

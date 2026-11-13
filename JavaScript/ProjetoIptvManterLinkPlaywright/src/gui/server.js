@@ -25,6 +25,7 @@ function criarInterface({ listar = playlistService.listar, listarElegiveis = pla
   let carregado = false;
   let carregando = false;
   let executando = false;
+  let controlador = null;
   let estado = { fase: 'aguardando', total: 0, elegiveis: 0, logs: [], resultado: null, erro: null };
 
   function adicionarLog(tipo, mensagem) {
@@ -102,14 +103,16 @@ function criarInterface({ listar = playlistService.listar, listarElegiveis = pla
     if (executando || carregando) throw new Error('Aguarde a operação em andamento.');
     const selecao = validarSelecao(entrada);
     executando = true;
+    controlador = new AbortController();
+    const { signal: sinal } = controlador;
     estado = { fase: 'executando', total: selecao.quantidade, elegiveis: selecao.quantidade,
-      porAplicativo: selecao.porAplicativo, logs: [], resultado: null, erro: null };
+      porAplicativo: selecao.porAplicativo, logs: [], resultado: null, erro: null, cancelando: false };
     adicionarLog('info', `Iniciando atualização de ${selecao.quantidade} playlist(s).`);
     const logOriginal = console.log;
     const erroOriginal = console.error;
     console.log = (...args) => { adicionarLog('info', args.join(' ')); logOriginal(...args); };
     console.error = (...args) => { adicionarLog('erro', args.join(' ')); erroOriginal(...args); };
-    Promise.resolve().then(() => executar(listarElegiveis(playlists), selecao.opcoes))
+    Promise.resolve().then(() => executar(listarElegiveis(playlists), selecao.opcoes, { sinal }))
       .then((resultado) => {
         estado.resultado = {
           sucessos: resultado.sucessos,
@@ -117,18 +120,19 @@ function criarInterface({ listar = playlistService.listar, listarElegiveis = pla
             detalhes: (resultado.detalhesFalhas?.get(p) || []).join('\n--- nova tentativa ---\n'),
             prints: resultado.printsFalhas?.get(p) || [] })),
           pastaPrints: resultado.pastaPrints || null,
+          cancelado: Boolean(resultado.cancelado),
           bloqueadas: resultado.playlistsBloqueadas.length,
           sitesBloqueados: resultado.sitesBloqueados,
         };
         estado.fase = 'concluido';
-        adicionarLog('info', `Concluído: ${resultado.sucessos} sucesso(s), ${resultado.falhas.length} falha(s).`);
+        adicionarLog('info', `${resultado.cancelado ? 'Cancelado' : 'Concluído'}: ${resultado.sucessos} sucesso(s), ${resultado.falhas.length} falha(s).`);
       })
       .catch((erro) => {
         estado.fase = 'erro';
         estado.erro = erro.message;
         adicionarLog('erro', `Erro na automação: ${erro.message}`);
       })
-      .finally(() => { console.log = logOriginal; console.error = erroOriginal; executando = false; });
+      .finally(() => { console.log = logOriginal; console.error = erroOriginal; executando = false; controlador = null; });
     return { quantidade: selecao.quantidade, porAplicativo: selecao.porAplicativo };
   }
 
@@ -152,7 +156,7 @@ function criarInterface({ listar = playlistService.listar, listarElegiveis = pla
     if (req.method === 'GET' && pathname === '/api/dados') {
       return enviarJson(res, 200, carregado ? resumo() : { total: 0, elegiveis: 0, servidores: [], clientes: [], aplicativos: [] });
     }
-    if (req.method === 'POST' && ['/api/carregar', '/api/iniciar', '/api/encerrar'].includes(pathname)) {
+    if (req.method === 'POST' && ['/api/carregar', '/api/iniciar', '/api/encerrar', '/api/cancelar'].includes(pathname)) {
       const origin = req.headers.origin;
       if (origin !== `http://${host}` || !req.headers['content-type']?.startsWith('application/json')) {
         return enviarJson(res, 403, { erro: 'Requisição inválida.' });
@@ -164,6 +168,15 @@ function criarInterface({ listar = playlistService.listar, listarElegiveis = pla
       }
       try {
         const entrada = JSON.parse(corpo || '{}');
+        if (pathname === '/api/cancelar') {
+          if (!executando || !controlador) return enviarJson(res, 409, { erro: 'Nenhuma execução em andamento.' });
+          if (!controlador.signal.aborted) {
+            controlador.abort();
+            estado.cancelando = true;
+            adicionarLog('info', 'Cancelamento solicitado. Finalizando as playlists em andamento; as demais não serão processadas.');
+          }
+          return enviarJson(res, 200, { ok: true });
+        }
         if (pathname === '/api/encerrar') {
           if (executando || carregando) return enviarJson(res, 409, { erro: 'Aguarde o fim da operação para encerrar.' });
           enviarJson(res, 200, { ok: true });

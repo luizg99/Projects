@@ -138,3 +138,36 @@ test('encerrar mostra aviso visível no topo e desabilita a tela', async ({ page
     await new Promise((resolve) => servidor.close(resolve));
   }
 });
+
+test('botão cancelar aparece durante a execução e interrompe a atualização', async ({ page }) => {
+  let sinalRecebido;
+  const interfaceApp = criarInterface({
+    listar: async () => playlists,
+    listarElegiveis: (items) => items,
+    agrupar: (items, opcoes) => new Map(items
+      .filter((p) => opcoes.modo === 'cliente' && opcoes.clientes.includes(p.clienteId))
+      .map((p) => [p.siteAtivacao, [p]])),
+    executar: (_items, _opcoes, { sinal }) => new Promise((resolve) => {
+      sinalRecebido = sinal;
+      sinal.addEventListener('abort', () => resolve({
+        sucessos: 0, falhas: [], cancelado: true, playlistsBloqueadas: [], sitesBloqueados: [],
+      }));
+    }),
+  });
+  const { servidor, url } = await iniciarServidor({ interfaceApp });
+  try {
+    await page.goto(url);
+    await expect(page.locator('#cancelar')).toBeHidden();
+    await page.getByRole('button', { name: 'Por cliente' }).click();
+    await page.getByPlaceholder('Digite para encontrar um cliente...').fill('Ana');
+    await page.locator('#clientes input').check();
+    await page.getByRole('button', { name: 'Iniciar atualização' }).click();
+    await expect(page.locator('#cancelar')).toBeVisible();
+    await page.locator('#cancelar').click();
+    await expect(page.locator('#progress-title')).toHaveText('Atualização cancelada');
+    await expect(page.locator('#cancelar')).toBeHidden();
+    expect(sinalRecebido.aborted).toBe(true);
+  } finally {
+    await new Promise((resolve) => servidor.close(resolve));
+  }
+});

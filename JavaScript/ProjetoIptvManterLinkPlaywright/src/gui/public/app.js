@@ -213,19 +213,27 @@ async function atualizarStatus() {
     $('recarregar').disabled = emExecucao || estado.fase === 'carregando';
     $('encerrar').disabled = emExecucao || estado.fase === 'carregando';
     atualizarPrevisao();
+    const cancelado = Boolean(estado.resultado?.cancelado);
+    $('cancelar').classList.toggle('hidden', !emExecucao);
+    $('cancelar').disabled = Boolean(estado.cancelando);
+    $('cancelar').textContent = estado.cancelando ? 'Cancelando…' : 'Cancelar execução';
     if (emExecucao) {
-      $('progress-title').textContent = 'Atualização em andamento';
-      $('progress-subtitle').textContent = `Processando ${estado.total} playlist(s) selecionada(s).`;
+      $('progress-title').textContent = estado.cancelando ? 'Cancelando a execução' : 'Atualização em andamento';
+      $('progress-subtitle').textContent = estado.cancelando
+        ? 'Finalizando as playlists em andamento. As demais não serão processadas.'
+        : `Processando ${estado.total} playlist(s) selecionada(s).`;
     } else if (estado.fase === 'concluido') {
-      $('progress-title').textContent = 'Atualização concluída';
-      $('progress-subtitle').textContent = 'Confira o resumo e o registro abaixo.';
+      $('progress-title').textContent = cancelado ? 'Atualização cancelada' : 'Atualização concluída';
+      $('progress-subtitle').textContent = cancelado
+        ? 'As playlists restantes não foram processadas. Confira o resumo abaixo.'
+        : 'Confira o resumo e o registro abaixo.';
     } else if (estado.fase === 'erro') {
       $('progress-title').textContent = 'A atualização foi interrompida';
       $('progress-subtitle').textContent = estado.erro || 'Confira o registro abaixo.';
     }
     const restante = [...estado.logs].reverse().find((log) => /Faltam? (\d+) MAC/.test(log.mensagem));
     const faltam = restante ? Number(restante.mensagem.match(/Faltam? (\d+) MAC/)[1]) : estado.total;
-    const percentual = estado.fase === 'concluido' ? 100 : estado.total ? Math.max(0, Math.round((1 - faltam / estado.total) * 100)) : 0;
+    const percentual = estado.fase === 'concluido' && !cancelado ? 100 : estado.total ? Math.max(0, Math.round((1 - faltam / estado.total) * 100)) : 0;
     $('progress-fill').style.width = `${percentual}%`;
     $('progress-number').textContent = `${percentual}%`;
     if (estado.logs.length !== ultimoLog) {
@@ -254,6 +262,14 @@ $('tab-cliente').addEventListener('click', () => trocarModo('cliente'));
 $('busca').addEventListener('input', renderClientes);
 $('recarregar').addEventListener('click', carregar);
 $('iniciar').addEventListener('click', iniciar);
+$('cancelar').addEventListener('click', async () => {
+  $('cancelar').disabled = true;
+  $('cancelar').textContent = 'Cancelando…';
+  try {
+    await api('/api/cancelar', {});
+    await atualizarStatus();
+  } catch (erro) { mostrarErro(erro.message); }
+});
 $('encerrar').addEventListener('click', async () => {
   try {
     await api('/api/encerrar', {});

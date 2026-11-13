@@ -41,15 +41,26 @@ function agruparPorAplicativo(playlists, opcoes) {
   return filas;
 }
 
-async function aguardarIntervalo() {
-  if (!INTERVALO_MS) return;
-  console.log(`Aguardando ${Math.ceil(INTERVALO_MS / 1000)}s antes da próxima rodada.`);
-  await new Promise((resolve) => setTimeout(resolve, INTERVALO_MS));
+// Espera `ms`, mas acorda antes se a execução for cancelada.
+function esperar(ms, sinal) {
+  return new Promise((resolve) => {
+    if (sinal?.aborted) return resolve();
+    const fim = () => { clearTimeout(timer); sinal?.removeEventListener('abort', fim); resolve(); };
+    const timer = setTimeout(fim, ms);
+    sinal?.addEventListener('abort', fim, { once: true });
+  });
 }
 
-async function aguardarIntervaloApi() {
+async function aguardarIntervalo(sinal) {
+  if (!INTERVALO_MS || sinal?.aborted) return;
+  console.log(`Aguardando ${Math.ceil(INTERVALO_MS / 1000)}s antes da próxima rodada.`);
+  await esperar(INTERVALO_MS, sinal);
+}
+
+async function aguardarIntervaloApi(sinal) {
+  if (sinal?.aborted) return;
   console.log('Aguardando 2.1s antes da próxima chamada à API.');
-  await new Promise((resolve) => setTimeout(resolve, INTERVALO_API_MS));
+  await esperar(INTERVALO_API_MS, sinal);
 }
 
 function criarProgresso(filas, escrever = console.log) {
@@ -78,9 +89,10 @@ function criarProgresso(filas, escrever = console.log) {
   };
 }
 
-async function executarRodadas(filas, paginas, processar) {
+async function executarRodadas(filas, paginas, processar, sinal) {
   const indices = new Map([...filas.keys()].map((site) => [site, 0]));
   while (true) {
+    if (sinal?.aborted) return;
     const rodada = [];
     for (const [site, fila] of filas) {
       const indice = indices.get(site);
@@ -95,6 +107,7 @@ async function executarRodadas(filas, paginas, processar) {
       const fila = filas.get(resultado.site);
       const indice = indices.get(resultado.site);
       for (const playlist of fila.slice(indice)) {
+        if (sinal?.aborted) return;
         await processar(playlist, paginas.get(resultado.site));
       }
       indices.set(resultado.site, fila.length);
@@ -102,8 +115,8 @@ async function executarRodadas(filas, paginas, processar) {
     const filasPendentes = [...filas].filter(([site, fila]) => indices.get(site) < fila.length);
     if (filasPendentes.length) {
       const somenteApis = filasPendentes.every(([site]) => !PAINEIS[site].navegador);
-      if (somenteApis) await aguardarIntervaloApi();
-      else await aguardarIntervalo();
+      if (somenteApis) await aguardarIntervaloApi(sinal);
+      else await aguardarIntervalo(sinal);
     }
   }
 }
@@ -126,7 +139,7 @@ async function processarPlaylist(playlist, opcoes, pagina) {
     : painel.modulo.processarCliente(playlist.macAddress, playlist.deviceKey, playlist.servidor);
 }
 
-async function executar(playlists, opcoes) {
+async function executar(playlists, opcoes, { sinal } = {}) {
   const filas = agruparPorAplicativo(playlists, opcoes);
   if (!filas.size) return { sucessos: 0, falhas: [], detalhesFalhas: new Map(), printsFalhas: new Map(), pastaPrints: null, playlistsBloqueadas: [], sitesBloqueados: [] };
 
@@ -209,17 +222,18 @@ async function executar(playlists, opcoes) {
       else falhas.push(playlist);
       progresso.registrar(playlist, Boolean(sucesso) || SITES_SEM_RETRY.has(playlist.siteAtivacao));
       return false;
-    });
+    }, sinal);
 
     const falhasSemRetry = falhas.filter((p) => SITES_SEM_RETRY.has(p.siteAtivacao));
     let pendentes = falhas.filter((p) => !SITES_SEM_RETRY.has(p.siteAtivacao));
-    for (let tentativa = 1; tentativa <= RETRIES_FALHANTES && pendentes.length; tentativa++) {
+    for (let tentativa = 1; tentativa <= RETRIES_FALHANTES && pendentes.length && !sinal?.aborted; tentativa++) {
       const novasFalhas = [];
       const filasDeRetry = agruparPorAplicativo(pendentes, opcoes);
       const somenteApis = [...filasDeRetry.keys()].every((site) => !PAINEIS[site].navegador);
       console.log(`Reexecutando ${pendentes.length} playlist(s) com falha (${tentativa}/${RETRIES_FALHANTES}).`);
-      if (somenteApis) await aguardarIntervaloApi();
-      else await aguardarIntervalo();
+      if (somenteApis) await aguardarIntervaloApi(sinal);
+      else await aguardarIntervalo(sinal);
+      if (sinal?.aborted) break;
       progresso.iniciarSessao();
       await executarRodadas(filasDeRetry, paginas, async (playlist, pagina) => {
         if (sitesBloqueados.has(playlist.siteAtivacao)) {
@@ -240,12 +254,13 @@ async function executar(playlists, opcoes) {
         else sucessos++;
         progresso.registrar(playlist, Boolean(sucesso) || tentativa === RETRIES_FALHANTES);
         return false;
-      });
+      }, sinal);
       pendentes = novasFalhas;
     }
 
     return {
       sucessos,
+      cancelado: Boolean(sinal?.aborted),
       falhas: [...pendentes, ...falhasSemRetry, ...falhasPermanentes],
       detalhesFalhas,
       printsFalhas,

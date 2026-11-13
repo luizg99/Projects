@@ -45,3 +45,31 @@ test('fila geral limita a duas chamadas por MAC com falha', async () => {
     console.log = logOriginal;
   }
 });
+
+test('cancelar interrompe a fila antes das próximas playlists e não faz retentativas', async () => {
+  const processarOriginal = painelPlayerApp.processarCliente;
+  const logOriginal = console.log;
+  const controlador = new AbortController();
+  let chamadas = 0;
+  painelPlayerApp.processarCliente = async () => {
+    chamadas++;
+    controlador.abort();
+    return false;
+  };
+  console.log = () => {};
+  try {
+    const playlists = ['A', 'B', 'C'].map((mac) => ({
+      siteAtivacao: 'playbr.app.br', servidor: 'TVS', macAddress: mac, deviceKey: 'KEY',
+    }));
+    const inicio = Date.now();
+    const resultado = await automacaoService.executar(
+      playlists, { servidores: ['TVS'], PLAYER_APP_API: true }, { sinal: controlador.signal },
+    );
+    expect(chamadas).toBe(1);
+    expect(resultado.cancelado).toBe(true);
+    expect(Date.now() - inicio).toBeLessThan(1500); // não espera os intervalos de 2,1s
+  } finally {
+    painelPlayerApp.processarCliente = processarOriginal;
+    console.log = logOriginal;
+  }
+});

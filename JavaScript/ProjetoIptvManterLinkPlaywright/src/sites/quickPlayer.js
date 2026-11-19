@@ -124,6 +124,8 @@ async function processarCliente(macAddress, deviceKey, servidor, page, tentativa
         }
         await campoUrl.fill(urlAtualizada);
       }
+      // No painel atual o formulário precisa existir; sem isso a espera abaixo passaria à toa.
+      if (!emModal) await page.locator('#edit-name').waitFor({ state: 'visible', timeout: 10000 });
       await modalEdicao.getByRole('button', { name: /^(salvar|save)$/i }).click();
       await (emModal ? modalEdicao : page.locator('#edit-name')).waitFor({ state: 'hidden', timeout: 15000 });
       await encerrarSessao(page);

@@ -22,7 +22,7 @@ async function capturar(fn) {
   try {
     return { resultado: await armazenamento.run(linhas, fn), linhas };
   } catch (erro) {
-    erro.linhasCapturadas = linhas;
+    if (erro && typeof erro === 'object') erro.linhasCapturadas = linhas;
     throw erro;
   }
 }

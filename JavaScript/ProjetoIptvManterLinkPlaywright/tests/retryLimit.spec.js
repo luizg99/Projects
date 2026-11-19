@@ -73,3 +73,30 @@ test('cancelar interrompe a fila antes das próximas playlists e não faz retent
     console.log = logOriginal;
   }
 });
+
+test('cancelar no meio da retentativa mantém na lista as falhas ainda não retentadas', async () => {
+  const processarOriginal = painelPlayerApp.processarCliente;
+  const logOriginal = console.log;
+  const controlador = new AbortController();
+  let chamadas = 0;
+  painelPlayerApp.processarCliente = async () => {
+    chamadas++;
+    if (chamadas === 4) controlador.abort(); // primeira chamada da rodada de retentativa
+    return false;
+  };
+  console.log = () => {};
+  try {
+    const playlists = ['A', 'B', 'C'].map((mac) => ({
+      siteAtivacao: 'playbr.app.br', servidor: 'TVS', macAddress: mac, deviceKey: 'KEY',
+    }));
+    const resultado = await automacaoService.executar(
+      playlists, { servidores: ['TVS'], PLAYER_APP_API: true }, { sinal: controlador.signal },
+    );
+    expect(chamadas).toBe(4);
+    expect(resultado.cancelado).toBe(true);
+    expect(resultado.falhas.map((p) => p.macAddress).sort()).toEqual(['A', 'B', 'C']);
+  } finally {
+    painelPlayerApp.processarCliente = processarOriginal;
+    console.log = logOriginal;
+  }
+});

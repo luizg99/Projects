@@ -20,7 +20,7 @@ async function salvarPrint(pagina, pasta, playlist, numero) {
   if (!pagina || !pasta) return null;
   try {
     fs.mkdirSync(pasta, { recursive: true });
-    const arquivo = path.join(pasta, `${nomeSeguro(playlist.siteAtivacao)}_${nomeSeguro(playlist.macAddress)}_${numero}.png`);
+    const arquivo = path.join(pasta, `${nomeSeguro(playlist.siteAtivacao)}_${nomeSeguro(playlist.servidor || 'sem-servidor')}_${nomeSeguro(playlist.macAddress)}_${numero}.png`);
     await pagina.screenshot({ path: arquivo, timeout: 8000 });
     return arquivo;
   } catch (erro) {

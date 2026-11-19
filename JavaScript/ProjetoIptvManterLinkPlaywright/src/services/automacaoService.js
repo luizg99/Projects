@@ -187,13 +187,13 @@ async function executar(playlists, opcoes, { sinal } = {}) {
       }
       try {
         const { resultado, linhas } = await capturar(() => processarPlaylist(playlist, opcoes, pagina));
-        if (!resultado) {
+        if (!resultado && resultado !== null) {
           registrarDetalhes(playlist, linhas);
           await registrarPrint(playlist, pagina);
         }
         return resultado;
       } catch (erro) {
-        registrarDetalhes(playlist, [...(erro.linhasCapturadas || []), erro?.message].filter(Boolean));
+        registrarDetalhes(playlist, [...(erro?.linhasCapturadas || []), erro?.message].filter(Boolean));
         await registrarPrint(playlist, pagina);
         if (erro?.code === 'PLAYERAPP_PLAYLIST_NOT_FOUND') {
           console.error(`PlayerApp API: dispositivo ou playlist não encontrado para MAC ${playlist.macAddress} (HTTP 404).`);
@@ -228,6 +228,7 @@ async function executar(playlists, opcoes, { sinal } = {}) {
     let pendentes = falhas.filter((p) => !SITES_SEM_RETRY.has(p.siteAtivacao));
     for (let tentativa = 1; tentativa <= RETRIES_FALHANTES && pendentes.length && !sinal?.aborted; tentativa++) {
       const novasFalhas = [];
+      const retentadas = new Set();
       const filasDeRetry = agruparPorAplicativo(pendentes, opcoes);
       const somenteApis = [...filasDeRetry.keys()].every((site) => !PAINEIS[site].navegador);
       console.log(`Reexecutando ${pendentes.length} playlist(s) com falha (${tentativa}/${RETRIES_FALHANTES}).`);
@@ -242,6 +243,7 @@ async function executar(playlists, opcoes, { sinal } = {}) {
           return true;
         }
         const sucesso = await processarComProtecao(playlist, pagina);
+        retentadas.add(playlist);
         if (sucesso === SITE_BLOQUEADO) {
           progresso.registrar(playlist, true);
           return true;
@@ -255,7 +257,8 @@ async function executar(playlists, opcoes, { sinal } = {}) {
         progresso.registrar(playlist, Boolean(sucesso) || tentativa === RETRIES_FALHANTES);
         return false;
       }, sinal);
-      pendentes = novasFalhas;
+      // Se cancelou no meio, as falhas que ainda não foram retentadas continuam listadas.
+      pendentes = [...novasFalhas, ...pendentes.filter((p) => !retentadas.has(p))];
     }
 
     return {
